@@ -28,7 +28,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
           <DocumentTree />
         </Paper>
 
-        <Paper elevation={1} sx={{ height: '90vh' }}>
+        <Paper elevation={1} sx={{ height: '80dvh' }}>
           <PDFPreview
             showWebLink={showWebLink}
             document={selectedDocument}

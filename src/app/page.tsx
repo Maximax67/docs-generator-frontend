@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <Box
       sx={{
-        minHeight: 'calc(100vh - 64px)',
+        minHeight: 'calc(100dvh - 64px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -80,13 +80,13 @@ export default function Home() {
             <Stack direction="row" spacing={1} alignItems="center">
               <ApiIcon color="primary" fontSize="large" />
               <Typography variant="h4" fontWeight={700}>
-                Інтеграція через API
+                Наше API
               </Typography>
             </Stack>
 
             <Typography variant="body1" textAlign="center" maxWidth={600}>
-              Використовуйте наш REST-API для автоматичної генерації PDF-документів у вашому
-              застосунку. Документація доступна за посиланнями нижче.
+              Використовуй REST-API для автоматичної генерації PDF-документів у твоєму застосунку.
+              Документація доступна за посиланнями нижче.
             </Typography>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -129,12 +129,12 @@ export default function Home() {
             <Stack direction="row" spacing={1} alignItems="center">
               <TelegramIcon color="primary" fontSize="large" />
               <Typography variant="h4" fontWeight={700}>
-                Наш Telegram‑бот
+                Telegram‑бот
               </Typography>
             </Stack>
             <Typography variant="body1" textAlign="center" maxWidth={600}>
-              Швидко створюйте PDF‑документи безпосередньо в Telegram. Бот підтримує персоналізовані
-              шаблони та зберігає ваші налаштування локально.
+              Швидко створюй PDF‑документи прямо в Telegram. Однак, історія та збережені дані
+              веб‑сервісу не синхронізуються з ботом
             </Typography>
             <Button
               component={Link}
@@ -146,9 +146,6 @@ export default function Home() {
             >
               Відкрити @kpi_docs_bot
             </Button>
-            <Typography color="text.secondary" maxWidth={600} textAlign="center">
-              Зауважте, що історія та збережені дані веб‑сервісу не синхронізуються з ботом.
-            </Typography>
           </Paper>
         </Stack>
       </Container>

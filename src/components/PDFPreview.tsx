@@ -38,7 +38,7 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
           justifyContent: 'center',
         }}
       >
-        <Typography variant="h6" color="text.secondary">
+        <Typography variant="h6" color="text.secondary" sx={{ textAlign: 'center' }}>
           Оберіть документ для перегляду
         </Typography>
       </Box>
@@ -59,7 +59,7 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
         }}
       >
         <CircularProgress size={40} />
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
           Завантаження попереднього перегляду...
         </Typography>
       </Box>
@@ -100,7 +100,7 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
           p: 2,
         }}
       >
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
           Неможливо завантажити попередній перегляд
         </Typography>
       </Box>

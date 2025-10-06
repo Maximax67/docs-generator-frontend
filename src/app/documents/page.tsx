@@ -14,7 +14,7 @@ export default function DocumentsPage() {
   return (
     <Container
       maxWidth={false}
-      sx={{ py: 3, height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}
+      sx={{ py: 3, height: 'calc(100dvh - 64px)', display: 'flex', flexDirection: 'column' }}
     >
       <Stack spacing={2} sx={{ height: '100%' }}>
         {!user && showAlert && (

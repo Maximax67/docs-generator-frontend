@@ -81,7 +81,7 @@ export default function AppThemeProvider({ children }: { children: React.ReactNo
         <CssBaseline />
         <Box
           sx={{
-            minHeight: '100vh',
+            minHeight: '100dvh',
             bgcolor: 'background.default',
             color: 'text.primary',
           }}
