@@ -13,9 +13,10 @@ import StepsTimeline from '@/components/Timeline';
 import Features from '@/components/Features';
 
 export default function Home() {
-  const apiDocsUrl = `${process.env.NEXT_PUBLIC_API_URL}/docs`;
-  const openApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/openapi.json`;
-  const postmanImportUrl = `https://go.postman.co/import?url=${encodeURIComponent(openApiUrl)}`;
+  const apiDocsUrl = process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/docs`
+    : 'https://example.com';
+  const postmanUrl = process.env.NEXT_PUBLIC_POSTMAN_URL || 'https://example.com';
 
   return (
     <Box
@@ -102,13 +103,13 @@ export default function Home() {
 
               <Button
                 component={Link}
-                href={postmanImportUrl}
+                href={postmanUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="contained"
                 size="large"
               >
-                Імпортувати в Postman
+                Відкрити в Postman
               </Button>
             </Stack>
           </Paper>
