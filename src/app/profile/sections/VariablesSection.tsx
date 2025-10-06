@@ -51,7 +51,7 @@ export default function VariablesSection({
             Очистити все
           </Button>
         )}
-        <Button variant="text" startIcon={<RefreshIcon />} onClick={onRefresh}>
+        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={onRefresh}>
           Оновити
         </Button>
       </Stack>
