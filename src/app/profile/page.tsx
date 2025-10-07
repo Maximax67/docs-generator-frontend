@@ -19,10 +19,11 @@ import DeleteAccountDialog from './dialogs/DeleteAccountDialog';
 
 import { useUserStore } from '@/store/user';
 import { SessionInfo } from '@/types/user';
-import { api, toErrorMessage } from '@/lib/api';
 import { AllVariablesResponse, DocumentVariable, VariableType } from '@/types/variables';
 import { getInitialFormValues } from '@/lib/validation';
 import { filterSavedVariables } from '@/utils/filter-saved-variables';
+import { api } from '@/lib/api/core';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export default function ProfilePage() {
   const router = useRouter();

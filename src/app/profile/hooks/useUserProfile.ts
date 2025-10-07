@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '@/store/user';
 import { User } from '@/types/user';
-import { api, toErrorMessage } from '@/lib/api';
+import { api } from '@/lib/api/core';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export function useUserProfile() {
   const router = useRouter();

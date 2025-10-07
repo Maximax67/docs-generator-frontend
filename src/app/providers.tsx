@@ -5,8 +5,10 @@ import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import { useUserStore } from '@/store/user';
 import { ThemeMode, ThemeModeContextValue } from '@/types/theme';
 
-const THEME_KEY = 'app-theme-mode';
+import '@/lib/api/request-interceptor';
+import '@/lib/api/response-interceptor';
 
+const THEME_KEY = 'app-theme-mode';
 const ThemeModeContext = createContext<ThemeModeContextValue | undefined>(undefined);
 
 export function useThemeMode() {

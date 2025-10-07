@@ -1,7 +1,7 @@
 import { isAxiosError } from 'axios';
-import { api } from './api';
-import { toErrorMessage } from './api';
 import { DocumentDetails, DocumentVariables, ValidationErrors } from '@/types/variables';
+import { api } from './api/core';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export class DocumentApiError extends Error {
   constructor(

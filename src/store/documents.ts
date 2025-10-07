@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { api } from '@/lib/api';
-import { toErrorMessage } from '@/lib/api';
+import { api } from '@/lib/api/core';
+import { toErrorMessage } from '@/utils/errors-messages';
 import { FolderTreeResponse, DriveFile, DocumentStore } from '@/types/documents';
 
 export const useDocumentStore = create<DocumentStore>((set, get) => ({

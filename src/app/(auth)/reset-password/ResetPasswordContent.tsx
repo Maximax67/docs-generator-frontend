@@ -15,11 +15,11 @@ import {
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useUserStore } from '@/store/user';
-import { toErrorMessage } from '@/lib/api';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword } from '@/utils/validators';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export default function ResetPasswordContent() {
   const params = useSearchParams();

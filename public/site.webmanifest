@@ -1,6 +1,7 @@
 {
   "name": "Docs Generator",
   "short_name": "Docs Generator",
+  "description": "Web app for PDF documents creation by KPI Student Council",
   "start_url": "/",
   "icons": [
     {

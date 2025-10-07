@@ -2,8 +2,10 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { api, toErrorMessage } from '@/lib/api';
+import { api } from '@/lib/api/core';
 import { UserState, SessionInfo, User, AllUsersResponse } from '@/types/user';
+import { toErrorMessage } from '@/utils/errors-messages';
+import { markBootstrapComplete } from '@/lib/api/bootstrap';
 
 export const useUserStore = create<UserState>()(
   persist(
@@ -19,13 +21,19 @@ export const useUserStore = create<UserState>()(
       logoutLocal: () => set({ user: null }),
       bootstrap: async () => {
         const storedUser = get().user;
-        if (!storedUser) return;
+        if (!storedUser) {
+          markBootstrapComplete();
+          return;
+        }
+
         try {
           await api.post('/auth/refresh');
           const me = await api.get<User>('/auth/me');
           set({ user: me.data, error: null });
         } catch {
           set({ user: null });
+        } finally {
+          markBootstrapComplete();
         }
       },
       loginWithCredentials: async (email, password) => {
