@@ -18,6 +18,8 @@ export default function VerifyEmailContent() {
   const [countdown, setCountdown] = useState<number>(5);
 
   useEffect(() => {
+    if (success) return;
+
     let intervalId: number | undefined;
 
     const startRedirect = (secs: number) => {
@@ -57,7 +59,7 @@ export default function VerifyEmailContent() {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [token, user, verifyEmail, refeshSession]);
+  }, [token, user, success, verifyEmail, refeshSession]);
 
   useEffect(() => {
     if (countdown === 0 && success) {
