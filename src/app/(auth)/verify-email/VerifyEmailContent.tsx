@@ -39,14 +39,14 @@ export default function VerifyEmailContent() {
       try {
         await verifyEmail(token);
 
+        setSuccess('Пошта підтверджена');
+        startRedirect(5);
+
         if (user) {
           try {
             await refeshSession();
           } catch {}
         }
-
-        setSuccess('Пошта підтверджена');
-        startRedirect(5);
       } catch {
         setError('Не валідний або прострочений токен підтвердження');
       } finally {
@@ -78,7 +78,7 @@ export default function VerifyEmailContent() {
             </>
           )}
 
-          {!loading && error && <Alert severity="error">{error}</Alert>}
+          {!loading && !success && error && <Alert severity="error">{error}</Alert>}
 
           {!loading && success && (
             <>
