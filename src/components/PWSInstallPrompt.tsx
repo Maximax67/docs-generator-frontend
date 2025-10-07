@@ -49,6 +49,12 @@ export default function PWAInstallPrompt() {
       slots={{ transition: Slide }}
       slotProps={{ transition: { direction: 'up' } }}
       message="Install this app?"
+      sx={{
+        '& .MuiPaper-root': {
+          backgroundColor: (theme) => theme.palette.background.paper,
+          color: (theme) => theme.palette.text.primary,
+        },
+      }}
       action={
         <>
           <Button color="primary" size="small" onClick={handleInstallClick}>
