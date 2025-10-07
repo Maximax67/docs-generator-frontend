@@ -15,4 +15,5 @@ module.exports = {
   ],
   changefreq: 'monthly',
   priority: 0.7,
+  trailingSlash: true,
 };
