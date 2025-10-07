@@ -35,7 +35,7 @@ const steps = [
     icon: <CheckCircleIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
   },
   {
-    title: 'Скчай PDF',
+    title: 'Скачай PDF',
     description: 'Завантаж або роздрукуй документ',
     icon: <SaveAltIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
   },
