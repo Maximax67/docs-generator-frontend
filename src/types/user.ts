@@ -49,6 +49,7 @@ export type UserState = {
   changePasswordWithToken: (token: string, newPassword: string) => Promise<void>;
   logoutEverywhere: () => Promise<void>;
   logout: () => Promise<void>;
+  refeshSession: () => Promise<void>;
   sendEmailConfirmation: () => Promise<void>;
   confirmEmail: (userId: string) => Promise<void>;
   revokeConfirmEmail: (userId: string) => Promise<void>;

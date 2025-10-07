@@ -344,8 +344,13 @@ export default function ProfilePage() {
         await changeUserEmail(targetUser._id, newEmail);
         targetUser.email = newEmail;
       }
+
       setEmailOpen(false);
       setNewEmail('');
+
+      if (isOwnProfile) {
+        router.push('/login');
+      }
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалося змінити пошту'));
     } finally {

@@ -111,6 +111,11 @@ export const useUserStore = create<UserState>()(
           set({ user: null });
         }
       },
+      refeshSession: async () => {
+        await api.post('/auth/refresh');
+        const me = await api.get<User>('/auth/me');
+        set({ user: me.data });
+      },
       sendEmailConfirmation: async () => {
         await api.post('/auth/email/send-confirmation');
       },
@@ -176,8 +181,7 @@ export const useUserStore = create<UserState>()(
       },
       changeEmail: async (newEmail: string) => {
         await api.post('/auth/email/change', { new_email: newEmail });
-        const me = await api.get<User>('/auth/me');
-        set({ user: me.data });
+        set({ user: null });
       },
       changePassword: async (oldPassword: string, newPassword: string) => {
         const u = get().user;

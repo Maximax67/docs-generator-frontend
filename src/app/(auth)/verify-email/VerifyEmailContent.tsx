@@ -11,7 +11,7 @@ export default function VerifyEmailContent() {
   const params = useSearchParams();
   const token = params.get('token');
   const router = useRouter();
-  const { user, verifyEmail } = useUserStore();
+  const { user, verifyEmail, refeshSession } = useUserStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -36,6 +36,13 @@ export default function VerifyEmailContent() {
 
       try {
         await verifyEmail(token);
+
+        if (user) {
+          try {
+            await refeshSession();
+          } catch {}
+        }
+
         setSuccess('Пошта підтверджена');
         startRedirect(5);
       } catch {
@@ -50,7 +57,7 @@ export default function VerifyEmailContent() {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [token, verifyEmail]);
+  }, [token, user, verifyEmail, refeshSession]);
 
   useEffect(() => {
     if (countdown === 0 && success) {
