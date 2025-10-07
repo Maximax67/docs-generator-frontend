@@ -60,6 +60,7 @@ export interface DocumentStore {
   previews: Record<string, DocumentPreview>;
 
   fetchFolderTree: () => Promise<void>;
+  clearTreeError: () => void;
   selectDocument: (document: DriveFile) => void;
   fetchPreview: (documentId: string) => Promise<void>;
   clearPreview: (documentId: string) => void;

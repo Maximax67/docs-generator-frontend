@@ -12,11 +12,14 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
+  Container,
+  Button,
 } from '@mui/material';
 import {
   Folder as FolderIcon,
   FolderOpen as FolderOpenIcon,
   Description as FileIcon,
+  Refresh as RefreshIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material';
@@ -120,13 +123,31 @@ const FolderTreeItem: FC<FolderTreeItemProps> = ({ item, onDocumentSelect, level
 };
 
 export const DocumentTree: FC<DocumentTreeProps> = ({ onDocumentSelect }) => {
-  const { folderTree, treeLoading, treeError, fetchFolderTree } = useDocumentStore();
+  const { folderTree, treeLoading, treeError, fetchFolderTree, clearTreeError } =
+    useDocumentStore();
 
   useEffect(() => {
-    if (!folderTree && !treeLoading) {
+    if (!folderTree && !treeLoading && !treeError) {
       fetchFolderTree();
     }
-  }, [folderTree, treeLoading, fetchFolderTree]);
+  }, [folderTree, treeLoading, treeError, fetchFolderTree]);
+
+  if (treeError) {
+    return (
+      <Container maxWidth="md" sx={{ py: 2 }}>
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={clearTreeError}>
+              <RefreshIcon sx={{ mr: 1 }} />
+            </Button>
+          }
+        >
+          {treeError}
+        </Alert>
+      </Container>
+    );
+  }
 
   if (treeLoading) {
     return (
@@ -140,14 +161,6 @@ export const DocumentTree: FC<DocumentTreeProps> = ({ onDocumentSelect }) => {
       >
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (treeError) {
-    return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        {treeError}
-      </Alert>
     );
   }
 

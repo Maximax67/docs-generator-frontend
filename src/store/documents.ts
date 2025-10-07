@@ -27,6 +27,10 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
     }
   },
 
+  clearTreeError: () => {
+    set({ treeError: null });
+  },
+
   selectDocument: (document: DriveFile) => {
     set({ selectedDocument: document });
 
