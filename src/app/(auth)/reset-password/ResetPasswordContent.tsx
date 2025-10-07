@@ -19,6 +19,7 @@ import { toErrorMessage } from '@/lib/api';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthScaffold from '@/components/AuthScaffold';
+import { validateEmail, validatePassword } from '@/utils/validators';
 
 export default function ResetPasswordContent() {
   const params = useSearchParams();
@@ -30,10 +31,24 @@ export default function ResetPasswordContent() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
 
   useEffect(() => {
     setError(null);
   }, []);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEmail(val);
+    setEmailError(val && !validateEmail(val) ? 'Не правильна електронна пошта' : '');
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPassword(val);
+    setPasswordError(val && !validatePassword(val) ? 'Пароль має бути від 8 до 32 символів' : '');
+  };
 
   const onRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,12 +102,14 @@ export default function ResetPasswordContent() {
                   label="Новий пароль"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   disabled={loading}
                   required
                   fullWidth
                   size="medium"
                   autoComplete="new-password"
+                  error={!!passwordError}
+                  helperText={passwordError}
                   slotProps={{
                     input: {
                       endAdornment: (
@@ -113,7 +130,7 @@ export default function ResetPasswordContent() {
                   type="submit"
                   variant="contained"
                   size="large"
-                  disabled={loading}
+                  disabled={loading || !password || !!passwordError}
                   startIcon={loading ? <CircularProgress size={18} color="inherit" /> : undefined}
                   sx={{
                     py: 1.25,
@@ -146,18 +163,20 @@ export default function ResetPasswordContent() {
                   label="Ел. пошта"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   disabled={loading}
                   required
                   fullWidth
                   size="medium"
                   autoComplete="email"
+                  error={!!emailError}
+                  helperText={emailError}
                 />
                 <Button
                   type="submit"
                   variant="contained"
                   size="large"
-                  disabled={loading}
+                  disabled={loading || !email || !!emailError}
                   startIcon={loading ? <CircularProgress size={18} color="inherit" /> : undefined}
                   sx={{
                     py: 1.25,

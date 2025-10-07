@@ -10,6 +10,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { validatePassword } from '@/utils/validators';
 
 type ChangePasswordDialogProps = {
   open: boolean;
@@ -40,6 +41,15 @@ export default function ChangePasswordDialog({
   onToggleNew,
   onSubmit,
 }: ChangePasswordDialogProps) {
+  const oldPasswordError = oldPassword && !validatePassword(oldPassword);
+  const newPasswordError = newPassword && !validatePassword(newPassword);
+  const isDisabled =
+    loading ||
+    !oldPassword ||
+    !newPassword ||
+    !!oldPasswordError ||
+    !!newPasswordError;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>Зміна пароля</DialogTitle>
@@ -54,18 +64,22 @@ export default function ChangePasswordDialog({
           fullWidth
           size="medium"
           margin="dense"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={onToggleOld}
-                  edge="end"
-                >
-                  {showOld ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
+          error={!!oldPasswordError}
+          helperText={oldPasswordError ? 'Пароль має бути від 8 до 32 символів' : ''}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={onToggleOld}
+                    edge="end"
+                  >
+                    {showOld ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
@@ -78,28 +92,28 @@ export default function ChangePasswordDialog({
           fullWidth
           size="medium"
           margin="dense"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={onToggleNew}
-                  edge="end"
-                >
-                  {showNew ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
+          error={!!newPasswordError}
+          helperText={newPasswordError ? 'Пароль має бути від 8 до 32 символів' : ''}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={onToggleNew}
+                    edge="end"
+                  >
+                    {showNew ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
       </DialogContent>
       <DialogActions sx={{ p: 2, pt: 0 }}>
         <Button onClick={onClose}>Скасувати</Button>
-        <Button
-          variant="contained"
-          onClick={onSubmit}
-          disabled={loading || !oldPassword || newPassword.length < 8}
-        >
+        <Button variant="contained" onClick={onSubmit} disabled={isDisabled}>
           Зберегти
         </Button>
       </DialogActions>

@@ -18,6 +18,7 @@ import { useUserStore } from '@/store/user';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthScaffold from '@/components/AuthScaffold';
+import { validateEmail, validatePassword } from '@/utils/validators';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,6 +26,32 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEmail(val);
+    setEmailError(val && !validateEmail(val) ? 'Не правильна електронна пошта' : '');
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPassword(val);
+    setPasswordError(val && !validatePassword(val) ? 'Пароль має бути від 8 до 32 символів' : '');
+  };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((v) => !v);
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const ok = await loginWithCredentials(email, password);
+    if (ok) router.push('/profile');
+  };
+
+  const isFormValid = email && password && !emailError && !passwordError;
 
   useEffect(() => {
     if (user) {
@@ -35,12 +62,6 @@ export default function LoginPage() {
   useEffect(() => {
     clearError();
   }, [clearError]);
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const ok = await loginWithCredentials(email, password);
-    if (ok) router.push('/profile');
-  };
 
   return (
     <AuthScaffold
@@ -54,17 +75,19 @@ export default function LoginPage() {
             label="Ел. пошта"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             required
             fullWidth
             size="medium"
             autoComplete="email"
+            error={!!emailError}
+            helperText={emailError}
           />
           <TextField
             label="Пароль"
             type={showPassword ? 'text' : 'password'}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             required
             fullWidth
             size="medium"
@@ -75,7 +98,7 @@ export default function LoginPage() {
                   <InputAdornment position="end">
                     <IconButton
                       aria-label="toggle password visibility"
-                      onClick={() => setShowPassword((v) => !v)}
+                      onClick={handleTogglePasswordVisibility}
                       edge="end"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -84,13 +107,15 @@ export default function LoginPage() {
                 ),
               },
             }}
+            error={!!passwordError}
+            helperText={passwordError}
           />
 
           <Button
             type="submit"
             variant="contained"
             size="large"
-            disabled={loading}
+            disabled={loading || !isFormValid}
             sx={{
               py: 1.25,
               borderRadius: 3,
