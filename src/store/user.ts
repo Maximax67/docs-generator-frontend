@@ -28,13 +28,12 @@ export const useUserStore = create<UserState>()(
           set({ user: null });
         }
       },
-      loginWithCredentials: async (email, password, sessionName) => {
+      loginWithCredentials: async (email, password) => {
         set({ loading: true, error: null });
         try {
           await api.post('/auth/login', {
             email,
             password,
-            session_name: sessionName,
           });
           const me = await api.get<User>('/auth/me');
           set({ user: me.data, loading: false });
@@ -52,7 +51,6 @@ export const useUserStore = create<UserState>()(
             first_name: payload.first_name,
             last_name: payload.last_name,
             password: payload.password,
-            session_name: payload.session_name,
           });
           const me = await api.get<User>('/auth/me');
           set({ user: me.data, loading: false });

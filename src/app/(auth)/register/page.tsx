@@ -15,7 +15,6 @@ import {
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useUserStore } from '@/store/user';
-import { getBrowserSessionName } from '@/utils/session';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthScaffold from '@/components/AuthScaffold';
@@ -46,7 +45,6 @@ export default function RegisterPage() {
       first_name: firstName,
       last_name: lastName,
       password,
-      session_name: getBrowserSessionName(),
     });
     if (ok) router.push('/profile');
   };

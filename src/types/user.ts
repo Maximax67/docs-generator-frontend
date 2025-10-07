@@ -38,13 +38,12 @@ export type UserState = {
   clearError: () => void;
   logoutLocal: () => void;
   bootstrap: () => Promise<void>;
-  loginWithCredentials: (email: string, password: string, sessionName?: string) => Promise<boolean>;
+  loginWithCredentials: (email: string, password: string) => Promise<boolean>;
   registerWithCredentials: (payload: {
     email: string;
     first_name: string;
     last_name?: string;
     password: string;
-    session_name?: string;
   }) => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<void>;
   changePasswordWithToken: (token: string, newPassword: string) => Promise<void>;

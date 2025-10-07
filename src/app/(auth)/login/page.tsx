@@ -15,7 +15,6 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
-import { getBrowserSessionName } from '@/utils/session';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthScaffold from '@/components/AuthScaffold';
@@ -39,7 +38,7 @@ export default function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await loginWithCredentials(email, password, getBrowserSessionName());
+    const ok = await loginWithCredentials(email, password);
     if (ok) router.push('/profile');
   };
 
