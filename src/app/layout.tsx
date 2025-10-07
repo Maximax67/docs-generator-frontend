@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import RegisterSW from '../components/RegisterSW';
 import AppThemeProvider from './providers';
 import EmotionCacheProvider from './emotion';
 import Header from '@/components/Header';
 import RateLimitOverlay from '../components/RateLimitOverlay';
 
 import './globals.css';
+import PWAInstallPrompt from '@/components/PWSInstallPrompt';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -41,6 +43,8 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <EmotionCacheProvider>
           <AppThemeProvider>
+            <RegisterSW />
+            <PWAInstallPrompt />
             <Header />
             {children}
             <RateLimitOverlay />

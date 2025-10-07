@@ -1,0 +1,64 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Snackbar, Button, IconButton, Slide } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
+export default function PWAInstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      if (localStorage.getItem('pwaPromptShown')) return;
+
+      const event = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(event);
+      setShowPrompt(true);
+      localStorage.setItem('pwaPromptShown', 'true');
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    await deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    console.log(`User ${outcome === 'accepted' ? 'accepted' : 'dismissed'} install`);
+
+    setDeferredPrompt(null);
+    setShowPrompt(false);
+  };
+
+  const handleClose = () => setShowPrompt(false);
+
+  return (
+    <Snackbar
+      open={showPrompt}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      slots={{ transition: Slide }}
+      slotProps={{ transition: { direction: 'up' } }}
+      message="Install this app?"
+      action={
+        <>
+          <Button color="primary" size="small" onClick={handleInstallClick}>
+            Install
+          </Button>
+          <IconButton size="small" aria-label="close" color="inherit" onClick={handleClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </>
+      }
+    />
+  );
+}
