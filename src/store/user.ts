@@ -2,10 +2,11 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { api } from '@/lib/api/core';
+import { api, bootstrapApi } from '@/lib/api/core';
 import { UserState, SessionInfo, User, AllUsersResponse } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { markBootstrapComplete } from '@/lib/api/bootstrap';
+import { isAxiosError } from '@/utils/is-axios-error';
 
 export const useUserStore = create<UserState>()(
   persist(
@@ -27,11 +28,31 @@ export const useUserStore = create<UserState>()(
         }
 
         try {
-          await api.post('/auth/refresh');
-          const me = await api.get<User>('/auth/me');
+          await bootstrapApi.post('/auth/refresh');
+          const me = await bootstrapApi.get<User>('/auth/me');
           set({ user: me.data, error: null });
-        } catch {
-          set({ user: null });
+        } catch (error: unknown) {
+          if (isAxiosError(error)) {
+            const status = error.response?.status;
+            switch (status) {
+              case 401:
+                set({ user: null });
+                break;
+
+              case 429:
+                set({ error: 'Too many requests, please try again later.' });
+                break;
+
+              default:
+                const message = toErrorMessage(error, `Server error: ${status ?? 'unknown'}`);
+                set({ error: message });
+                break;
+            }
+          } else if (error instanceof Error) {
+            set({ error: error.message });
+          } else {
+            set({ error: 'Сталася помилка' });
+          }
         } finally {
           markBootstrapComplete();
         }

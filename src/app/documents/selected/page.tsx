@@ -330,6 +330,12 @@ export default function DocumentVariablesPage() {
           autoHideDuration={6000}
           onClose={handleCloseToast}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          sx={{
+            '& .MuiPaper-root': {
+              backgroundColor: (theme) => theme.palette.background.paper,
+              color: (theme) => theme.palette.text.primary,
+            },
+          }}
         >
           <Alert onClose={handleCloseToast} severity="error" sx={{ width: '100%' }}>
             {toastMessage}
