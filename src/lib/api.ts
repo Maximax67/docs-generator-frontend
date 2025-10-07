@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useUserStore } from '@/store/user';
 
 export const api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api` || '/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
   withCredentials: true,
 });
 
@@ -79,7 +79,7 @@ api.interceptors.response.use(
         if (requestUrl.includes('/auth/refresh')) {
           try {
             useUserStore.getState().logoutLocal();
-          } catch {}
+          } catch { }
 
           return Promise.reject(error);
         }
@@ -92,7 +92,7 @@ api.interceptors.response.use(
           } catch {
             try {
               useUserStore.getState().logoutLocal();
-            } catch {}
+            } catch { }
 
             return Promise.reject(error);
           }
@@ -130,9 +130,9 @@ api.interceptors.response.use(
         const until = Date.now() + (retryAfterMs ?? 15000);
         try {
           useUserStore.getState().setRateLimit(until);
-        } catch {}
+        } catch { }
       }
-    } catch {}
+    } catch { }
 
     return Promise.reject(error);
   },

@@ -13,9 +13,7 @@ import StepsTimeline from '@/components/Timeline';
 import Features from '@/components/Features';
 
 export default function Home() {
-  const apiDocsUrl = process.env.NEXT_PUBLIC_API_URL
-    ? `${process.env.NEXT_PUBLIC_API_URL}/docs`
-    : 'https://example.com';
+  const swaggerUrl = process.env.NEXT_PUBLIC_SWAGGER_URL || 'https://example.com';
   const postmanUrl = process.env.NEXT_PUBLIC_POSTMAN_URL || 'https://example.com';
 
   return (
@@ -92,7 +90,7 @@ export default function Home() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <Button
                 component={Link}
-                href={apiDocsUrl}
+                href={swaggerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="outlined"
