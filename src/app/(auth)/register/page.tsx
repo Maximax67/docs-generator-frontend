@@ -171,13 +171,7 @@ export default function RegisterPage() {
           />
 
           <FormControlLabel
-            control={
-              <Checkbox
-                checked={agreeTos}
-                onChange={handleAgreeTosChange}
-                required
-              />
-            }
+            control={<Checkbox checked={agreeTos} onChange={handleAgreeTosChange} required />}
             label={
               <Typography component="span" variant="body2">
                 Я погоджуюся з{' '}
@@ -190,6 +184,17 @@ export default function RegisterPage() {
                   }}
                 >
                   умовами користування
+                </Link>{' '}
+                та{' '}
+                <Link
+                  href="/privacy"
+                  style={{
+                    color: 'inherit',
+                    textDecoration: 'underline',
+                    fontWeight: 600,
+                  }}
+                >
+                  політикою конфіденційності
                 </Link>
               </Typography>
             }

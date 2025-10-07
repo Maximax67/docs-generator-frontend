@@ -147,6 +147,18 @@ export default function Home() {
               Відкрити @kpi_docs_bot
             </Button>
           </Paper>
+
+          <Typography variant="body2" sx={{ textAlign: 'center' }}>
+            <Link href="/tos" target="_blank" rel="noopener noreferrer">
+              Умови користування
+            </Link>
+            <Box component="span" sx={{ mx: { xs: 0.5, sm: 1.5 } }}>
+              |
+            </Box>
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer">
+              Політика конфіденційності
+            </Link>
+          </Typography>
         </Stack>
       </Container>
     </Box>

@@ -44,11 +44,7 @@ export default function ChangePasswordDialog({
   const oldPasswordError = oldPassword && !validatePassword(oldPassword);
   const newPasswordError = newPassword && !validatePassword(newPassword);
   const isDisabled =
-    loading ||
-    !oldPassword ||
-    !newPassword ||
-    !!oldPasswordError ||
-    !!newPasswordError;
+    loading || !oldPassword || !newPassword || !!oldPasswordError || !!newPasswordError;
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
