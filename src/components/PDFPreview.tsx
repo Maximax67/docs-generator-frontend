@@ -45,17 +45,66 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
     );
   }
 
+  const documentSelectHandler = () => router.push(`/documents/selected?id=${document.id}`);
+  const openWebViewHandler = () => {
+    if (document.web_view_link) {
+      window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const header = (
+    <Paper
+      elevation={1}
+      sx={{
+        p: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: 1,
+        borderColor: 'divider',
+        flexShrink: 0,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+      }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0, mr: 2 }}>
+        <Typography variant="h6" noWrap>
+          {formatFilename(document.name, document.mime_type)}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Остання зміна: {formatDateTime(new Date(document.modified_time))}
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'flex', gap: 2 }}>
+        <Button size="medium" variant="outlined" onClick={documentSelectHandler}>
+          Обрати
+        </Button>
+        {showWebLink && document.web_view_link && (
+          <IconButton
+            onClick={openWebViewHandler}
+            color="primary"
+            size="small"
+            aria-label="Open in new tab"
+          >
+            <LaunchIcon />
+          </IconButton>
+        )}
+      </Box>
+    </Paper>
+  );
+
+  let previewSection;
   if (preview?.loading) {
-    return (
+    previewSection = (
       <Box
         sx={{
-          p: 2,
-          height: '100%',
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 2,
+          p: 2,
         }}
       >
         <CircularProgress size={40} />
@@ -64,13 +113,11 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
         </Typography>
       </Box>
     );
-  }
-
-  if (preview?.error) {
-    return (
+  } else if (preview?.error) {
+    previewSection = (
       <Box
         sx={{
-          height: '100%',
+          flex: 1,
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
@@ -87,13 +134,11 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
         </IconButton>
       </Box>
     );
-  }
-
-  if (!preview?.url || preview.url === '') {
-    return (
+  } else if (!preview?.url || preview.url === '') {
+    previewSection = (
       <Box
         sx={{
-          height: '100%',
+          flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -105,56 +150,8 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
         </Typography>
       </Box>
     );
-  }
-
-  const documentSelectHandler = () => router.push(`/documents/selected?id=${document.id}`);
-  const openWebViewHandler = () => {
-    if (document.web_view_link) {
-      window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Paper
-        elevation={1}
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: 1,
-          borderColor: 'divider',
-          flexShrink: 0,
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
-        }}
-      >
-        <Box sx={{ flex: 1, minWidth: 0, mr: 2 }}>
-          <Typography variant="h6" noWrap>
-            {formatFilename(document.name, document.mime_type)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Остання зміна: {formatDateTime(new Date(document.modified_time))}
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button size="medium" variant="outlined" onClick={documentSelectHandler}>
-            Обрати
-          </Button>
-          {showWebLink && document.web_view_link && (
-            <IconButton
-              onClick={openWebViewHandler}
-              color="primary"
-              size="small"
-              aria-label="Open in new tab"
-            >
-              <LaunchIcon />
-            </IconButton>
-          )}
-        </Box>
-      </Paper>
-
+  } else {
+    previewSection = (
       <Box
         sx={{
           flex: 1,
@@ -165,6 +162,13 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
       >
         <PDFViewerClient url={preview.url} className="h-full" />
       </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {header}
+      {previewSection}
     </Box>
   );
 };
