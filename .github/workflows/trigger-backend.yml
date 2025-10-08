@@ -1,0 +1,20 @@
+name: Trigger backend build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repository dispatch to backend
+        env:
+          GH_TOKEN: ${{ secrets.BACKEND_REPO_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/Maximax67/docs-generator/dispatches \
+            -d '{"event_type": "frontend_updated", "client_payload": {"ref": "${{ github.ref }}", "repo": "frontend"}}'
