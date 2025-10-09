@@ -1,8 +1,10 @@
 import { FC } from 'react';
 import { Chip, ChipProps } from '@mui/material';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import PersonIcon from '@mui/icons-material/Person';
-import BoltIcon from '@mui/icons-material/Bolt';
+import {
+  AdminPanelSettings as AdminPanelSettingsIcon,
+  Person as PersonIcon,
+  Bolt as BoltIcon,
+} from '@mui/icons-material';
 import { UserRole } from '@/types/user';
 
 type RoleChipInputProps = {

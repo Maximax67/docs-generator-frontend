@@ -7,11 +7,13 @@ import {
   TimelineContent,
   TimelineDot,
 } from '@mui/lab';
-import DescriptionIcon from '@mui/icons-material/Description';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import SaveAltIcon from '@mui/icons-material/SaveAlt';
+import {
+  Description as DescriptionIcon,
+  Visibility as VisibilityIcon,
+  Edit as EditIcon,
+  CheckCircle as CheckCircleIcon,
+  SaveAlt as SaveAltIcon,
+} from '@mui/icons-material';
 
 const steps = [
   {

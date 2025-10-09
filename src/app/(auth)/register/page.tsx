@@ -17,8 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useUserStore } from '@/store/user';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword, validateName } from '@/utils/validators';
 

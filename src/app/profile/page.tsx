@@ -19,11 +19,15 @@ import DeleteAccountDialog from './dialogs/DeleteAccountDialog';
 
 import { useUserStore } from '@/store/user';
 import { SessionInfo } from '@/types/user';
-import { AllVariablesResponse, DocumentVariable, VariableType } from '@/types/variables';
+import { AllVariablesResponse, DocumentVariable } from '@/types/variables';
 import { getInitialFormValues } from '@/lib/validation';
 import { filterSavedVariables } from '@/utils/filter-saved-variables';
 import { api } from '@/lib/api/core';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { ProfileTab } from '@/types/profile';
+import GenerationSection from './sections/GenerationSection';
+import { useGenerationsStore } from '@/store/generations';
+import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -58,10 +62,21 @@ export default function ProfilePage() {
     clearUserSavedVariables,
     deleteUser,
   } = useUserStore();
+  const {
+    generations,
+    meta,
+    fetchGenerations,
+    deleteGeneration,
+    deleteAllUserGenerations,
+    regenerateGeneration,
+  } = useGenerationsStore();
 
-  const [active, setActive] = useState<'info' | 'vars' | 'sessions' | 'logout'>('info');
+  const [active, setActive] = useState<ProfileTab>('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [generationPage, setGenerationPage] = useState(1);
+  const [generationVariableView, setGenerationVariableView] = useState<'table' | 'json'>('table');
 
   const [emailOpen, setEmailOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -92,9 +107,7 @@ export default function ProfilePage() {
 
     const newAllVars: Record<string, DocumentVariable> = {};
     for (const variable of allVarsResponse.data.variables) {
-      if (variable.type !== VariableType.CONSTANT) {
-        newAllVars[variable.variable] = variable;
-      }
+      newAllVars[variable.variable] = variable;
     }
     setAllVars(newAllVars);
 
@@ -114,6 +127,21 @@ export default function ProfilePage() {
     setSavedDataValues(initialValues);
   }, [getSavedVariables, getUserSavedVariables, isOwnProfile, targetUser?._id]);
 
+  const fetchUserGenerations = useCallback(
+    async (page: number) => {
+      if (!targetUser?._id) return;
+
+      try {
+        await fetchGenerations(page, undefined, targetUser._id);
+      } catch (e) {
+        setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchGenerations, targetUser?._id],
+  );
+
   useEffect(() => {
     const load = async () => {
       if (!targetUser?._id) return;
@@ -128,6 +156,7 @@ export default function ProfilePage() {
           }
 
           await updateVariables();
+          await fetchUserGenerations(1);
         }
       } catch (e) {
         setError(toErrorMessage(e, 'Помилка завантаження даних'));
@@ -139,6 +168,7 @@ export default function ProfilePage() {
     targetUser?._id,
     updateVariables,
     listSessions,
+    fetchUserGenerations,
     isOwnProfile,
     loadingAttempted,
     setLoadingAttempted,
@@ -413,6 +443,42 @@ export default function ProfilePage() {
     }
   };
 
+  const handleRegenerateGeneration = async (id: string, oldConstants: boolean) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const blob = await regenerateGeneration(id, oldConstants);
+      await savePdfToIndexedDb('generatedPdf', blob);
+
+      window.open('/documents/result', '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteGeneration = (id: string) =>
+    withAsyncHandler(() => deleteGeneration(id), 'Не вдалось видалити генерацію');
+
+  const handleDeleteAllGenerations = () =>
+    withAsyncHandler(
+      () => deleteAllUserGenerations(targetUser._id),
+      'Не вдалось видалити всі генерації',
+    );
+
+  const handleChangeGenerationPage = (page: number) =>
+    withAsyncHandler(async () => {
+      await fetchUserGenerations(page);
+      setGenerationPage(page);
+    }, 'Не вдалось отримати список генерацій');
+
+  const handleRefreshGenerations = () =>
+    withAsyncHandler(
+      () => fetchUserGenerations(generationPage),
+      'Не вдалось отримати список генерацій',
+    );
+
   return (
     <Container sx={{ py: { xs: 2, md: 6 } }}>
       <ProfileLayout
@@ -457,6 +523,28 @@ export default function ProfilePage() {
             onPromote={handlePromoteUser}
             onDemote={handleDemoteUser}
             onDelete={() => setOpenDeleteDialog(true)}
+          />
+        )}
+
+        {active === 'generations' && (
+          <GenerationSection
+            deleteAllowed={
+              isOwnProfile ||
+              currentUser.role === 'god' ||
+              (currentUser.role === 'admin' && targetUser.role === 'user')
+            }
+            isAdmin={currentUser.role == 'admin' || currentUser.role === 'god'}
+            loading={loading}
+            generations={generations}
+            meta={meta}
+            allVars={allVars}
+            variableView={generationVariableView}
+            setVariableView={setGenerationVariableView}
+            onDelete={handleDeleteGeneration}
+            onRefresh={handleRefreshGenerations}
+            onChangePage={handleChangeGenerationPage}
+            onRegenerate={handleRegenerateGeneration}
+            onDeleteAll={handleDeleteAllGenerations}
           />
         )}
 

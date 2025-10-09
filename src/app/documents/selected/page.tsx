@@ -32,6 +32,7 @@ import { VariableInput } from '@/components/VariableInput';
 import { useUserStore } from '@/store/user';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
+import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
 
 export default function DocumentVariablesPage() {
   const router = useRouter();
@@ -155,8 +156,7 @@ export default function DocumentVariablesPage() {
 
     try {
       const blob = await documentApi.generateDocument(documentId, formValues, user?._id);
-      const pdfUrl = window.URL.createObjectURL(blob);
-      sessionStorage.setItem('generatedPdfUrl', pdfUrl);
+      await savePdfToIndexedDb('generatedPdf', blob);
 
       router.push('/documents/result');
     } catch (err: unknown) {

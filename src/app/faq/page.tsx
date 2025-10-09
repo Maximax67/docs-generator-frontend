@@ -1,7 +1,7 @@
 'use client';
 
 import { faq } from '@/app/faq/data';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material';
 import {
   Accordion,
   AccordionSummary,

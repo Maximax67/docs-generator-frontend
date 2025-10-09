@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stack, Typography, Button } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
+import { Logout as LogoutIcon } from '@mui/icons-material';
 
 type LogoutSectionProps = {
   onLogout: () => void;

@@ -77,3 +77,9 @@ export interface SavedVariable {
   created_at: string;
   updated_at: string;
 }
+
+export const VariableTypeNames: Record<VariableType, string> = {
+  [VariableType.CONSTANT]: 'Константа',
+  [VariableType.PLAIN]: 'Текст',
+  [VariableType.MULTICHOICE]: 'Вибір',
+};

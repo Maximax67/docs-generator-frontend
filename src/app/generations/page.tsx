@@ -32,7 +32,6 @@ import {
   Replay as ReplayIcon,
   Refresh as RefreshIcon,
   Restore as RestoreIcon,
-  Error as ErrorIcon,
   HorizontalRule as HorizontalRuleIcon,
 } from '@mui/icons-material';
 import { Fragment, useCallback, useEffect, useState } from 'react';
@@ -45,14 +44,16 @@ import { formatDateTime } from '@/utils/dates';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { AllVariablesResponse, DocumentVariable } from '@/types/variables';
 import { api } from '@/lib/api/core';
-import { validateVariableValue } from '@/lib/validation';
+import { GenerationVariables } from '@/components/GenerationVariables';
+import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
 
 export default function GenerationsPage() {
   const { user } = useUserStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [resultsFetched, setResultsFetched] = useState(false);
-  const { results, meta, fetchResults, deleteResult, regenerateResult } = useGenerationsStore();
+  const [generationsFetched, setGenerationsFetched] = useState(false);
+  const { generations, meta, fetchGenerations, deleteGeneration, regenerateGeneration } =
+    useGenerationsStore();
 
   const [variableView, setVariableView] = useState<'table' | 'json'>('table');
   const [allVars, setAllVars] = useState<Record<string, DocumentVariable>>({});
@@ -68,7 +69,7 @@ export default function GenerationsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      await fetchResults(page);
+      await fetchGenerations(page);
 
       if (!allVarsLoaded) {
         const allVarsResponse = await api.get<AllVariablesResponse>('/config/variables');
@@ -84,14 +85,14 @@ export default function GenerationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [fetchResults, page, allVarsLoaded]);
+  }, [fetchGenerations, page, allVarsLoaded]);
 
   useEffect(() => {
-    if (!resultsFetched && user && (user.role === 'admin' || user.role === 'god')) {
-      setResultsFetched(true);
+    if (!generationsFetched && user && (user.role === 'admin' || user.role === 'god')) {
+      setGenerationsFetched(true);
       fetchData();
     }
-  }, [user, resultsFetched, fetchData]);
+  }, [user, generationsFetched, fetchData]);
 
   if (!user) {
     return (
@@ -138,7 +139,7 @@ export default function GenerationsPage() {
     );
   }
 
-  if (!results.length) {
+  if (!generations.length) {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="info">Немає згенерованих документів</Alert>
@@ -146,14 +147,13 @@ export default function GenerationsPage() {
     );
   }
 
-  const handleRegenerateResult = async (id: string, oldConstants: boolean) => {
+  const handleRegenerateGeneration = async (id: string, oldConstants: boolean) => {
     setDisabledUI(true);
     try {
-      const blob = await regenerateResult(id, oldConstants);
-      const pdfUrl = window.URL.createObjectURL(blob);
-      sessionStorage.setItem('generatedPdfUrl', pdfUrl);
+      const blob = await regenerateGeneration(id, oldConstants);
+      await savePdfToIndexedDb('generatedPdf', blob);
 
-      window.open('/documents/result');
+      window.open('/documents/result', '_blank', 'noopener,noreferrer');
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
     } finally {
@@ -161,10 +161,10 @@ export default function GenerationsPage() {
     }
   };
 
-  const handleDeleteResult = async (id: string) => {
+  const handleDeleteGeneration = async (id: string) => {
     setDisabledUI(true);
     try {
-      await deleteResult(id);
+      await deleteGeneration(id);
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
     } finally {
@@ -174,7 +174,7 @@ export default function GenerationsPage() {
 
   const handleChangePage = async (page: number) => {
     setPage(page);
-    setResultsFetched(false);
+    setGenerationsFetched(false);
   };
 
   return (
@@ -210,18 +210,18 @@ export default function GenerationsPage() {
 
       {isMobile ? (
         <Stack spacing={2}>
-          {results.map((result) => {
-            const isExpanded = expanded === result._id;
+          {generations.map((generation) => {
+            const isExpanded = expanded === generation._id;
             return (
-              <Card key={result._id} variant="outlined">
+              <Card key={generation._id} variant="outlined">
                 <CardContent>
                   <Stack spacing={1}>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight="bold">{result.template_name}</Typography>
+                      <Typography fontWeight="bold">{generation.template_name}</Typography>
                       <Stack direction="row" spacing={0.5}>
                         <IconButton
                           component={Link}
-                          href={`https://docs.google.com/document/d/${result.template_id}`}
+                          href={`https://docs.google.com/document/d/${generation.template_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           size="small"
@@ -232,7 +232,7 @@ export default function GenerationsPage() {
                         <IconButton
                           size="small"
                           disabled={disabledUI}
-                          onClick={() => handleRegenerateResult(result._id, false)}
+                          onClick={() => handleRegenerateGeneration(generation._id, false)}
                           title="Перегенерувати"
                         >
                           <ReplayIcon fontSize="small" />
@@ -240,7 +240,7 @@ export default function GenerationsPage() {
                         <IconButton
                           size="small"
                           disabled={disabledUI}
-                          onClick={() => handleRegenerateResult(result._id, true)}
+                          onClick={() => handleRegenerateGeneration(generation._id, true)}
                           title="Перегенерувати зі старими значеннями"
                         >
                           <RestoreIcon fontSize="small" />
@@ -249,7 +249,7 @@ export default function GenerationsPage() {
                           size="small"
                           color="error"
                           disabled={disabledUI}
-                          onClick={() => handleDeleteResult(result._id)}
+                          onClick={() => handleDeleteGeneration(generation._id)}
                           title="Видалити"
                         >
                           <DeleteIcon fontSize="small" />
@@ -257,15 +257,15 @@ export default function GenerationsPage() {
                       </Stack>
                     </Box>
 
-                    {result.user ? (
+                    {generation.user ? (
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <Typography variant="body2">
-                          {`${result.user.first_name} ${result.user.last_name ?? ''}`}
+                          {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
                         </Typography>
-                        <RoleChip role={result.user.role} />
+                        <RoleChip role={generation.user.role} />
                         <IconButton
                           component={Link}
-                          href={`/profile?id=${result.user.id}`}
+                          href={`/profile?id=${generation.user.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           size="small"
@@ -278,81 +278,30 @@ export default function GenerationsPage() {
                     )}
 
                     <Typography variant="body2" color="text.secondary">
-                      {formatDateTime(new Date(result.created_at))}
+                      {formatDateTime(new Date(generation.created_at))}
                     </Typography>
 
-                    {Object.entries(result.variables).length > 0 && (
+                    {Object.entries(generation.variables).length > 0 && (
                       <>
                         <Divider />
                         <Button
                           variant="text"
                           size="small"
                           startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
-                          onClick={() => setExpanded(isExpanded ? null : result._id)}
+                          onClick={() => setExpanded(isExpanded ? null : generation._id)}
                           sx={{ alignSelf: 'flex-start' }}
                         >
                           {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
                         </Button>
 
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          {variableView === 'json' ? (
-                            <Box
-                              sx={{
-                                p: 1.5,
-                                borderRadius: 2,
-                                fontFamily: 'monospace',
-                                fontSize: 13,
-                                overflowX: 'auto',
-                              }}
-                            >
-                              <pre style={{ margin: 0 }}>
-                                {JSON.stringify(result.variables, null, 2)}
-                              </pre>
-                            </Box>
-                          ) : (
-                            <Box sx={{ p: 1.5, overflowX: 'auto' }}>
-                              <Table size="small">
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell>Змінна</TableCell>
-                                    <TableCell>Тип</TableCell>
-                                    <TableCell>Значення</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {Object.entries(result.variables).map(([variableName, value]) => {
-                                    const variableMeta = allVars[variableName];
-                                    const validationError = variableMeta
-                                      ? validateVariableValue(variableMeta, value)
-                                      : 'Змінна не існує';
-
-                                    const displayName = variableMeta
-                                      ? variableMeta.name
-                                      : variableName;
-
-                                    return (
-                                      <TableRow key={variableName}>
-                                        <TableCell>
-                                          {validationError && (
-                                            <span title={validationError}>
-                                              <ErrorIcon
-                                                fontSize="small"
-                                                color="error"
-                                                sx={{ mr: 0.5 }}
-                                              />
-                                            </span>
-                                          )}
-                                          {displayName}
-                                        </TableCell>
-                                        <TableCell>{variableMeta?.type ?? '?'}</TableCell>
-                                        <TableCell>{value}</TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                                </TableBody>
-                              </Table>
-                            </Box>
-                          )}
+                          <GenerationVariables
+                            fullWidth
+                            showConstantsInTable
+                            allVars={allVars}
+                            variables={generation.variables}
+                            view={variableView}
+                          />
                         </Collapse>
                       </>
                     )}
@@ -376,24 +325,24 @@ export default function GenerationsPage() {
           </TableHead>
 
           <TableBody>
-            {results.map((result, index) => {
-              const isExpanded = expanded === result._id;
+            {generations.map((generation, index) => {
+              const isExpanded = expanded === generation._id;
               return (
                 <Fragment key={index}>
-                  <TableRow key={result._id}>
+                  <TableRow key={generation._id}>
                     <TableCell>
-                      <Typography fontWeight="bold">{result.template_name}</Typography>
+                      <Typography fontWeight="bold">{generation.template_name}</Typography>
                     </TableCell>
 
                     <TableCell>
-                      {result.user ? (
+                      {generation.user ? (
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <Typography>
-                            {`${result.user.first_name} ${result.user.last_name ?? ''}`}
+                            {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
                           </Typography>
                           <IconButton
                             component={Link}
-                            href={`/profile?id=${result.user.id}`}
+                            href={`/profile?id=${generation.user.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             size="small"
@@ -407,18 +356,18 @@ export default function GenerationsPage() {
                     </TableCell>
 
                     <TableCell>
-                      {result.user ? (
-                        <RoleChip role={result.user.role} />
+                      {generation.user ? (
+                        <RoleChip role={generation.user.role} />
                       ) : (
                         <HorizontalRuleIcon color="disabled" />
                       )}
                     </TableCell>
 
-                    <TableCell>{formatDateTime(new Date(result.created_at))}</TableCell>
+                    <TableCell>{formatDateTime(new Date(generation.created_at))}</TableCell>
 
                     <TableCell>
-                      {Object.entries(result.variables).length > 0 ? (
-                        <IconButton onClick={() => setExpanded(isExpanded ? null : result._id)}>
+                      {Object.entries(generation.variables).length > 0 ? (
+                        <IconButton onClick={() => setExpanded(isExpanded ? null : generation._id)}>
                           {isExpanded ? <ExpandLess /> : <ExpandMore />}
                         </IconButton>
                       ) : (
@@ -432,7 +381,7 @@ export default function GenerationsPage() {
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
                         <IconButton
                           component={Link}
-                          href={`https://docs.google.com/document/d/${result.template_id}`}
+                          href={`https://docs.google.com/document/d/${generation.template_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           title="Відкрити шаблон"
@@ -440,14 +389,14 @@ export default function GenerationsPage() {
                           <LaunchIcon />
                         </IconButton>
                         <IconButton
-                          onClick={() => handleRegenerateResult(result._id, false)}
+                          onClick={() => handleRegenerateGeneration(generation._id, false)}
                           disabled={disabledUI}
                           title="Перегенерувати"
                         >
                           <ReplayIcon />
                         </IconButton>
                         <IconButton
-                          onClick={() => handleRegenerateResult(result._id, true)}
+                          onClick={() => handleRegenerateGeneration(generation._id, true)}
                           disabled={disabledUI}
                           title="Перегенерувати зі старими значеннями"
                         >
@@ -455,7 +404,7 @@ export default function GenerationsPage() {
                         </IconButton>
                         <IconButton
                           color="error"
-                          onClick={() => handleDeleteResult(result._id)}
+                          onClick={() => handleDeleteGeneration(generation._id)}
                           disabled={disabledUI}
                           title="Видалити"
                         >
@@ -467,66 +416,14 @@ export default function GenerationsPage() {
 
                   <TableRow>
                     <TableCell colSpan={6} sx={{ p: 0 }}>
-                      {Object.entries(result.variables).length > 0 && (
+                      {Object.entries(generation.variables).length > 0 && (
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          {variableView === 'json' ? (
-                            <Box
-                              sx={{
-                                p: 1.5,
-                                borderRadius: 2,
-                                fontFamily: 'monospace',
-                                fontSize: 13,
-                                overflowX: 'auto',
-                              }}
-                            >
-                              <pre style={{ margin: 0 }}>
-                                {JSON.stringify(result.variables, null, 2)}
-                              </pre>
-                            </Box>
-                          ) : (
-                            <Box sx={{ p: 1.5, overflowX: 'auto' }}>
-                              <Table size="small" sx={{ tableLayout: 'auto', width: 'auto' }}>
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell>Змінна</TableCell>
-                                    <TableCell>Тип</TableCell>
-                                    <TableCell>Значення</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {Object.entries(result.variables).map(([variableName, value]) => {
-                                    const variableMeta = allVars[variableName];
-                                    const validationError = variableMeta
-                                      ? validateVariableValue(variableMeta, value)
-                                      : 'Змінна не існує';
-
-                                    const displayName = variableMeta
-                                      ? variableMeta.name
-                                      : variableName;
-
-                                    return (
-                                      <TableRow key={variableName}>
-                                        <TableCell>
-                                          {validationError && (
-                                            <span title={validationError}>
-                                              <ErrorIcon
-                                                fontSize="small"
-                                                color="error"
-                                                sx={{ mr: 0.5 }}
-                                              />
-                                            </span>
-                                          )}
-                                          {displayName}
-                                        </TableCell>
-                                        <TableCell>{variableMeta?.type ?? '?'}</TableCell>
-                                        <TableCell>{value}</TableCell>
-                                      </TableRow>
-                                    );
-                                  })}
-                                </TableBody>
-                              </Table>
-                            </Box>
-                          )}
+                          <GenerationVariables
+                            showConstantsInTable
+                            allVars={allVars}
+                            variables={generation.variables}
+                            view={variableView}
+                          />
                         </Collapse>
                       )}
                     </TableCell>

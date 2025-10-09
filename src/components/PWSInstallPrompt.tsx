@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Snackbar, Button, IconButton, Slide } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -48,7 +48,7 @@ export default function PWAInstallPrompt() {
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       slots={{ transition: Slide }}
       slotProps={{ transition: { direction: 'up' } }}
-      message="Install this app?"
+      message="Встановити додаток?"
       sx={{
         '& .MuiPaper-root': {
           backgroundColor: (theme) => theme.palette.background.paper,
@@ -58,7 +58,7 @@ export default function PWAInstallPrompt() {
       action={
         <>
           <Button color="primary" size="small" onClick={handleInstallClick}>
-            Install
+            Встановити
           </Button>
           <IconButton size="small" aria-label="close" color="inherit" onClick={handleClose}>
             <CloseIcon fontSize="small" />

@@ -8,16 +8,20 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
-import SettingsIcon from '@mui/icons-material/Settings';
-import StorageIcon from '@mui/icons-material/Storage';
-import KeyIcon from '@mui/icons-material/Key';
-import LogoutIcon from '@mui/icons-material/Logout';
+import {
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Storage as StorageIcon,
+  Key as KeyIcon,
+  Logout as LogoutIcon,
+  PictureAsPdf as PictureAsPdfIcon,
+} from '@mui/icons-material';
 import { User } from '@/types/user';
+import { ProfileTab } from '@/types/profile';
 
 type SidebarProps = {
-  active: 'info' | 'vars' | 'sessions' | 'logout';
-  onChange: (val: 'info' | 'vars' | 'sessions' | 'logout') => void;
+  active: ProfileTab;
+  onChange: (val: ProfileTab) => void;
   user: User;
   isOwnProfile: boolean;
 };
@@ -40,6 +44,13 @@ export default function Sidebar({ active, onChange, user, isOwnProfile }: Sideba
             <SettingsIcon />
           </ListItemIcon>
           <ListItemText primary="Інформація" />
+        </ListItemButton>
+
+        <ListItemButton selected={active === 'generations'} onClick={() => onChange('generations')}>
+          <ListItemIcon>
+            <PictureAsPdfIcon />
+          </ListItemIcon>
+          <ListItemText primary="Генерації" />
         </ListItemButton>
 
         <ListItemButton selected={active === 'vars'} onClick={() => onChange('vars')}>

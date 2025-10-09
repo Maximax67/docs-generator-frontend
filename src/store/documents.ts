@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { api } from '@/lib/api/core';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { FolderTreeResponse, DriveFile, DocumentStore } from '@/types/documents';
+import { documentApi } from '@/lib/documentApi';
+
+const CACHE_DURATION = 10 * 60 * 1000;
 
 export const useDocumentStore = create<DocumentStore>((set, get) => ({
   folderTree: null,
@@ -43,7 +46,6 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
   fetchPreview: async (documentId: string) => {
     const { previews } = get();
     const now = Date.now();
-    const CACHE_DURATION = 5 * 60 * 1000;
 
     if (previews[documentId]?.loading) {
       return;
@@ -67,9 +69,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
     });
 
     try {
-      const response = await api.get(`/documents/${documentId}/preview`, {
-        responseType: 'blob',
-      });
+      const blob = await documentApi.getDocumentPreview(documentId);
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -83,7 +83,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
               url: dataUrl,
               loading: false,
               timestamp: now,
-              blob: response.data,
+              blob,
             },
           },
         });
@@ -104,7 +104,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
         });
       };
 
-      reader.readAsDataURL(response.data);
+      reader.readAsDataURL(blob);
     } catch (error) {
       set({
         previews: {

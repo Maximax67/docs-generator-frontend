@@ -10,8 +10,7 @@ import {
   TableCell,
   TableBody,
 } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Logout as LogoutIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { SessionInfo } from '@/types/user';
 import { formatDateTime } from '@/utils/dates';
 

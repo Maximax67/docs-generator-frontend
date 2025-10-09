@@ -1,37 +1,45 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api/core';
-import { Result, PaginatedResults, PaginationMeta } from '@/types/generations';
+import { Generation, PaginatedGenerations, PaginationMeta } from '@/types/generations';
 
 interface GenerationsStore {
-  results: Result[];
+  generations: Generation[];
   meta: PaginationMeta | null;
 
-  fetchResults: (page?: number, pageSize?: number) => Promise<void>;
-  deleteResult: (id: string) => Promise<void>;
-  regenerateResult: (id: string, oldConstants?: boolean) => Promise<Blob>;
+  fetchGenerations: (page?: number, pageSize?: number, userId?: string) => Promise<void>;
+  deleteGeneration: (id: string) => Promise<void>;
+  deleteAllUserGenerations: (userId: string) => Promise<void>;
+  regenerateGeneration: (id: string, oldConstants?: boolean) => Promise<Blob>;
 }
 
 export const useGenerationsStore = create<GenerationsStore>((set, get) => ({
-  results: [],
+  generations: [],
   meta: null,
 
-  fetchResults: async (page = 1, pageSize = 10): Promise<void> => {
-    const res = await api.get<PaginatedResults>('/generations', {
-      params: { page, page_size: pageSize },
+  fetchGenerations: async (page = 1, pageSize = 10, userId?: string): Promise<void> => {
+    const res = await api.get<PaginatedGenerations>('/generations', {
+      params: { page, page_size: pageSize, user_id: userId },
     });
+
     set({
-      results: res.data.data,
+      generations: res.data.data,
       meta: res.data.meta,
     });
   },
 
-  deleteResult: async (id: string): Promise<void> => {
+  deleteGeneration: async (id: string): Promise<void> => {
     await api.delete(`/generations/${id}`);
-    const { results } = get();
-    set({ results: results.filter((r) => r._id !== id) });
+    const { generations } = get();
+    set({ generations: generations.filter((r) => r._id !== id) });
   },
 
-  regenerateResult: async (id: string, oldConstants = false): Promise<Blob> => {
+  deleteAllUserGenerations: async (userId: string): Promise<void> => {
+    await api.delete(`/users/${userId}/generations`);
+    const { generations } = get();
+    set({ generations: generations.filter((r) => r.user?.id !== userId) });
+  },
+
+  regenerateGeneration: async (id: string, oldConstants = false): Promise<Blob> => {
     const response = await api.post(`/generations/${id}/regenerate`, null, {
       params: { old_constants: oldConstants },
       responseType: 'blob',

@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios';
-import { DocumentDetails, DocumentVariables, ValidationErrors } from '@/types/variables';
+import { DocumentDetails } from '@/types/variables';
 import { api } from './api/core';
 import { toErrorMessage } from '@/utils/errors-messages';
 
@@ -26,29 +26,15 @@ export const documentApi = {
     }
   },
 
-  async getDocumentVariables(documentId: string): Promise<DocumentVariables> {
+  async getDocumentPreview(documentId: string): Promise<Blob> {
     try {
-      const response = await api.get<DocumentVariables>(`/documents/${documentId}/variables`);
-      return response.data;
-    } catch (error: unknown) {
-      const message = toErrorMessage(error, 'Не вдалося завантажити змінні документа');
-      const status = isAxiosError(error) ? error.response?.status : undefined;
-
-      throw new DocumentApiError(message, status);
-    }
-  },
-
-  async validateVariables(
-    documentId: string,
-    variables: Record<string, string>,
-  ): Promise<ValidationErrors> {
-    try {
-      const response = await api.post<ValidationErrors>(`/documents/${documentId}/validate`, {
-        variables,
+      const response = await api.get(`/documents/${documentId}/preview`, {
+        responseType: 'blob',
       });
-      return response.data;
+
+      return response.data
     } catch (error: unknown) {
-      const message = toErrorMessage(error, 'Не вдалося перевірити змінні');
+      const message = toErrorMessage(error, 'Не вдалося завантажити попередній перегляд');
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
       throw new DocumentApiError(message, status);
@@ -71,42 +57,6 @@ export const documentApi = {
       return response.data;
     } catch (error: unknown) {
       const message = toErrorMessage(error, 'Не вдалося згенерувати документ');
-      const status = isAxiosError(error) ? error.response?.status : undefined;
-
-      throw new DocumentApiError(message, status);
-    }
-  },
-
-  async getSavedVariables(userId: string): Promise<Record<string, string>> {
-    try {
-      const response = await api.get<Record<string, string>>(`/users/${userId}/saved_variables`);
-      return response.data;
-    } catch (error: unknown) {
-      const message = toErrorMessage(error, 'Не вдалося завантажити збережені змінні');
-      const status = isAxiosError(error) ? error.response?.status : undefined;
-
-      throw new DocumentApiError(message, status);
-    }
-  },
-
-  async saveVariable(userId: string, variable: string, value: string): Promise<void> {
-    try {
-      await api.patch(
-        `/users/${userId}/saved_variables/${variable}?value=${encodeURIComponent(value)}`,
-      );
-    } catch (error: unknown) {
-      const message = toErrorMessage(error, 'Не вдалося зберегти змінну');
-      const status = isAxiosError(error) ? error.response?.status : undefined;
-
-      throw new DocumentApiError(message, status);
-    }
-  },
-
-  async deleteSavedVariable(userId: string, variable: string): Promise<void> {
-    try {
-      await api.delete(`/users/${userId}/saved_variables/${variable}`);
-    } catch (error: unknown) {
-      const message = toErrorMessage(error, 'Не вдалося видалити збережену змінну');
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
       throw new DocumentApiError(message, status);

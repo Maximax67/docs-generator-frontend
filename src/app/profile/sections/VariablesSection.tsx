@@ -10,7 +10,7 @@ import {
   TableCell,
   TableBody,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { VariableInput } from '@/components/VariableInput';
 import { DocumentVariable } from '@/types/variables';
 

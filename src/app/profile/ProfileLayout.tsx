@@ -1,9 +1,10 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { ProfileTab } from '@/types/profile';
 
 type ProfileLayoutProps = {
   active: string;
-  onChangeActive: (value: 'info' | 'vars' | 'sessions' | 'logout') => void;
+  onChangeActive: (value: ProfileTab) => void;
   sidebar?: React.ReactNode;
   children?: React.ReactNode;
 };

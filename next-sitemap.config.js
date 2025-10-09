@@ -11,6 +11,7 @@ module.exports = {
     '/verify-email',
     '/profile',
     '/users',
+    '/generations',
     '/documents/result',
   ],
   changefreq: 'monthly',

@@ -1,6 +1,6 @@
 import { UserInfo } from './user';
 
-export type Result = {
+export type Generation = {
   _id: string;
   user?: UserInfo & { id: string };
   template_id: string;
@@ -17,7 +17,7 @@ export type PaginationMeta = {
   page_size: number;
 };
 
-export type PaginatedResults = {
-  data: Result[];
+export type PaginatedGenerations = {
+  data: Generation[];
   meta: PaginationMeta;
 };
