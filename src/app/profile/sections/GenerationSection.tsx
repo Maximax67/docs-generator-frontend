@@ -15,8 +15,6 @@ import {
   TableCell,
   TableBody,
   Divider,
-  ToggleButtonGroup,
-  ToggleButton,
   Pagination,
   Alert,
   useMediaQuery,
@@ -38,6 +36,7 @@ import { formatDateTime } from '@/utils/dates';
 import { DocumentVariable } from '@/types/variables';
 import { Generation, PaginationMeta } from '@/types/generations';
 import { GenerationVariables } from '@/components/GenerationVariables';
+import { GenerationVariablesControls } from '@/components/GenerationVariablesControls';
 
 type GenerationSectionProps = {
   deleteAllowed: boolean;
@@ -71,6 +70,8 @@ export default function GenerationSection({
   setVariableView,
 }: GenerationSectionProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [showConstants, setShowConstants] = useState(false);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -101,29 +102,12 @@ export default function GenerationSection({
       ) : (
         <>
           {isAdmin && (
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              mb={1}
-              gap={2}
-              alignItems={{ xs: 'flex-start', sm: 'center' }}
-            >
-              <Typography variant="h6">Відображення змінних:</Typography>
-              <ToggleButtonGroup
-                value={variableView}
-                exclusive
-                onChange={(_, v) => v && setVariableView(v)}
-                size="small"
-                fullWidth
-                sx={{ width: { xs: '100%', sm: 'auto' } }}
-              >
-                <ToggleButton value="table" sx={{ flex: 1, px: 2 }}>
-                  Таблиця
-                </ToggleButton>
-                <ToggleButton value="json" sx={{ flex: 1, px: 2 }}>
-                  JSON
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Stack>
+            <GenerationVariablesControls
+              showConstants={showConstants}
+              variableView={variableView}
+              setShowConstants={setShowConstants}
+              setVariableView={setVariableView}
+            />
           )}
           {isMobile ? (
             <Stack spacing={2}>
@@ -198,7 +182,7 @@ export default function GenerationSection({
                             <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                               <GenerationVariables
                                 fullWidth
-                                showConstantsInTable={isAdmin}
+                                showConstants={showConstants}
                                 allVars={allVars}
                                 variables={generation.variables}
                                 view={variableView}
@@ -288,7 +272,7 @@ export default function GenerationSection({
                         <TableCell colSpan={4} sx={{ p: 0 }}>
                           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                             <GenerationVariables
-                              showConstantsInTable={isAdmin}
+                              showConstants={showConstants}
                               allVars={allVars}
                               variables={generation.variables}
                               view={variableView}

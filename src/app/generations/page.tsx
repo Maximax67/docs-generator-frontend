@@ -21,8 +21,6 @@ import {
   Divider,
   useMediaQuery,
   Pagination,
-  ToggleButtonGroup,
-  ToggleButton,
 } from '@mui/material';
 import {
   ExpandMore,
@@ -46,6 +44,7 @@ import { AllVariablesResponse, DocumentVariable } from '@/types/variables';
 import { api } from '@/lib/api/core';
 import { GenerationVariables } from '@/components/GenerationVariables';
 import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
+import { GenerationVariablesControls } from '@/components/GenerationVariablesControls';
 
 export default function GenerationsPage() {
   const { user } = useUserStore();
@@ -56,6 +55,7 @@ export default function GenerationsPage() {
     useGenerationsStore();
 
   const [variableView, setVariableView] = useState<'table' | 'json'>('table');
+  const [showConstants, setShowConstants] = useState(false);
   const [allVars, setAllVars] = useState<Record<string, DocumentVariable>>({});
   const [allVarsLoaded, setAllVarsLoaded] = useState(false);
 
@@ -183,30 +183,12 @@ export default function GenerationsPage() {
         Генерації
       </Typography>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        mb={1}
-        gap={2}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Typography variant="h5">Відображення змінних:</Typography>
-
-        <ToggleButtonGroup
-          value={variableView}
-          exclusive
-          onChange={(_, value) => value && setVariableView(value)}
-          size="small"
-          fullWidth
-          sx={{ width: { xs: '100%', sm: 'auto' } }}
-        >
-          <ToggleButton value="table" sx={{ flex: 1, px: 2 }}>
-            Таблиця
-          </ToggleButton>
-          <ToggleButton value="json" sx={{ flex: 1, px: 2 }}>
-            JSON
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Stack>
+      <GenerationVariablesControls
+        showConstants={showConstants}
+        variableView={variableView}
+        setShowConstants={setShowConstants}
+        setVariableView={setVariableView}
+      />
 
       {isMobile ? (
         <Stack spacing={2}>
@@ -297,7 +279,7 @@ export default function GenerationsPage() {
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                           <GenerationVariables
                             fullWidth
-                            showConstantsInTable
+                            showConstants={showConstants}
                             allVars={allVars}
                             variables={generation.variables}
                             view={variableView}
@@ -419,7 +401,7 @@ export default function GenerationsPage() {
                       {Object.entries(generation.variables).length > 0 && (
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                           <GenerationVariables
-                            showConstantsInTable
+                            showConstants={showConstants}
                             allVars={allVars}
                             variables={generation.variables}
                             view={variableView}

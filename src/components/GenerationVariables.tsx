@@ -9,7 +9,7 @@ import { Error as ErrorIcon } from '@mui/icons-material';
 interface GenerationVariablesProps {
   variables: Record<string, string>;
   allVars: Record<string, DocumentVariable>;
-  showConstantsInTable: boolean;
+  showConstants: boolean;
   fullWidth?: boolean;
   view: 'table' | 'json';
 }
@@ -19,8 +19,18 @@ export const GenerationVariables: FC<GenerationVariablesProps> = ({
   allVars,
   fullWidth,
   view,
-  showConstantsInTable,
+  showConstants,
 }) => {
+  const filteredVariables = Object.fromEntries(
+    Object.entries(variables).filter(([name]) => {
+      const variableMeta = allVars[name];
+      if (!showConstants && variableMeta?.type === VariableType.CONSTANT) {
+        return false;
+      }
+      return true;
+    }),
+  );
+
   if (view === 'json') {
     return (
       <Box
@@ -32,7 +42,9 @@ export const GenerationVariables: FC<GenerationVariablesProps> = ({
           overflowX: 'auto',
         }}
       >
-        <pre style={{ margin: 0 }}>{JSON.stringify(variables, null, 2)}</pre>
+        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          {JSON.stringify(filteredVariables, null, 2)}
+        </pre>
       </Box>
     );
   }
@@ -48,17 +60,12 @@ export const GenerationVariables: FC<GenerationVariablesProps> = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {Object.entries(variables).map(([variableName, value]) => {
+          {Object.entries(filteredVariables).map(([variableName, value]) => {
             const variableMeta = allVars[variableName];
-            if (!showConstantsInTable && variableMeta.type === VariableType.CONSTANT) {
-              return;
-            }
-
             const validationError = variableMeta
               ? validateVariableValue(variableMeta, value)
               : 'Змінна не існує';
             const displayName = variableMeta ? variableMeta.name : variableName;
-
             const type = variableMeta?.type ? VariableTypeNames[variableMeta.type] : '?';
 
             return (
