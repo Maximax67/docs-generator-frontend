@@ -24,12 +24,15 @@ import {
   FormControl,
   Select,
   SelectChangeEvent,
+  Button,
 } from '@mui/material';
 import {
   Launch as LaunchIcon,
   Verified as VerifiedIcon,
   ErrorOutline as ErrorOutlineIcon,
   Block as BlockIcon,
+  Refresh as RefreshIcon,
+  HorizontalRule as HorizontalRuleIcon,
 } from '@mui/icons-material';
 import { formatDate } from '@/utils/dates';
 import Link from 'next/link';
@@ -37,6 +40,7 @@ import { User } from '@/types/user';
 import { useUserStore } from '@/store/user';
 import { useTheme } from '@mui/material/styles';
 import RoleChip from '@/components/RoleChip';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export default function UsersPage() {
   const { user, getAllUsers } = useUserStore();
@@ -45,6 +49,8 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const theme = useTheme();
@@ -61,7 +67,7 @@ export default function UsersPage() {
         setUsers(sorted);
         setFiltered(sorted);
       } catch (e) {
-        console.error(e);
+        setError(toErrorMessage(e, 'Не вдалось завантажити список користувачів'));
       } finally {
         setLoading(false);
       }
@@ -103,6 +109,27 @@ export default function UsersPage() {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="error">Сторінка лише для адміністраторів</Alert>
+      </Container>
+    );
+  }
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
+  if (error) {
+    return (
+      <Container maxWidth="md" sx={{ py: 2 }}>
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={handleRefresh}>
+              <RefreshIcon sx={{ mr: 1 }} />
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
       </Container>
     );
   }
@@ -163,8 +190,9 @@ export default function UsersPage() {
         >
           <Select value={roleFilter} onChange={handleRoleFilter}>
             <MenuItem value="all">Всі ролі</MenuItem>
-            <MenuItem value="admin">Адмін</MenuItem>
             <MenuItem value="user">Користувач</MenuItem>
+            <MenuItem value="admin">Адмін</MenuItem>
+            <MenuItem value="god">Бог</MenuItem>
           </Select>
         </FormControl>
 
@@ -209,6 +237,8 @@ export default function UsersPage() {
                     <IconButton
                       component={Link}
                       href={`/profile?id=${user._id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       aria-label="Переглянути профіль"
                       size="small"
                     >
@@ -216,10 +246,10 @@ export default function UsersPage() {
                     </IconButton>
                   </Box>
 
-                  <Typography variant="body2">
-                    {user.email ?? '-'}
-                    {user.email &&
-                      (user.email_verified ? (
+                  {user.email && (
+                    <Typography variant="body2">
+                      {user.email}
+                      {user.email_verified ? (
                         <VerifiedIcon
                           color="success"
                           fontSize="small"
@@ -231,23 +261,26 @@ export default function UsersPage() {
                           fontSize="small"
                           sx={{ verticalAlign: 'middle', ml: 0.5 }}
                         />
-                      ))}
-                  </Typography>
+                      )}
+                    </Typography>
+                  )}
 
-                  <Typography variant="body2">
-                    {user.telegram_username ? (
-                      <a
-                        href={`https://t.me/${user.telegram_username}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#0088cc' }}
-                      >
-                        @{user.telegram_username}
-                      </a>
-                    ) : (
-                      (user.telegram_id ?? '-')
-                    )}
-                  </Typography>
+                  {user.telegram_id && (
+                    <Typography variant="body2">
+                      {user.telegram_username ? (
+                        <a
+                          href={`https://t.me/${user.telegram_username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: '#0088cc' }}
+                        >
+                          @{user.telegram_username}
+                        </a>
+                      ) : (
+                        user.telegram_id
+                      )}
+                    </Typography>
+                  )}
                   <Typography variant="body2">{formatDate(new Date(user.created_at))}</Typography>
 
                   <Divider />
@@ -291,7 +324,7 @@ export default function UsersPage() {
               <TableRow key={user._id}>
                 <TableCell>{`${user.first_name} ${user.last_name ?? ''}`.trim()}</TableCell>
                 <TableCell>
-                  {user.email ?? '-'}
+                  {user.email ?? <HorizontalRuleIcon color={'disabled'}></HorizontalRuleIcon>}
                   {user.email &&
                     (user.email_verified ? (
                       <VerifiedIcon
@@ -318,7 +351,9 @@ export default function UsersPage() {
                       @{user.telegram_username}
                     </a>
                   ) : (
-                    (user.telegram_id ?? '-')
+                    (user.telegram_id ?? (
+                      <HorizontalRuleIcon color={'disabled'}></HorizontalRuleIcon>
+                    ))
                   )}
                 </TableCell>
                 <TableCell>{formatDate(new Date(user.created_at))}</TableCell>
@@ -336,6 +371,8 @@ export default function UsersPage() {
                   <IconButton
                     component={Link}
                     href={`/profile?id=${user._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     aria-label="Переглянути профіль"
                   >
                     <LaunchIcon />

@@ -1,7 +1,6 @@
 export type UserRole = 'admin' | 'user' | 'god';
 
-export type User = {
-  _id: string;
+export type UserInfo = {
   telegram_id?: number | null;
   email?: string | null;
   first_name: string;
@@ -14,6 +13,8 @@ export type User = {
   created_at: string;
   updated_at: string;
 };
+
+export type User = UserInfo & { _id: string };
 
 export type AllUsersResponse = {
   users: User[];

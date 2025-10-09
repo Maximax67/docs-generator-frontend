@@ -23,6 +23,7 @@ import {
   HelpOutline as HelpOutlineIcon,
   Home as HomeIcon,
   Person as PersonIcon,
+  PictureAsPdf as PictureAsPdfIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useUserStore } from '@/store/user';
@@ -45,6 +46,7 @@ export default function Header() {
     ];
 
     if (user?.role === 'admin' || user?.role === 'god') {
+      links.push({ href: '/generations', label: 'Генерації', icon: <PictureAsPdfIcon /> });
       links.push({ href: '/users', label: 'Користувачі', icon: <PersonIcon /> });
     }
 
