@@ -17,8 +17,7 @@ export const PDFViewerClient: FC<PDFViewerClientProps> = ({ blob, url, className
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    if (loadedTheme) return;
+    if (!containerRef.current || loadedTheme) return;
 
     containerRef.current.innerHTML = '';
 

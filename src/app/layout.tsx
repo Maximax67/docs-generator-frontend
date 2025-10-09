@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import RateLimitOverlay from '../components/RateLimitOverlay';
 
 import './globals.css';
-import PWAInstallPrompt from '@/components/PWSInstallPrompt';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Docs Generator',
   description: 'KPI docs generator app',
-  manifest: '/site.manifest',
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({
