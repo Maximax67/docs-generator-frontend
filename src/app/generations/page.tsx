@@ -153,7 +153,7 @@ export default function GenerationsPage() {
       const blob = await regenerateGeneration(id, oldConstants);
       await savePdfToIndexedDb('generatedPdf', blob);
 
-      window.open('/documents/result', '_blank', 'noopener,noreferrer');
+      window.open('/documents/result/', '_blank', 'noopener,noreferrer');
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
     } finally {

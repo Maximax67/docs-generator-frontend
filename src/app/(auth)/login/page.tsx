@@ -47,14 +47,14 @@ export default function LoginPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const ok = await loginWithCredentials(email, password);
-    if (ok) router.push('/profile');
+    if (ok) router.push('/profile/');
   };
 
   const isFormValid = email && password && !emailError && !passwordError;
 
   useEffect(() => {
     if (user) {
-      router.push('/profile');
+      router.push('/profile/');
     }
   }, [router, user]);
 

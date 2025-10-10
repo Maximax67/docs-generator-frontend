@@ -45,7 +45,7 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
     );
   }
 
-  const documentSelectHandler = () => router.push(`/documents/selected?id=${document.id}`);
+  const documentSelectHandler = () => router.push(`/documents/selected/?id=${document.id}`);
   const openWebViewHandler = () => {
     if (document.web_view_link) {
       window.open(document.web_view_link, '_blank', 'noopener,noreferrer');

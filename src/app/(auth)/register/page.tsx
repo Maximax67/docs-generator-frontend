@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (user) {
-      router.push('/profile');
+      router.push('/profile/');
     }
   }, [router, user]);
 
@@ -97,7 +97,7 @@ export default function RegisterPage() {
       last_name: lastName,
       password,
     });
-    if (ok) router.push('/profile');
+    if (ok) router.push('/profile/');
   };
 
   return (

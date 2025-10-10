@@ -379,7 +379,7 @@ export default function ProfilePage() {
       setNewEmail('');
 
       if (isOwnProfile) {
-        router.push('/login');
+        router.push('/login/');
       }
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалося змінити пошту'));
@@ -394,7 +394,7 @@ export default function ProfilePage() {
     try {
       await changePassword(oldPassword, newPassword);
       setPasswordOpen(false);
-      router.push('/login');
+      router.push('/login/');
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалося змінити пароль'));
     } finally {
@@ -450,7 +450,7 @@ export default function ProfilePage() {
       const blob = await regenerateGeneration(id, oldConstants);
       await savePdfToIndexedDb('generatedPdf', blob);
 
-      window.open('/documents/result', '_blank', 'noopener,noreferrer');
+      window.open('/documents/result/', '_blank', 'noopener,noreferrer');
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
     } finally {

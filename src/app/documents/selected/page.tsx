@@ -158,7 +158,7 @@ export default function DocumentVariablesPage() {
       const blob = await documentApi.generateDocument(documentId, formValues, user?._id);
       await savePdfToIndexedDb('generatedPdf', blob);
 
-      router.push('/documents/result');
+      router.push('/documents/result/');
     } catch (err: unknown) {
       if (err instanceof DocumentApiError) {
         setGenerateError(err.message);

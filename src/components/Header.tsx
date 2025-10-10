@@ -92,7 +92,7 @@ export default function Header() {
           </IconButton>
         )}
 
-        <Typography variant="h6" sx={{ flexGrow: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+        <Box sx={{ flexGrow: 1 }}>
           <Link
             href="/"
             style={{
@@ -109,27 +109,43 @@ export default function Header() {
               width={isMobile ? 35 : 45}
               height={isMobile ? 35 : 45}
             />
-            Docs Generator
+            <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+              Docs Generator
+            </Typography>
           </Link>
-        </Typography>
+        </Box>
 
         {!isMobile && (
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>{renderLinks()}</Box>
         )}
 
-        <IconButton color="inherit" onClick={toggle} aria-label="Змінити тему">
+        <IconButton
+          color="inherit"
+          onClick={toggle}
+          aria-label="Змінити тему"
+        >
           {mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
         </IconButton>
 
         {user ? (
           <IconButton
             component={Link}
-            size="large"
+            size={isMobile ? 'medium' : 'large'}
             color="inherit"
             href="/profile"
             aria-label="Профіль"
           >
             <AccountCircleIcon />
+          </IconButton>
+        ) : isMobile ? (
+          <IconButton
+            component={Link}
+            size="medium"
+            color="inherit"
+            href="/login"
+            aria-label="Увійти"
+          >
+            <LoginIcon />
           </IconButton>
         ) : (
           <Button component={Link} href="/login" color="inherit" startIcon={<LoginIcon />}>

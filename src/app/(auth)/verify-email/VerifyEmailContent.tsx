@@ -63,7 +63,7 @@ export default function VerifyEmailContent() {
 
   useEffect(() => {
     if (countdown === 0 && success) {
-      router.push(user ? '/profile' : '/');
+      router.push(user ? '/profile/' : '/');
     }
   }, [countdown, success, router, user]);
 

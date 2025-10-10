@@ -29,16 +29,24 @@ export default function Home() {
       <Container>
         <Stack spacing={6} alignItems="center">
           <Stack spacing={2} alignItems="center" textAlign="center">
-            <Box sx={{ mb: 2 }}>
-              <Image src="/logo.png" alt="Docs Generator" width={150} height={150} />
-            </Box>
-            <Typography variant="h2" component="h1" fontWeight={700}>
+            <Image src="/logo.png" alt="Docs Generator" width={150} height={150} />
+            <Typography
+              variant="h2"
+              component="h1"
+              fontWeight={700}
+              sx={{ fontSize: { xs: '2rem', sm: '3.75rem' } }}
+            >
               Docs Generator
             </Typography>
-            <Typography variant="h6" color="text.secondary" maxWidth={600}>
-              Генеруй документи швидко та зручно всього в кілька кліків.
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              maxWidth={600}
+              sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+            >
+              Генеруй документи швидко та зручно всього в кілька кліків
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} pt={{ sm: 1 }}>
               <Button
                 component={Link}
                 href="/documents"
@@ -76,7 +84,11 @@ export default function Home() {
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
-              <ApiIcon color="primary" fontSize="large" />
+              <ApiIcon
+                color="primary"
+                fontSize="large"
+                sx={{ fontSize: { xs: '1.75rem', sm: '2rem' } }}
+              />
               <Typography variant="h4" fontWeight={700}>
                 Наше API
               </Typography>
@@ -87,7 +99,7 @@ export default function Home() {
               Документація доступна за посиланнями нижче.
             </Typography>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Stack direction="row" spacing={2}>
               <Button
                 component={Link}
                 href={swaggerUrl}
@@ -96,7 +108,7 @@ export default function Home() {
                 variant="outlined"
                 size="large"
               >
-                Відкрити Swagger UI
+                Swagger
               </Button>
 
               <Button
@@ -107,7 +119,7 @@ export default function Home() {
                 variant="contained"
                 size="large"
               >
-                Відкрити в Postman
+                Postman
               </Button>
             </Stack>
           </Paper>
@@ -126,13 +138,17 @@ export default function Home() {
           >
             <Stack direction="row" spacing={1} alignItems="center">
               <TelegramIcon color="primary" fontSize="large" />
-              <Typography variant="h4" fontWeight={700}>
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ fontSize: { xs: '1.75rem', sm: '2rem' } }}
+              >
                 Telegram‑бот
               </Typography>
             </Stack>
             <Typography variant="body1" textAlign="center" maxWidth={600}>
-              Швидко створюй PDF‑документи прямо в Telegram. Однак, історія та збережені дані
-              веб‑сервісу не синхронізуються з ботом
+              Швидко створюй PDF-документи прямо в Telegram. Однак, історія та збережені дані
+              веб‑сервісу не синхронізуються з ботом.
             </Typography>
             <Button
               component={Link}
@@ -142,7 +158,7 @@ export default function Home() {
               variant="outlined"
               size="large"
             >
-              Відкрити @kpi_docs_bot
+              @kpi_docs_bot
             </Button>
           </Paper>
 
