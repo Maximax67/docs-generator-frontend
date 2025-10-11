@@ -72,7 +72,7 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
           {formatFilename(document.name, document.mime_type)}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Остання зміна: {formatDateTime(new Date(document.modified_time))}
+          Оновлено: {formatDateTime(new Date(document.modified_time))}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', gap: 2 }}>
