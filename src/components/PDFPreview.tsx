@@ -21,6 +21,18 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
 
   const preview = document ? previews[document.id] : null;
 
+  const documentSelectHandler = () => {
+    if (document) {
+      router.push(`/documents/selected/?id=${document.id}`);
+    }
+  };
+
+  const openWebViewHandler = () => {
+    if (document?.web_view_link) {
+      window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   useEffect(() => {
     if (document && !preview) {
       fetchPreview(document.id);
@@ -44,13 +56,6 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
       </Box>
     );
   }
-
-  const documentSelectHandler = () => router.push(`/documents/selected/?id=${document.id}`);
-  const openWebViewHandler = () => {
-    if (document.web_view_link) {
-      window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
-    }
-  };
 
   const header = (
     <Paper
