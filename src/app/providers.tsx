@@ -23,16 +23,20 @@ export default function AppThemeProvider({ children }: { children: React.ReactNo
   const { bootstrap } = useUserStore();
 
   useEffect(() => {
-    setMounted(true);
     try {
       const saved = window.localStorage.getItem(THEME_KEY) as ThemeMode | null;
-      if (saved) {
-        setMode(saved);
-      } else {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        setMode(mediaQuery.matches ? 'dark' : 'light');
-      }
-    } catch {}
+      const preferred = saved
+        ? saved
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+
+      setMode(preferred);
+    } catch {
+      setMode('light');
+    } finally {
+      setMounted(true);
+    }
   }, []);
 
   useEffect(() => {

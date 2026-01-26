@@ -18,6 +18,7 @@ export const PDFViewerClient: FC<PDFViewerClientProps> = ({ blob, url, className
 
   useEffect(() => {
     if (!containerRef.current || loadedTheme) return;
+    if (loadedTheme === mode) return;
 
     containerRef.current.innerHTML = '';
 
@@ -44,12 +45,8 @@ export const PDFViewerClient: FC<PDFViewerClientProps> = ({ blob, url, className
       viewer.loadUrl(url);
     }
 
-    setLoadedTheme(mode);
+    setTimeout(() => setLoadedTheme(mode), 0);
   }, [url, blob, mode, loadedTheme]);
-
-  if (loadedTheme && loadedTheme !== mode) {
-    setLoadedTheme(null);
-  }
 
   return <div ref={containerRef} className={className} />;
 };
