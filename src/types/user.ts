@@ -1,24 +1,20 @@
+import { Paginated } from './pagination';
+
 export type UserRole = 'admin' | 'user' | 'god';
 
 export type UserInfo = {
-  telegram_id?: number | null;
-  email?: string | null;
+  email: string;
   first_name: string;
   last_name?: string | null;
-  telegram_username?: string | null;
   saved_variables: Record<string, string>;
   is_banned: boolean;
-  email_verified?: boolean;
+  email_verified: boolean;
   role: UserRole;
   created_at: string;
   updated_at: string;
 };
 
 export type User = UserInfo & { _id: string };
-
-export type AllUsersResponse = {
-  users: User[];
-};
 
 export type SessionInfo = {
   id: string;
@@ -78,5 +74,5 @@ export type UserState = {
   updateUserSavedVariable: (userId: string, key: string, value: string) => Promise<User>;
   deleteUserSavedVariable: (userId: string, key: string) => Promise<User>;
   clearUserSavedVariables: (userId: string) => Promise<User>;
-  getAllUsers: () => Promise<User[]>;
+  getUsers: (page: number, pageSize: number, search?: string, role?: string, status?: string) => Promise<Paginated<User>>;
 };

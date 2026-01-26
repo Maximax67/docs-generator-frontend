@@ -3,10 +3,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { api, bootstrapApi } from '@/lib/api/core';
-import { UserState, SessionInfo, User, AllUsersResponse } from '@/types/user';
+import { UserState, SessionInfo, User } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { markBootstrapComplete } from '@/lib/api/bootstrap';
 import { isAxiosError } from '@/utils/is-axios-error';
+import { Paginated } from '@/types/pagination';
 
 export const useUserStore = create<UserState>()(
   persist(
@@ -308,14 +309,30 @@ export const useUserStore = create<UserState>()(
 
         return res.data;
       },
-      getAllUsers: async () => {
+      getUsers: async (
+        page: number = 1,
+        pageSize: number = 25,
+        search?: string,
+        role?: string,
+        status?: string
+      ) => {
         const u = get().user;
         if (u?.role !== 'admin' && u?.role !== 'god')
           throw new Error('Потрібен акаунт адміністратора');
-        const resp = await api.get<AllUsersResponse>('/users');
 
-        return resp.data.users;
-      },
+        const params: Record<string, string | number> = {
+          page,
+          page_size: pageSize,
+        };
+
+        if (search) params.q = search;
+        if (role && role !== 'all') params.role = role;
+        if (status && status !== 'all') params.status = status;
+
+        const resp = await api.get<Paginated<User>>('/users', { params });
+
+        return resp.data;
+      }
     }),
     {
       name: 'user-store',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, ChangeEvent } from 'react';
+import { useEffect, useState, ChangeEvent, KeyboardEvent } from 'react';
 import {
   Box,
   TextField,
@@ -10,7 +10,6 @@ import {
   TableCell,
   TableBody,
   IconButton,
-  CircularProgress,
   Typography,
   Alert,
   Container,
@@ -25,6 +24,8 @@ import {
   Select,
   SelectChangeEvent,
   Button,
+  Pagination,
+  InputAdornment,
 } from '@mui/material';
 import {
   Launch as LaunchIcon,
@@ -32,7 +33,7 @@ import {
   ErrorOutline as ErrorOutlineIcon,
   Block as BlockIcon,
   Refresh as RefreshIcon,
-  HorizontalRule as HorizontalRuleIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { formatDate } from '@/utils/dates';
 import Link from 'next/link';
@@ -41,61 +42,56 @@ import { useUserStore } from '@/store/user';
 import { useTheme } from '@mui/material/styles';
 import RoleChip from '@/components/RoleChip';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Paginated } from '@/types/pagination';
+import { LoadingContent } from '@/components/LoadingContent';
 
 export default function UsersPage() {
-  const { user, getAllUsers } = useUserStore();
-  const [users, setUsers] = useState<User[]>([]);
-  const [filtered, setFiltered] = useState<User[]>([]);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const { user, getUsers } = useUserStore();
+  const [searchResult, setSearchResult] = useState<Paginated<User> | null>(null);
+  const [searchInput, setSearchInput] = useState('');
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const page = Number(searchParams.get('page') ?? 1);
+  const pageSize = Number(searchParams.get('page_size') ?? 25);
+  const appliedSearch = searchParams.get('q') ?? '';
+  const roleFilter = searchParams.get('role') ?? 'all';
+  const statusFilter = searchParams.get('status') ?? 'all';
 
   useEffect(() => {
+    if (user?.role !== 'admin' && user?.role !== 'god') return;
+
+    let cancelled = false;
+
     (async () => {
       try {
-        if (user?.role !== 'admin' && user?.role !== 'god') return;
-        const users = await getAllUsers();
-        const sorted = users.sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        );
-        setUsers(sorted);
-        setFiltered(sorted);
+        setLoading(true);
+        const response = await getUsers(page, pageSize, appliedSearch, roleFilter, statusFilter);
+        if (!cancelled) {
+          setSearchResult(response);
+        }
       } catch (e) {
-        setError(toErrorMessage(e, 'Не вдалось завантажити список користувачів'));
+        if (!cancelled) {
+          setError(toErrorMessage(e, 'Не вдалось завантажити список користувачів'));
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     })();
-  }, [user, getAllUsers]);
 
-  useEffect(() => {
-    let result = [...users];
-
-    const term = search.trim().toLowerCase();
-    if (term) {
-      result = result.filter((u) => {
-        const fullName = `${u.first_name} ${u.last_name ?? ''}`.toLowerCase();
-        const email = (u.email ?? '').toLowerCase();
-        return fullName.includes(term) || email.includes(term);
-      });
-    }
-
-    if (roleFilter !== 'all') {
-      result = result.filter((u) => u.role === roleFilter);
-    }
-
-    if (statusFilter !== 'all') {
-      result = result.filter((u) => (statusFilter === 'banned' ? u.is_banned : !u.is_banned));
-    }
-
-    setFiltered(result);
-  }, [search, users, roleFilter, statusFilter]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, getUsers, page, pageSize, appliedSearch, roleFilter, statusFilter]);
 
   if (!user) {
     return (
@@ -134,25 +130,57 @@ export default function UsersPage() {
     );
   }
 
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  const updateURL = (
+    newPage: number,
+    newPageSize: number,
+    search: string,
+    role: string,
+    status: string,
+  ) => {
+    const params = new URLSearchParams();
+    params.set('page', newPage.toString());
+    params.set('page_size', newPageSize.toString());
+    if (search) params.set('q', search);
+    if (role !== 'all') params.set('role', role);
+    if (status !== 'all') params.set('status', status);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const performSearch = () => {
+    if (searchInput.trim() !== appliedSearch) {
+      updateURL(1, pageSize, searchInput.trim(), roleFilter, statusFilter);
+    }
+  };
+
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  };
+
+  const handleSearchBlur = () => {
+    performSearch();
   };
 
   const handleRoleFilter = (e: SelectChangeEvent) => {
-    setRoleFilter(e.target.value);
+    updateURL(1, pageSize, appliedSearch, e.target.value, statusFilter);
   };
 
   const handleStatusFilter = (e: SelectChangeEvent) => {
-    setStatusFilter(e.target.value);
+    updateURL(1, pageSize, appliedSearch, roleFilter, e.target.value);
   };
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const handlePageChange = (_event: unknown, newPage: number) => {
+    updateURL(newPage, pageSize, appliedSearch, roleFilter, statusFilter);
+  };
+
+  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
+    updateURL(1, Number(event.target.value), appliedSearch, roleFilter, statusFilter);
+  };
 
   return (
     <Box p={2}>
@@ -171,11 +199,24 @@ export default function UsersPage() {
         <TextField
           label="Пошук"
           variant="outlined"
-          value={search}
-          onChange={handleSearch}
+          value={searchInput}
+          onChange={handleSearchInputChange}
+          onKeyDown={handleSearchKeyDown}
+          onBlur={handleSearchBlur}
           sx={{
             flex: { xs: '1 1 100%', md: '1 1 auto' },
             minWidth: 0,
+          }}
+          slotProps={{
+            input: {
+              endAdornment: searchInput.trim() !== appliedSearch && (
+                <InputAdornment position="end">
+                  <IconButton onClick={performSearch} edge="end" aria-label="Шукати" size="small">
+                    <SearchIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
@@ -213,40 +254,57 @@ export default function UsersPage() {
         </FormControl>
       </Stack>
 
+      <Box mb={2} display="flex" alignItems="center" gap={2}>
+        <Typography variant="body2">Елементів на сторінці:</Typography>
+        <FormControl size="small" variant="outlined">
+          <Select value={pageSize} onChange={handlePageSizeChange}>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={25}>25</MenuItem>
+            <MenuItem value={50}>50</MenuItem>
+            <MenuItem value={100}>100</MenuItem>
+          </Select>
+        </FormControl>
+        {searchResult && (
+          <Typography variant="body2" color="text.secondary">
+            Всього: {searchResult.meta.total_items}
+          </Typography>
+        )}
+      </Box>
+
       {isMobile ? (
-        <Stack spacing={2}>
-          {filtered.map((user) => (
-            <Card key={user._id} variant="outlined">
-              <CardContent>
-                <Stack spacing={1}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight="bold"
-                      sx={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        mr: 1,
-                      }}
-                      title={`${user.first_name} ${user.last_name ?? ''}`}
-                    >
-                      {`${user.first_name} ${user.last_name ?? ''}`.trim()}
-                    </Typography>
+        <LoadingContent loading={loading}>
+          <Stack spacing={2}>
+            {searchResult?.data.map((user) => (
+              <Card key={user._id} variant="outlined">
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          mr: 1,
+                        }}
+                        title={`${user.first_name} ${user.last_name ?? ''}`}
+                      >
+                        {`${user.first_name} ${user.last_name ?? ''}`.trim()}
+                      </Typography>
 
-                    <IconButton
-                      component={Link}
-                      href={`/profile?id=${user._id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Переглянути профіль"
-                      size="small"
-                    >
-                      <LaunchIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
+                      <IconButton
+                        component={Link}
+                        href={`/profile?id=${user._id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Переглянути профіль"
+                        size="small"
+                      >
+                        <LaunchIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
 
-                  {user.email && (
                     <Typography variant="body2">
                       {user.email}
                       {user.email_verified ? (
@@ -263,70 +321,55 @@ export default function UsersPage() {
                         />
                       )}
                     </Typography>
-                  )}
 
-                  {user.telegram_id && (
-                    <Typography variant="body2">
-                      {user.telegram_username ? (
-                        <a
-                          href={`https://t.me/${user.telegram_username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ color: '#0088cc' }}
-                        >
-                          @{user.telegram_username}
-                        </a>
-                      ) : (
-                        user.telegram_id
-                      )}
-                    </Typography>
-                  )}
-                  <Typography variant="body2">{formatDate(new Date(user.created_at))}</Typography>
+                    <Typography variant="body2">{formatDate(new Date(user.created_at))}</Typography>
 
-                  <Divider />
+                    <Divider />
 
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      alignItems: 'center',
-                      gap: 0.75,
-                    }}
-                  >
-                    <RoleChip role={user.role} />
-                    <Chip
-                      label={user.is_banned ? 'Заблокований' : 'Активний'}
-                      color={user.is_banned ? 'error' : 'success'}
-                      size="small"
-                      icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
-                    />
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          ))}
-        </Stack>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: 0.75,
+                      }}
+                    >
+                      <RoleChip role={user.role} />
+                      <Chip
+                        label={user.is_banned ? 'Заблокований' : 'Активний'}
+                        color={user.is_banned ? 'error' : 'success'}
+                        size="small"
+                        icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
+                      />
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
+        </LoadingContent>
       ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Повне ім&apos;я</TableCell>
-              <TableCell>E‑mail</TableCell>
-              <TableCell>Telegram</TableCell>
-              <TableCell>Дата реєстрації</TableCell>
-              <TableCell>Роль</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Дії</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filtered.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>{`${user.first_name} ${user.last_name ?? ''}`.trim()}</TableCell>
-                <TableCell>
-                  {user.email ?? <HorizontalRuleIcon color={'disabled'}></HorizontalRuleIcon>}
-                  {user.email &&
-                    (user.email_verified ? (
+        <LoadingContent loading={loading}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Повне ім&apos;я</TableCell>
+                <TableCell>E-mail</TableCell>
+                <TableCell>Дата реєстрації</TableCell>
+                <TableCell>Роль</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell align="right">Дії</TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {searchResult?.data.map((user) => (
+                <TableRow key={user._id}>
+                  <TableCell>{`${user.first_name} ${user.last_name ?? ''}`.trim()}</TableCell>
+
+                  <TableCell>
+                    {user.email}
+                    {user.email_verified ? (
                       <VerifiedIcon
                         color="success"
                         fontSize="small"
@@ -338,51 +381,54 @@ export default function UsersPage() {
                         fontSize="small"
                         sx={{ verticalAlign: 'middle', ml: 0.5 }}
                       />
-                    ))}
-                </TableCell>
-                <TableCell>
-                  {user.telegram_username ? (
-                    <a
-                      href={`https://t.me/${user.telegram_username}`}
+                    )}
+                  </TableCell>
+
+                  <TableCell>{formatDate(new Date(user.created_at))}</TableCell>
+
+                  <TableCell>
+                    <RoleChip role={user.role} />
+                  </TableCell>
+
+                  <TableCell>
+                    <Chip
+                      label={user.is_banned ? 'Заблокований' : 'Активний'}
+                      color={user.is_banned ? 'error' : 'success'}
+                      icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
+                    />
+                  </TableCell>
+
+                  <TableCell align="right">
+                    <IconButton
+                      component={Link}
+                      href={`/profile?id=${user._id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: '#0088cc' }}
+                      aria-label="Переглянути профіль"
                     >
-                      @{user.telegram_username}
-                    </a>
-                  ) : (
-                    (user.telegram_id ?? (
-                      <HorizontalRuleIcon color={'disabled'}></HorizontalRuleIcon>
-                    ))
-                  )}
-                </TableCell>
-                <TableCell>{formatDate(new Date(user.created_at))}</TableCell>
-                <TableCell>
-                  <RoleChip role={user.role} />
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={user.is_banned ? 'Заблокований' : 'Активний'}
-                    color={user.is_banned ? 'error' : 'success'}
-                    icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    component={Link}
-                    href={`/profile?id=${user._id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Переглянути профіль"
-                  >
-                    <LaunchIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                      <LaunchIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </LoadingContent>
       )}
+
+      <Box display="flex" justifyContent="center" mt={3}>
+        {searchResult && (
+          <Pagination
+            count={searchResult.meta.total_pages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            showFirstButton
+            showLastButton
+            disabled={loading}
+          />
+        )}
+      </Box>
     </Box>
   );
 }

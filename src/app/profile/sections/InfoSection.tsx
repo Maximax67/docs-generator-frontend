@@ -60,13 +60,11 @@ export default function InfoSection({
           color={user.is_banned ? 'error' : 'success'}
           icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
         />
-        {user.email && (
-          <Chip
-            label={user.email_verified ? 'Пошта підтверджена' : 'Пошта не підтверджена'}
-            color={user.email_verified ? 'success' : 'warning'}
-            icon={user.email_verified ? <VerifiedIcon /> : <ErrorOutlineIcon />}
-          />
-        )}
+        <Chip
+          label={user.email_verified ? 'Пошта підтверджена' : 'Пошта не підтверджена'}
+          color={user.email_verified ? 'success' : 'warning'}
+          icon={user.email_verified ? <VerifiedIcon /> : <ErrorOutlineIcon />}
+        />
       </Stack>
 
       <Box
@@ -87,27 +85,22 @@ export default function InfoSection({
           justifyContent="space-between"
           spacing={1}
         >
-          <Typography variant="h6">{user.email || '-'}</Typography>
+          <Typography variant="h6">{user.email}</Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            {user.email &&
-              !user.email_verified &&
-              (isOwnProfile || isGod || user.role == 'user') && (
-                <Button
-                  size="small"
-                  onClick={isOwnProfile ? onSendEmailConfirm : onConfirmEmail}
-                  disabled={loading}
-                >
-                  {isOwnProfile ? 'Надіслати підтвердження' : 'Підтвердити'}
-                </Button>
-              )}
-            {user.email &&
-              user.email_verified &&
-              !isOwnProfile &&
-              (isGod || user.role == 'user') && (
-                <Button size="small" onClick={onRevokeConfirmEmail} disabled={loading}>
-                  Зняти підтвердження
-                </Button>
-              )}
+            {!user.email_verified && (isOwnProfile || isGod || user.role == 'user') && (
+              <Button
+                size="small"
+                onClick={isOwnProfile ? onSendEmailConfirm : onConfirmEmail}
+                disabled={loading}
+              >
+                {isOwnProfile ? 'Надіслати підтвердження' : 'Підтвердити'}
+              </Button>
+            )}
+            {user.email_verified && !isOwnProfile && (isGod || user.role == 'user') && (
+              <Button size="small" onClick={onRevokeConfirmEmail} disabled={loading}>
+                Зняти підтвердження
+              </Button>
+            )}
             {(isOwnProfile || isGod) && (
               <Button
                 size="small"
