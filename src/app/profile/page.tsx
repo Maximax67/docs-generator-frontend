@@ -19,15 +19,12 @@ import DeleteAccountDialog from './dialogs/DeleteAccountDialog';
 
 import { useUserStore } from '@/store/user';
 import { SessionInfo } from '@/types/user';
-import { AllVariablesResponse, DocumentVariable } from '@/types/variables';
-import { getInitialFormValues } from '@/lib/validation';
-import { filterSavedVariables } from '@/utils/filter-saved-variables';
-import { api } from '@/lib/api/core';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { ProfileTab } from '@/types/profile';
 import GenerationSection from './sections/GenerationSection';
 import { useGenerationsStore } from '@/store/generations';
 import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
+import { JSONValue } from '@/types/json';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -47,7 +44,6 @@ export default function ProfilePage() {
     listSessions,
     revokeSession,
     getSavedVariables,
-    updateSavedVariable,
     deleteSavedVariable,
     clearSavedVariables,
     logoutLocal,
@@ -57,7 +53,6 @@ export default function ProfilePage() {
     promoteUser,
     demoteUser,
     getUserSavedVariables,
-    updateUserSavedVariable,
     deleteUserSavedVariable,
     clearUserSavedVariables,
     deleteUser,
@@ -76,7 +71,6 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
 
   const [generationPage, setGenerationPage] = useState(1);
-  const [generationVariableView, setGenerationVariableView] = useState<'table' | 'json'>('table');
 
   const [emailOpen, setEmailOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -84,9 +78,7 @@ export default function ProfilePage() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [allVars, setAllVars] = useState<Record<string, DocumentVariable>>({});
-  const [savedVars, setSavedVars] = useState<Record<string, string>>({});
-  const [savedDataValues, setSavedDataValues] = useState<Record<string, string>>({});
+  const [savedVars, setSavedVars] = useState<Record<string, JSONValue>>({});
 
   const [newEmail, setNewEmail] = useState('');
   const [oldPassword, setOldPassword] = useState('');
@@ -103,28 +95,13 @@ export default function ProfilePage() {
   const updateVariables = useCallback(async () => {
     if (!targetUser?._id) return;
 
-    const allVarsResponse = await api.get<AllVariablesResponse>('/config/variables');
-
-    const newAllVars: Record<string, DocumentVariable> = {};
-    for (const variable of allVarsResponse.data.variables) {
-      newAllVars[variable.variable] = variable;
-    }
-    setAllVars(newAllVars);
-
     let vars: Record<string, string>;
     if (isOwnProfile) {
       vars = await getSavedVariables();
     } else {
       vars = await getUserSavedVariables(targetUser._id);
     }
-    const filteredVars = filterSavedVariables(vars, newAllVars);
-    setSavedVars(filteredVars);
-
-    const initialValues = getInitialFormValues(
-      Object.keys(filteredVars).map((variable) => newAllVars[variable]),
-      filteredVars,
-    );
-    setSavedDataValues(initialValues);
+    setSavedVars(vars);
   }, [getSavedVariables, getUserSavedVariables, isOwnProfile, targetUser?._id]);
 
   const fetchUserGenerations = useCallback(
@@ -241,10 +218,6 @@ export default function ProfilePage() {
     router.push('/');
   };
 
-  const handleSavedValuesChange = (variable: string, value: string) => {
-    setSavedDataValues((prev) => ({ ...prev, [variable]: value }));
-  };
-
   const handleRefreshSavedVars = async () => {
     if (!targetUser) return;
     setError(null);
@@ -268,28 +241,9 @@ export default function ProfilePage() {
       } else {
         ({ saved_variables } = await clearUserSavedVariables(targetUser._id));
       }
-      const filtered = filterSavedVariables(saved_variables, allVars);
-      setSavedVars(filtered);
+      setSavedVars(saved_variables);
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалося очистити дані'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveVariable = async (variable: string, value: string) => {
-    try {
-      setLoading(true);
-      let saved_variables: Record<string, string>;
-      if (isOwnProfile) {
-        ({ saved_variables } = await updateSavedVariable(variable, value));
-      } else {
-        ({ saved_variables } = await updateUserSavedVariable(targetUser._id, variable, value));
-      }
-      const filtered = filterSavedVariables(saved_variables, allVars);
-      setSavedVars(filtered);
-    } catch {
-      setError('Не вдалося зберегти змінну');
     } finally {
       setLoading(false);
     }
@@ -304,8 +258,7 @@ export default function ProfilePage() {
       } else {
         ({ saved_variables } = await deleteUserSavedVariable(targetUser._id, variable));
       }
-      const filtered = filterSavedVariables(saved_variables, allVars);
-      setSavedVars(filtered);
+      setSavedVars(saved_variables);
     } catch {
       setError('Не вдалося видалити змінну');
     } finally {
@@ -537,9 +490,6 @@ export default function ProfilePage() {
             loading={loading}
             generations={generations}
             meta={meta}
-            allVars={allVars}
-            variableView={generationVariableView}
-            setVariableView={setGenerationVariableView}
             onDelete={handleDeleteGeneration}
             onRefresh={handleRefreshGenerations}
             onChangePage={handleChangeGenerationPage}
@@ -548,21 +498,12 @@ export default function ProfilePage() {
           />
         )}
 
-        {active === 'vars' && (
+        {active === 'vars' && isOwnProfile && (
           <VariablesSection
-            isGod={currentUser.role === 'god'}
-            isTargetUserRestricted={
-              targetUser.role !== 'admin' && targetUser.role !== 'god' && !targetUser.email_verified
-            }
-            isOwnProfile={isOwnProfile}
             savedVars={savedVars}
-            allVars={allVars}
-            savedDataValues={savedDataValues}
             onRefresh={handleRefreshSavedVars}
             onClear={handleClearSavedVariables}
-            onSave={handleSaveVariable}
             onDelete={handleDeleteVariable}
-            onChangeValue={handleSavedValuesChange}
           />
         )}
 

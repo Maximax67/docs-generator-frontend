@@ -32,7 +32,7 @@ export const documentApi = {
         responseType: 'blob',
       });
 
-      return response.data
+      return response.data;
     } catch (error: unknown) {
       const message = toErrorMessage(error, 'Не вдалося завантажити попередній перегляд');
       const status = isAxiosError(error) ? error.response?.status : undefined;
@@ -43,20 +43,39 @@ export const documentApi = {
 
   async generateDocument(
     documentId: string,
-    variables: Record<string, string>,
+    variables: Record<string, unknown>,
     userId?: string,
   ): Promise<Blob> {
     try {
       const response = await api.post(
-        userId
-          ? `/documents/${documentId}/generate/${userId}`
-          : `/documents/${documentId}/generate`,
+        `/documents/${documentId}/generate`,
         { variables },
-        { responseType: 'blob' },
+        {
+          responseType: 'blob',
+          params: userId ? { user_id: userId } : undefined
+        },
       );
       return response.data;
     } catch (error: unknown) {
       const message = toErrorMessage(error, 'Не вдалося згенерувати документ');
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+
+      throw new DocumentApiError(message, status);
+    }
+  },
+
+  async validateDocument(
+    documentId: string,
+    variables: Record<string, unknown>,
+  ): Promise<{ is_valid: boolean; errors: Record<string, string> }> {
+    try {
+      const response = await api.post(
+        `/documents/${documentId}/validate`,
+        { variables },
+      );
+      return response.data;
+    } catch (error: unknown) {
+      const message = toErrorMessage(error, 'Не вдалося валідувати документ');
       const status = isAxiosError(error) ? error.response?.status : undefined;
 
       throw new DocumentApiError(message, status);

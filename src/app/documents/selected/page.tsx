@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -13,64 +13,68 @@ import {
   Divider,
   Stack,
   Chip,
-  Snackbar,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Download as DownloadIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { DocumentDetails, VariableType } from '@/types/variables';
+
+import Form from '@rjsf/mui';
+import validator from '@rjsf/validator-ajv8';
+import { RJSFSchema } from '@rjsf/utils';
+
+import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
 import { documentApi, DocumentApiError } from '@/lib/documentApi';
-import {
-  validateFormValues,
-  getInitialFormValues,
-  canSubmitForm,
-  hasVariablesToFill,
-} from '@/lib/validation';
-import { VariableInput } from '@/components/VariableInput';
 import { useUserStore } from '@/store/user';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
 import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
+import { IChangeEvent } from '@rjsf/core';
+import { JSONValue } from '@/types/json';
 
 export default function DocumentVariablesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, updateSavedVariable, deleteSavedVariable } = useUserStore();
+  const { user } = useUserStore();
+
+  const documentId = searchParams.get('id');
 
   const [documentDetails, setDocumentDetails] = useState<DocumentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const [formValues, setFormValues] = useState<Record<string, JSONValue>>({});
+  const [isValid, setIsValid] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const [toastOpen, setToastOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-
-  const documentId = searchParams.get('id');
 
   useEffect(() => {
+    if (!documentId) {
+      setError('Документ не обрано!');
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
-      if (!documentId) {
-        setError('Документ не обрано!');
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
       try {
+        setLoading(true);
+        setError(null);
+
         const details = await documentApi.getDocumentDetails(documentId);
         setDocumentDetails(details);
-      } catch (err: unknown) {
-        if (err instanceof DocumentApiError) {
-          setError(err.message);
-        } else {
-          setError('Не вдалося завантажити дані документа');
-        }
+
+        const initialValues: Record<string, JSONValue> = {};
+        details.variables.variables.forEach((v: DocumentVariableInfo) => {
+          if (v.value != null) initialValues[v.variable] = v.value;
+          else if (v.saved_value != null) initialValues[v.variable] = v.saved_value;
+        });
+
+        setFormValues(initialValues);
+      } catch (err) {
+        setError(
+          err instanceof DocumentApiError ? err.message : 'Не вдалося завантажити дані документа',
+        );
       } finally {
         setLoading(false);
       }
@@ -79,92 +83,57 @@ export default function DocumentVariablesPage() {
     loadData();
   }, [documentId]);
 
-  useEffect(() => {
-    if (!documentDetails) return;
+  const schema: RJSFSchema = useMemo(() => {
+    const properties: Record<string, JSONValue> = {};
+    const required: string[] = [];
 
-    setFormValues((prev) => {
-      if (Object.keys(prev).length > 0) {
-        return prev;
-      }
+    const variableMap = new Map(documentDetails?.variables.variables.map((v) => [v.variable, v]));
 
-      const savedVariables =
-        user?.email_verified || user?.role === 'admin' || user?.role === 'god'
-          ? user.saved_variables
-          : {};
+    documentDetails?.variables.template_variables.forEach((name) => {
+      const info = variableMap.get(name);
 
-      return getInitialFormValues(documentDetails.variables, savedVariables);
-    });
-  }, [documentDetails, user?.saved_variables, user?.email_verified, user?.role]);
+      if (info?.in_database && info.validation_schema) {
+        properties[name] = {
+          ...info.validation_schema,
+          title: info.validation_schema.title || name,
+        };
 
-  const handleValueChange = (variable: string, value: string) => {
-    setFormValues((prev) => ({ ...prev, [variable]: value }));
-
-    if (fieldErrors[variable]) {
-      setFieldErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[variable];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleFieldError = (variable: string, error: string | undefined) => {
-    setFieldErrors((prev) => {
-      if (error) {
-        return { ...prev, [variable]: error };
+        if (info.required) required.push(name);
       } else {
-        const newErrors = { ...prev };
-        delete newErrors[variable];
-        return newErrors;
+        properties[name] = {
+          type: 'string',
+          title: name,
+        };
       }
     });
-  };
 
-  const handleSaveVariable = async (variable: string, value: string) => {
-    if (!user) return;
+    return {
+      type: 'object',
+      properties,
+      required,
+    } as RJSFSchema;
+  }, [documentDetails?.variables.template_variables, documentDetails?.variables.variables]);
 
-    try {
-      await updateSavedVariable(variable, value);
-    } catch {
-      setToastMessage('Не вдалося зберегти змінну');
-      setToastOpen(true);
-    }
-  };
-
-  const handleDeleteVariable = async (variable: string) => {
-    if (!user) return;
-
-    try {
-      await deleteSavedVariable(variable);
-    } catch {
-      setToastMessage('Не вдалося видалити змінну');
-      setToastOpen(true);
-    }
+  const handleFormChange = (e: IChangeEvent) => {
+    setFormValues(e.formData);
+    setIsValid(e.errors.length === 0);
   };
 
   const handleGenerate = async () => {
-    if (!documentDetails || !documentId) return;
-
-    const validation = validateFormValues(documentDetails.variables, formValues);
-    if (!validation.isValid) {
-      setFieldErrors(validation.errors);
-      return;
-    }
-
-    setIsGenerating(true);
-    setGenerateError(null);
+    if (!documentId || !documentDetails) return;
 
     try {
-      const blob = await documentApi.generateDocument(documentId, formValues, user?._id);
-      await savePdfToIndexedDb('generatedPdf', blob);
+      setIsGenerating(true);
+      setGenerateError(null);
 
+      const blob = await documentApi.generateDocument(documentId, formValues, user?._id);
+
+      await savePdfToIndexedDb('generatedPdf', blob);
       router.push('/documents/result/');
-    } catch (err: unknown) {
-      if (err instanceof DocumentApiError) {
-        setGenerateError(err.message);
-      } else {
-        setGenerateError('Не вдалося згенерувати документ');
-      }
+    } catch (err) {
+      setGenerateError(
+        err instanceof DocumentApiError ? err.message : 'Не вдалося згенерувати документ',
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -172,13 +141,6 @@ export default function DocumentVariablesPage() {
 
   const handleRefresh = () => {
     window.location.reload();
-  };
-
-  const handleCloseToast = () => setToastOpen(false);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setToastOpen(true);
   };
 
   if (loading) {
@@ -219,9 +181,9 @@ export default function DocumentVariablesPage() {
     );
   }
 
-  const canSubmit = canSubmitForm(documentDetails.variables, formValues);
-  const hasUnknownVariables = documentDetails.unknown_variables.length > 0;
-  const hasVariablesToInput = hasVariablesToFill(documentDetails.variables);
+  const unknownVariables = documentDetails?.variables.template_variables.filter(
+    (v) => !documentDetails?.variables.variables.find((x) => x.variable === v),
+  );
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -239,108 +201,45 @@ export default function DocumentVariablesPage() {
             Оновлено: {formatDateTime(new Date(documentDetails.file.modified_time))}
           </Typography>
 
-          {hasUnknownVariables && (
-            <Alert severity="warning" sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  gap: 0.75,
-                }}
-              >
-                <Typography variant="subtitle2" component="span">
-                  Невідомі змінні в документі:
-                </Typography>
-
-                {documentDetails.unknown_variables.map((variable) => (
-                  <Chip key={variable} label={variable} size="small" color="warning" />
+          {unknownVariables.length > 0 && (
+            <Alert severity="warning">
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                {unknownVariables.map((v) => (
+                  <Chip key={v} label={v} size="small" color="warning" />
                 ))}
-              </Box>
+              </Stack>
             </Alert>
           )}
         </Box>
 
         <Paper sx={{ p: 3 }}>
-          {!hasVariablesToInput && (
-            <Alert severity="info">Цей документ не містить полів для заповнення</Alert>
-          )}
-
-          {hasVariablesToInput && (
-            <>
-              <Typography variant="h6">Заповніть дані</Typography>
-              <Stack spacing={3} sx={{ mt: 3 }}>
-                {documentDetails.variables
-                  .filter((variable) => variable.type !== VariableType.CONSTANT)
-                  .map((variable) => (
-                    <VariableInput
-                      with_example
-                      with_label
-                      key={variable.variable}
-                      variable={variable}
-                      value={formValues[variable.variable] || ''}
-                      onChange={(value) => handleValueChange(variable.variable, value)}
-                      onError={(error) => handleFieldError(variable.variable, error)}
-                      savedValue={
-                        user?.email_verified || user?.role === 'admin' || user?.role === 'god'
-                          ? user?.saved_variables[variable.variable]
-                          : undefined
-                      }
-                      onSave={handleSaveVariable}
-                      onDelete={handleDeleteVariable}
-                      onToast={showToast}
-                    />
-                  ))}
-              </Stack>
-            </>
-          )}
-
-          <Divider sx={{ my: 3 }} />
-
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-            flexDirection={{ xs: 'column', sm: 'row' }}
-            gap={2}
+          <Form
+            liveValidate
+            showErrorList={false}
+            schema={schema}
+            formData={formValues}
+            validator={validator}
+            onChange={handleFormChange}
+            onSubmit={handleGenerate}
           >
-            {generateError && (
-              <Alert severity="error" sx={{ flex: 1 }}>
-                {generateError}
-              </Alert>
-            )}
+            <Divider sx={{ my: 3 }} />
+
+            {generateError && <Alert severity="error">{generateError}</Alert>}
 
             <Button
               variant="contained"
               size="large"
+              type="submit"
               startIcon={isGenerating ? <CircularProgress size={20} /> : <DownloadIcon />}
-              onClick={handleGenerate}
-              disabled={!canSubmit || isGenerating}
+              disabled={!isValid || isGenerating}
               sx={{
                 minWidth: { xs: '100%', sm: 200 },
               }}
             >
               {isGenerating ? 'Генерація...' : 'Згенерувати PDF'}
             </Button>
-          </Box>
+          </Form>
         </Paper>
-
-        <Snackbar
-          open={toastOpen}
-          autoHideDuration={6000}
-          onClose={handleCloseToast}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-          sx={{
-            '& .MuiPaper-root': {
-              backgroundColor: (theme) => theme.palette.background.paper,
-              color: (theme) => theme.palette.text.primary,
-            },
-          }}
-        >
-          <Alert onClose={handleCloseToast} severity="error" sx={{ width: '100%' }}>
-            {toastMessage}
-          </Alert>
-        </Snackbar>
       </Stack>
     </Container>
   );

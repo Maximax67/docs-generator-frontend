@@ -176,8 +176,9 @@ export const useUserStore = create<UserState>()(
         await api.post(`/auth/email/verify?token=${encodeURIComponent(token)}`);
         const u = get().user;
         if (u?._id) {
-          u.email_verified = true;
-          set({ user: u });
+          set(state => ({
+            user: state.user ? { ...state.user, email_verified: true } : null
+          }));
         }
       },
       changeEmail: async (newEmail: string) => {

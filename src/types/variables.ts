@@ -1,50 +1,19 @@
-export enum VariableType {
-  PLAIN = 'plain',
-  MULTICHOICE = 'multichoice',
-  CONSTANT = 'constant',
-}
+import { JSONValue } from "./json";
 
-export interface ValidationRule {
-  name: string;
-  regex: string;
-  error_message?: string;
-  is_valid: boolean;
-}
-
-export interface BaseVariable {
+export interface DocumentVariableInfo {
   variable: string;
-  name: string;
-  allow_skip: boolean;
+  in_database: boolean;
+  value: JSONValue;
+  validation_schema: Record<string, JSONValue> | null;
+  required: boolean;
   allow_save: boolean;
-  type: VariableType;
+  scope: string | null;
+  saved_value: JSONValue;
 }
 
-export interface PlainVariable extends BaseVariable {
-  type: VariableType.PLAIN;
-  validation_rules: ValidationRule[];
-  example?: string;
-}
-
-export interface MultichoiceVariable extends BaseVariable {
-  type: VariableType.MULTICHOICE;
-  choices: string[];
-}
-
-export interface ConstantVariable extends BaseVariable {
-  type: VariableType.CONSTANT;
-  value: string;
-}
-
-export type DocumentVariable = PlainVariable | MultichoiceVariable | ConstantVariable;
-
-export interface DocumentVariables {
-  variables: DocumentVariable[];
-  unknown_variables: string[];
-  is_valid: boolean;
-}
-
-export interface AllVariablesResponse {
-  variables: DocumentVariable[];
+export interface DocumentVariablesResponse {
+  template_variables: string[];
+  variables: DocumentVariableInfo[];
 }
 
 export interface DocumentDetails {
@@ -57,29 +26,20 @@ export interface DocumentDetails {
     size?: number;
     web_view_link?: string;
   };
-  variables: DocumentVariable[];
-  unknown_variables: string[];
-  is_valid: boolean;
+  variables: DocumentVariablesResponse;
 }
 
-export interface ValidationErrors {
-  errors: Record<string, string>;
-  is_valid: boolean;
+export interface VariableSchemaUpdateRequest {
+  schema: Record<string, JSONValue>;
 }
 
-export interface GenerateDocumentRequest {
-  variables: Record<string, string>;
+export interface AllVariablesResponse {
+  variables: DocumentVariableInfo[];
 }
 
 export interface SavedVariable {
   variable: string;
-  value: string;
+  value: JSONValue;
   created_at: string;
   updated_at: string;
 }
-
-export const VariableTypeNames: Record<VariableType, string> = {
-  [VariableType.CONSTANT]: 'Константа',
-  [VariableType.PLAIN]: 'Текст',
-  [VariableType.MULTICHOICE]: 'Вибір',
-};

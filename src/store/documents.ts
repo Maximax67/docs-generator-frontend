@@ -56,9 +56,9 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
       return;
     }
 
-    set({
+    set(state => ({
       previews: {
-        ...previews,
+        ...state.previews,
         [documentId]: {
           id: documentId,
           url: '',
@@ -66,7 +66,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
           timestamp: now,
         },
       },
-    });
+    }));
 
     try {
       const blob = await documentApi.getDocumentPreview(documentId);
@@ -75,9 +75,9 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
       reader.onload = () => {
         const dataUrl = reader.result as string;
 
-        set({
+        set(state => ({
           previews: {
-            ...previews,
+            ...state.previews,
             [documentId]: {
               id: documentId,
               url: dataUrl,
@@ -86,13 +86,13 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
               blob,
             },
           },
-        });
+        }));
       };
 
       reader.onerror = () => {
-        set({
+        set(state => ({
           previews: {
-            ...previews,
+            ...state.previews,
             [documentId]: {
               id: documentId,
               url: '',
@@ -101,14 +101,14 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
               timestamp: now,
             },
           },
-        });
+        }));
       };
 
       reader.readAsDataURL(blob);
     } catch (error) {
-      set({
+      set(state => ({
         previews: {
-          ...previews,
+          ...state.previews,
           [documentId]: {
             id: documentId,
             url: '',
@@ -117,7 +117,7 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
             timestamp: now,
           },
         },
-      });
+      }));
     }
   },
 

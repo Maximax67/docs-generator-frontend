@@ -40,11 +40,7 @@ import Link from 'next/link';
 import RoleChip from '@/components/RoleChip';
 import { formatDateTime } from '@/utils/dates';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { AllVariablesResponse, DocumentVariable } from '@/types/variables';
-import { api } from '@/lib/api/core';
-import { GenerationVariables } from '@/components/GenerationVariables';
 import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
-import { GenerationVariablesControls } from '@/components/GenerationVariablesControls';
 
 export default function GenerationsPage() {
   const { user } = useUserStore();
@@ -53,11 +49,6 @@ export default function GenerationsPage() {
   const [generationsFetched, setGenerationsFetched] = useState(false);
   const { generations, meta, fetchGenerations, deleteGeneration, regenerateGeneration } =
     useGenerationsStore();
-
-  const [variableView, setVariableView] = useState<'table' | 'json'>('table');
-  const [showConstants, setShowConstants] = useState(false);
-  const [allVars, setAllVars] = useState<Record<string, DocumentVariable>>({});
-  const [allVarsLoaded, setAllVarsLoaded] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -70,22 +61,12 @@ export default function GenerationsPage() {
     setLoading(true);
     try {
       await fetchGenerations(page);
-
-      if (!allVarsLoaded) {
-        const allVarsResponse = await api.get<AllVariablesResponse>('/config/variables');
-        const newAllVars: Record<string, DocumentVariable> = {};
-        for (const variable of allVarsResponse.data.variables) {
-          newAllVars[variable.variable] = variable;
-        }
-        setAllVars(newAllVars);
-        setAllVarsLoaded(true);
-      }
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
     } finally {
       setLoading(false);
     }
-  }, [fetchGenerations, page, allVarsLoaded]);
+  }, [fetchGenerations, page]);
 
   useEffect(() => {
     if (!generationsFetched && user && (user.role === 'admin' || user.role === 'god')) {
@@ -183,13 +164,6 @@ export default function GenerationsPage() {
         Генерації
       </Typography>
 
-      <GenerationVariablesControls
-        showConstants={showConstants}
-        variableView={variableView}
-        setShowConstants={setShowConstants}
-        setVariableView={setVariableView}
-      />
-
       {isMobile ? (
         <Stack spacing={2}>
           {generations.map((generation) => {
@@ -277,13 +251,21 @@ export default function GenerationsPage() {
                         </Button>
 
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <GenerationVariables
-                            fullWidth
-                            showConstants={showConstants}
-                            allVars={allVars}
-                            variables={generation.variables}
-                            view={variableView}
-                          />
+                          <Box
+                            sx={{
+                              p: 1.5,
+                              borderRadius: 2,
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              overflowX: 'auto',
+                            }}
+                          >
+                            <pre
+                              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                            >
+                              {JSON.stringify(generation.variables, null, 2)}
+                            </pre>
+                          </Box>
                         </Collapse>
                       </>
                     )}
@@ -400,12 +382,21 @@ export default function GenerationsPage() {
                     <TableCell colSpan={6} sx={{ p: 0 }}>
                       {Object.entries(generation.variables).length > 0 && (
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <GenerationVariables
-                            showConstants={showConstants}
-                            allVars={allVars}
-                            variables={generation.variables}
-                            view={variableView}
-                          />
+                          <Box
+                            sx={{
+                              p: 1.5,
+                              borderRadius: 2,
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                              overflowX: 'auto',
+                            }}
+                          >
+                            <pre
+                              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                            >
+                              {JSON.stringify(generation.variables, null, 2)}
+                            </pre>
+                          </Box>
                         </Collapse>
                       )}
                     </TableCell>

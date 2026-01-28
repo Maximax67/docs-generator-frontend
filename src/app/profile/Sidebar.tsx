@@ -53,15 +53,15 @@ export default function Sidebar({ active, onChange, user, isOwnProfile }: Sideba
           <ListItemText primary="Генерації" />
         </ListItemButton>
 
-        <ListItemButton selected={active === 'vars'} onClick={() => onChange('vars')}>
-          <ListItemIcon>
-            <StorageIcon />
-          </ListItemIcon>
-          <ListItemText primary="Збережені дані" />
-        </ListItemButton>
-
         {isOwnProfile && (
           <>
+            <ListItemButton selected={active === 'vars'} onClick={() => onChange('vars')}>
+              <ListItemIcon>
+                <StorageIcon />
+              </ListItemIcon>
+              <ListItemText primary="Збережені дані" />
+            </ListItemButton>
+
             <ListItemButton selected={active === 'sessions'} onClick={() => onChange('sessions')}>
               <ListItemIcon>
                 <KeyIcon />

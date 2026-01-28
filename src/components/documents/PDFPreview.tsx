@@ -7,7 +7,7 @@ import { DriveFile } from '@/types/documents';
 import { useDocumentStore } from '@/store/documents';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
-import { PDFViewerClient } from './PDFViewerClient';
+import { PDFViewerClient } from '../PDFViewerClient';
 
 interface PDFPreviewProps {
   showWebLink?: boolean;

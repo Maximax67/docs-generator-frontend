@@ -33,25 +33,19 @@ import { useState, Fragment } from 'react';
 import { useTheme } from '@mui/material/styles';
 import Link from 'next/link';
 import { formatDateTime } from '@/utils/dates';
-import { DocumentVariable } from '@/types/variables';
 import { Generation, PaginationMeta } from '@/types/generations';
-import { GenerationVariables } from '@/components/GenerationVariables';
-import { GenerationVariablesControls } from '@/components/GenerationVariablesControls';
 
 type GenerationSectionProps = {
   deleteAllowed: boolean;
   generations: Generation[];
   meta: PaginationMeta | null;
   loading: boolean;
-  variableView: 'table' | 'json';
   isAdmin: boolean;
-  allVars: Record<string, DocumentVariable>;
   onDelete: (id: string) => void;
   onDeleteAll: () => void;
   onRegenerate: (id: string, oldValues: boolean) => void;
   onRefresh: () => void;
   onChangePage: (page: number) => void;
-  setVariableView: (value: 'table' | 'json') => void;
 };
 
 export default function GenerationSection({
@@ -59,18 +53,14 @@ export default function GenerationSection({
   generations,
   meta,
   loading,
-  variableView,
   isAdmin,
-  allVars,
   onDelete,
   onDeleteAll,
   onRegenerate,
   onRefresh,
   onChangePage,
-  setVariableView,
 }: GenerationSectionProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [showConstants, setShowConstants] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -101,14 +91,6 @@ export default function GenerationSection({
         <Alert severity="info">Немає згенерованих документів</Alert>
       ) : (
         <>
-          {isAdmin && (
-            <GenerationVariablesControls
-              showConstants={showConstants}
-              variableView={variableView}
-              setShowConstants={setShowConstants}
-              setVariableView={setVariableView}
-            />
-          )}
           {isMobile ? (
             <Stack spacing={2}>
               {generations.map((generation) => {
@@ -180,13 +162,25 @@ export default function GenerationSection({
                             </Button>
 
                             <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                              <GenerationVariables
-                                fullWidth
-                                showConstants={showConstants}
-                                allVars={allVars}
-                                variables={generation.variables}
-                                view={variableView}
-                              />
+                              <Box
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: 2,
+                                  fontFamily: 'monospace',
+                                  fontSize: 13,
+                                  overflowX: 'auto',
+                                }}
+                              >
+                                <pre
+                                  style={{
+                                    margin: 0,
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word',
+                                  }}
+                                >
+                                  {JSON.stringify(generation.variables, null, 2)}
+                                </pre>
+                              </Box>
                             </Collapse>
                           </>
                         )}
@@ -271,12 +265,25 @@ export default function GenerationSection({
                       <TableRow>
                         <TableCell colSpan={4} sx={{ p: 0 }}>
                           <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                            <GenerationVariables
-                              showConstants={showConstants}
-                              allVars={allVars}
-                              variables={generation.variables}
-                              view={variableView}
-                            />
+                            <Box
+                              sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                fontFamily: 'monospace',
+                                fontSize: 13,
+                                overflowX: 'auto',
+                              }}
+                            >
+                              <pre
+                                style={{
+                                  margin: 0,
+                                  whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-word',
+                                }}
+                              >
+                                {JSON.stringify(generation.variables, null, 2)}
+                              </pre>
+                            </Box>
                           </Collapse>
                         </TableCell>
                       </TableRow>
