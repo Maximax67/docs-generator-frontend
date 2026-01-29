@@ -31,10 +31,17 @@ export const generationsApi = {
   },
 
   /**
-   * Delete a specific generation
+   * Delete a specific generation (admin only)
    */
   async deleteGeneration(generationId: string): Promise<void> {
     await api.delete(`/generations/${generationId}`);
+  },
+
+  /**
+   * Delete all generations for a user (admin only)
+   */
+  async deleteAllUserGenerations(userId: string): Promise<void> {
+    await api.delete(`/generations`, { params: { user_id: userId } });
   },
 
   /**

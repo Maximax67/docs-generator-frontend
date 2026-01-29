@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack, Typography, Chip, Box, Button } from '@mui/material';
 import {
   Verified as VerifiedIcon,

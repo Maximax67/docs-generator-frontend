@@ -1,155 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Container, Alert } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useUserProfile } from './hooks/useUserProfile';
-
-import Sidebar from './Sidebar';
-import ProfileLayout from './ProfileLayout';
-import InfoSection from './sections/InfoSection';
-import VariablesSection from './sections/VariablesSection';
-import SessionsSection from './sections/SessionsSection';
-import LogoutSection from './sections/LogoutSection';
-
-import ChangeEmailDialog from './dialogs/ChangeEmailDialog';
-import ChangePasswordDialog from './dialogs/ChangePasswordDialog';
-import EditNamesDialog from './dialogs/EditNamesDialog';
-import DeleteAccountDialog from './dialogs/DeleteAccountDialog';
-
+import { Suspense } from 'react';
+import { Container, Alert, CircularProgress, Box } from '@mui/material';
 import { useUserStore } from '@/store/user';
-import { SessionInfo } from '@/types/user';
-import { toErrorMessage } from '@/utils/errors-messages';
-import { ProfileTab } from '@/types/profile';
-import GenerationSection from './sections/GenerationSection';
-import { useGenerationsStore } from '@/store/generations';
-import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
-import { JSONValue } from '@/types/json';
+import { useProfileData } from './hooks/useProfileData';
+import { useProfileHandlers } from './hooks/useProfileHandlers';
+import { ProfileContent } from './components/ProfileContent';
+import { ProfileDialogs } from './components/ProfileDialogs';
 
-export default function ProfilePage() {
-  const router = useRouter();
-  const { targetUser, currentUser, isOwnProfile, error: hookError } = useUserProfile();
-
-  const {
-    logoutEverywhere,
-    logout,
-    sendEmailConfirmation,
-    changeEmail,
-    changeUserEmail,
-    revokeConfirmEmail,
-    changePassword,
-    deleteAccount,
-    updateNames,
-    updateUserNames,
-    listSessions,
-    revokeSession,
-    getSavedVariables,
-    deleteSavedVariable,
-    clearSavedVariables,
-    logoutLocal,
-    confirmEmail,
-    banUser,
-    unbanUser,
-    promoteUser,
-    demoteUser,
-    getUserSavedVariables,
-    deleteUserSavedVariable,
-    clearUserSavedVariables,
-    deleteUser,
-  } = useUserStore();
-  const {
-    generations,
-    meta,
-    fetchGenerations,
-    deleteGeneration,
-    deleteAllUserGenerations,
-    regenerateGeneration,
-  } = useGenerationsStore();
-
-  const [active, setActive] = useState<ProfileTab>('info');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [generationPage, setGenerationPage] = useState(1);
-
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [passwordOpen, setPasswordOpen] = useState(false);
-  const [namesOpen, setNamesOpen] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-
-  const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [savedVars, setSavedVars] = useState<Record<string, JSONValue>>({});
-
-  const [newEmail, setNewEmail] = useState('');
-  const [oldPassword, setOldPassword] = useState('');
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState<string | ''>('');
-  const [confirmEmailDeleteAccount, setConfirmEmailDeleteAccount] = useState('');
-  const [errorDeleteAccount, setErrorDeleteAccount] = useState('');
-
-  const [loadingAttempted, setLoadingAttempted] = useState<string | null>(null);
-
-  const updateVariables = useCallback(async () => {
-    if (!targetUser?._id) return;
-
-    let vars: Record<string, string>;
-    if (isOwnProfile) {
-      vars = await getSavedVariables();
-    } else {
-      vars = await getUserSavedVariables(targetUser._id);
-    }
-    setSavedVars(vars);
-  }, [getSavedVariables, getUserSavedVariables, isOwnProfile, targetUser?._id]);
-
-  const fetchUserGenerations = useCallback(
-    async (page: number) => {
-      if (!targetUser?._id) return;
-
-      try {
-        await fetchGenerations(page, undefined, targetUser._id);
-      } catch (e) {
-        setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchGenerations, targetUser?._id],
-  );
-
-  useEffect(() => {
-    const load = async () => {
-      if (!targetUser?._id) return;
-
-      try {
-        if (loadingAttempted !== targetUser._id) {
-          setLoadingAttempted(targetUser._id);
-
-          if (isOwnProfile) {
-            const list = await listSessions();
-            setSessions(list);
-          }
-
-          await updateVariables();
-          await fetchUserGenerations(1);
-        }
-      } catch (e) {
-        setError(toErrorMessage(e, 'Помилка завантаження даних'));
-      }
-    };
-
-    load();
-  }, [
-    targetUser?._id,
-    updateVariables,
-    listSessions,
-    fetchUserGenerations,
-    isOwnProfile,
-    loadingAttempted,
-    setLoadingAttempted,
-  ]);
+function ProfilePageContent() {
+  const { user: currentUser } = useUserStore();
+  const { targetUser, isOwnProfile, loading, error } = useProfileData();
+  const handlers = useProfileHandlers(targetUser, isOwnProfile);
 
   if (!currentUser) {
     return (
@@ -159,7 +21,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!isOwnProfile && currentUser?.role !== 'admin' && currentUser?.role !== 'god') {
+  if (!isOwnProfile && currentUser.role !== 'admin' && currentUser.role !== 'god') {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="error">Лише модератор може переглядати профіль інших</Alert>
@@ -167,409 +29,39 @@ export default function ProfilePage() {
     );
   }
 
-  if (!targetUser) {
-    if (!loadingAttempted && !hookError) return;
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
+  if (error || !targetUser) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="error">{hookError ? hookError : 'Користувач не знайдений'}</Alert>
+        <Alert severity="error">{error || 'Користувач не знайдений'}</Alert>
       </Container>
     );
   }
 
-  const handleRefreshSessions = async () => {
-    if (!targetUser) return;
-    setError(null);
-    setLoading(true);
-    try {
-      const list = await listSessions();
-      setSessions(list);
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалося завантажити сесії'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRevokeSession = async (sessionId: string, isCurrent: boolean) => {
-    setError(null);
-    setLoading(true);
-    try {
-      await revokeSession(sessionId);
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-      if (isCurrent) {
-        logoutLocal();
-        router.push('/');
-      }
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалося видалити сесію'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
-  };
-
-  const handleLogoutEverywhere = async () => {
-    await logoutEverywhere();
-    router.push('/');
-  };
-
-  const handleRefreshSavedVars = async () => {
-    if (!targetUser) return;
-    setError(null);
-    setLoading(true);
-    try {
-      await updateVariables();
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалося завантажити дані'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearSavedVariables = async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      let saved_variables: Record<string, string>;
-      if (isOwnProfile) {
-        ({ saved_variables } = await clearSavedVariables());
-      } else {
-        ({ saved_variables } = await clearUserSavedVariables(targetUser._id));
-      }
-      setSavedVars(saved_variables);
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалося очистити дані'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteVariable = async (variable: string) => {
-    try {
-      setLoading(true);
-      let saved_variables: Record<string, string>;
-      if (isOwnProfile) {
-        ({ saved_variables } = await deleteSavedVariable(variable));
-      } else {
-        ({ saved_variables } = await deleteUserSavedVariable(targetUser._id, variable));
-      }
-      setSavedVars(saved_variables);
-    } catch {
-      setError('Не вдалося видалити змінну');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const withAsyncHandler = async (action: CallableFunction, errorMessage: string) => {
-    setError(null);
-    setLoading(true);
-    try {
-      await action();
-    } catch (e) {
-      setError(toErrorMessage(e, errorMessage));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendEmailConfirm = () =>
-    withAsyncHandler(sendEmailConfirmation, 'Не вдалося надіслати лист підтвердження');
-
-  const handleConfirmEmail = () =>
-    withAsyncHandler(async () => {
-      await confirmEmail(targetUser._id);
-      targetUser.email_verified = true;
-    }, 'Не вдалося підтвердити пошту');
-
-  const handleRevokeConfirmEmail = () =>
-    withAsyncHandler(async () => {
-      await revokeConfirmEmail(targetUser._id);
-      targetUser.email_verified = false;
-    }, 'Не вдалося зняти підтвердження пошту');
-
-  const handleBanUser = () =>
-    withAsyncHandler(async () => {
-      await banUser(targetUser._id);
-      targetUser.is_banned = true;
-    }, 'Не вдалося заблокувати користувача');
-
-  const handleUnbanUser = () =>
-    withAsyncHandler(async () => {
-      await unbanUser(targetUser._id);
-      targetUser.is_banned = false;
-    }, 'Не вдалося розблокувати користувача');
-
-  const handlePromoteUser = () =>
-    withAsyncHandler(async () => {
-      await promoteUser(targetUser._id);
-      targetUser.role = 'admin';
-    }, 'Не вдалося підвищити користувача');
-
-  const handleDemoteUser = () =>
-    withAsyncHandler(async () => {
-      await demoteUser(targetUser._id);
-      targetUser.role = 'user';
-    }, 'Не вдалося понизити користувача');
-
-  const handleChangeEmail = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      if (isOwnProfile) {
-        await changeEmail(newEmail);
-      } else {
-        await changeUserEmail(targetUser._id, newEmail);
-        targetUser.email = newEmail;
-      }
-
-      setEmailOpen(false);
-      setNewEmail('');
-
-      if (isOwnProfile) {
-        router.push('/login/');
-      }
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалося змінити пошту'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChangePassword = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      await changePassword(oldPassword, newPassword);
-      setPasswordOpen(false);
-      router.push('/login/');
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалося змінити пароль'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateNames = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      if (isOwnProfile) {
-        await updateNames(firstName, lastName || null);
-      } else {
-        await updateUserNames(targetUser._id, firstName, lastName || null);
-        targetUser.first_name = firstName;
-        targetUser.last_name = lastName || null;
-      }
-      setNamesOpen(false);
-    } catch (e) {
-      setError(toErrorMessage(e, "Не вдалося оновити ім'я"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancelDeleteAccount = async () => {
-    setErrorDeleteAccount('');
-    setConfirmEmailDeleteAccount('');
-    setOpenDeleteDialog(false);
-  };
-
-  const handleDeleteAccount = async () => {
-    setErrorDeleteAccount('');
-
-    try {
-      if (isOwnProfile) {
-        await deleteAccount();
-      } else {
-        await deleteUser(targetUser._id);
-      }
-      setOpenDeleteDialog(false);
-      router.push(isOwnProfile ? '/' : '/users');
-    } catch {
-      setErrorDeleteAccount('Помилка при видаленні акаунта.');
-    }
-  };
-
-  const handleRegenerateGeneration = async (id: string, oldConstants: boolean) => {
-    setError(null);
-    setLoading(true);
-    try {
-      const blob = await regenerateGeneration(id, oldConstants);
-      await savePdfToIndexedDb('generatedPdf', blob);
-
-      window.open('/documents/result/', '_blank', 'noopener,noreferrer');
-    } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteGeneration = (id: string) =>
-    withAsyncHandler(() => deleteGeneration(id), 'Не вдалось видалити генерацію');
-
-  const handleDeleteAllGenerations = () =>
-    withAsyncHandler(
-      () => deleteAllUserGenerations(targetUser._id),
-      'Не вдалось видалити всі генерації',
-    );
-
-  const handleChangeGenerationPage = (page: number) =>
-    withAsyncHandler(async () => {
-      await fetchUserGenerations(page);
-      setGenerationPage(page);
-    }, 'Не вдалось отримати список генерацій');
-
-  const handleRefreshGenerations = () =>
-    withAsyncHandler(
-      () => fetchUserGenerations(generationPage),
-      'Не вдалось отримати список генерацій',
-    );
-
   return (
     <Container sx={{ py: { xs: 2, md: 6 } }}>
-      <ProfileLayout
-        active={active}
-        onChangeActive={(v) => setActive(v)}
-        sidebar={
-          <Sidebar
-            isOwnProfile={isOwnProfile}
-            active={active}
-            onChange={(v) => setActive(v)}
-            user={targetUser}
-          />
-        }
-      >
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {active === 'info' && (
-          <InfoSection
-            isGod={currentUser.role === 'god'}
-            isOwnProfile={isOwnProfile}
-            user={targetUser}
-            loading={loading}
-            onSendEmailConfirm={handleSendEmailConfirm}
-            onOpenChangeEmail={() => {
-              setNewEmail(targetUser.email || '');
-              setEmailOpen(true);
-            }}
-            onOpenChangePassword={() => setPasswordOpen(true)}
-            onOpenEditNames={() => {
-              setFirstName(targetUser.first_name || '');
-              setLastName(targetUser.last_name || '');
-              setNamesOpen(true);
-            }}
-            onConfirmEmail={handleConfirmEmail}
-            onRevokeConfirmEmail={handleRevokeConfirmEmail}
-            onBan={handleBanUser}
-            onUnban={handleUnbanUser}
-            onPromote={handlePromoteUser}
-            onDemote={handleDemoteUser}
-            onDelete={() => setOpenDeleteDialog(true)}
-          />
-        )}
-
-        {active === 'generations' && (
-          <GenerationSection
-            deleteAllowed={
-              isOwnProfile ||
-              currentUser.role === 'god' ||
-              (currentUser.role === 'admin' && targetUser.role === 'user')
-            }
-            isAdmin={currentUser.role == 'admin' || currentUser.role === 'god'}
-            loading={loading}
-            generations={generations}
-            meta={meta}
-            onDelete={handleDeleteGeneration}
-            onRefresh={handleRefreshGenerations}
-            onChangePage={handleChangeGenerationPage}
-            onRegenerate={handleRegenerateGeneration}
-            onDeleteAll={handleDeleteAllGenerations}
-          />
-        )}
-
-        {active === 'vars' && isOwnProfile && (
-          <VariablesSection
-            savedVars={savedVars}
-            onRefresh={handleRefreshSavedVars}
-            onClear={handleClearSavedVariables}
-            onDelete={handleDeleteVariable}
-          />
-        )}
-
-        {active === 'sessions' && isOwnProfile && (
-          <SessionsSection
-            sessions={sessions}
-            loading={loading}
-            onRefresh={handleRefreshSessions}
-            onRevoke={handleRevokeSession}
-            onLogoutEverywhere={handleLogoutEverywhere}
-          />
-        )}
-
-        {active === 'logout' && isOwnProfile && (
-          <LogoutSection
-            onLogout={handleLogout}
-            onLogoutEverywhere={handleLogoutEverywhere}
-            onDeleteAccount={() => setOpenDeleteDialog(true)}
-          />
-        )}
-      </ProfileLayout>
-
-      <ChangeEmailDialog
-        open={emailOpen}
-        value={newEmail}
-        loading={loading}
-        onClose={() => setEmailOpen(false)}
-        onChange={(val) => setNewEmail(val)}
-        onSubmit={handleChangeEmail}
+      <ProfileContent
+        currentUser={currentUser}
+        targetUser={targetUser}
+        isOwnProfile={isOwnProfile}
+        handlers={handlers}
       />
-
-      <ChangePasswordDialog
-        open={passwordOpen}
-        loading={loading}
-        oldPassword={oldPassword}
-        newPassword={newPassword}
-        showOld={showOldPassword}
-        showNew={showNewPassword}
-        onClose={() => setPasswordOpen(false)}
-        onChangeOld={(val) => setOldPassword(val)}
-        onChangeNew={(val) => setNewPassword(val)}
-        onToggleOld={() => setShowOldPassword((s) => !s)}
-        onToggleNew={() => setShowNewPassword((s) => !s)}
-        onSubmit={handleChangePassword}
-      />
-
-      <EditNamesDialog
-        open={namesOpen}
-        loading={loading}
-        firstName={firstName}
-        lastName={lastName}
-        onChangeFirst={(v) => setFirstName(v)}
-        onChangeLast={(v) => setLastName(v)}
-        onClose={() => setNamesOpen(false)}
-        onSubmit={handleUpdateNames}
-      />
-
-      <DeleteAccountDialog
-        open={openDeleteDialog}
-        email={targetUser.email || 'Видалити'}
-        confirmValue={confirmEmailDeleteAccount}
-        error={errorDeleteAccount}
-        onChangeConfirm={(v) => setConfirmEmailDeleteAccount(v)}
-        onClose={handleCancelDeleteAccount}
-        onSubmit={handleDeleteAccount}
-      />
+      <ProfileDialogs targetUser={targetUser} handlers={handlers} />
     </Container>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<CircularProgress />}>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

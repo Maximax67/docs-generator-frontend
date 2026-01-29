@@ -1,27 +1,34 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUserStore } from '@/store/user';
+import { adminApi } from '@/lib/api';
 import { User } from '@/types/user';
-import { api } from '@/lib/api/core';
 import { toErrorMessage } from '@/utils/errors-messages';
 
-export function useUserProfile() {
+export function useProfileData() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get('id');
   const currentUser = useUserStore((state) => state.user);
+
   const [targetUser, setTargetUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUser = useCallback(async () => {
-    if (!currentUser) return;
-
-    if (!userId || userId === currentUser._id) {
-      setTargetUser(currentUser);
+    if (!currentUser) {
+      setLoading(false);
       return;
     }
 
+    // If no userId or it's the current user's ID, use current user
+    if (!userId || userId === currentUser._id) {
+      setTargetUser(currentUser);
+      setLoading(false);
+      return;
+    }
+
+    // Only admins can view other profiles
     if (currentUser.role !== 'admin' && currentUser.role !== 'god') {
       router.replace('/profile');
       return;
@@ -31,10 +38,10 @@ export function useUserProfile() {
     setError(null);
 
     try {
-      const response = await api.get(`/users/${userId}`);
-      setTargetUser(response.data);
+      const user = await adminApi.getUserById(userId);
+      setTargetUser(user);
     } catch (err) {
-      setError(toErrorMessage(err));
+      setError(toErrorMessage(err, 'Не вдалось завантажити профіль'));
     } finally {
       setLoading(false);
     }

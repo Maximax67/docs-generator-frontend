@@ -33,12 +33,12 @@ import { useState, Fragment } from 'react';
 import { useTheme } from '@mui/material/styles';
 import Link from 'next/link';
 import { formatDateTime } from '@/utils/dates';
-import { Generation, PaginationMeta } from '@/types/generations';
+import { Generation } from '@/types/generations';
+import { Paginated } from '@/types/pagination';
 
 type GenerationSectionProps = {
   deleteAllowed: boolean;
-  generations: Generation[];
-  meta: PaginationMeta | null;
+  generations: Paginated<Generation> | null;
   loading: boolean;
   isAdmin: boolean;
   onDelete: (id: string) => void;
@@ -51,7 +51,6 @@ type GenerationSectionProps = {
 export default function GenerationSection({
   deleteAllowed,
   generations,
-  meta,
   loading,
   isAdmin,
   onDelete,
@@ -70,11 +69,12 @@ export default function GenerationSection({
       <Typography variant="h5">Генерації</Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        {generations.length !== 0 && deleteAllowed && (
-          <Button variant="outlined" color="warning" onClick={onDeleteAll} disabled={loading}>
-            Видалити все
-          </Button>
-        )}
+        {!generations ||
+          (generations.data.length !== 0 && deleteAllowed && (
+            <Button variant="outlined" color="warning" onClick={onDeleteAll} disabled={loading}>
+              Видалити все
+            </Button>
+          ))}
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
@@ -87,13 +87,13 @@ export default function GenerationSection({
 
       <Divider />
 
-      {generations.length === 0 ? (
+      {!generations || generations.data.length === 0 ? (
         <Alert severity="info">Немає згенерованих документів</Alert>
       ) : (
         <>
           {isMobile ? (
             <Stack spacing={2}>
-              {generations.map((generation) => {
+              {generations.data.map((generation) => {
                 const isExpanded = expanded === generation._id;
                 return (
                   <Card key={generation._id} variant="outlined">
@@ -201,7 +201,7 @@ export default function GenerationSection({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {generations.map((generation) => {
+                {generations.data.map((generation) => {
                   const isExpanded = expanded === generation._id;
                   return (
                     <Fragment key={generation._id}>
@@ -294,19 +294,17 @@ export default function GenerationSection({
             </Table>
           )}
 
-          {meta && (
-            <Box display="flex" justifyContent="center" mt={3}>
-              <Pagination
-                count={meta.total_pages}
-                page={meta.current_page}
-                onChange={(_, value) => onChangePage(value)}
-                disabled={loading}
-                color="primary"
-                showFirstButton
-                showLastButton
-              />
-            </Box>
-          )}
+          <Box display="flex" justifyContent="center" mt={3}>
+            <Pagination
+              count={generations.meta.total_pages}
+              page={generations.meta.current_page}
+              onChange={(_, value) => onChangePage(value)}
+              disabled={loading}
+              color="primary"
+              showFirstButton
+              showLastButton
+            />
+          </Box>
         </>
       )}
     </Stack>

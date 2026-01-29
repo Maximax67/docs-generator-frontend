@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack, Typography, Button } from '@mui/material';
 import { Logout as LogoutIcon } from '@mui/icons-material';
 
