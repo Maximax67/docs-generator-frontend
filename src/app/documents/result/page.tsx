@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Alert, Box, CircularProgress, Container } from '@mui/material';
-import { PDFViewerClient } from '@/components/PDFViewerClient';
-import { getPdfFromIndexedDb } from '@/lib/indexedDbPdf';
+import { PdfViewerClient } from '@/components/PdfViewerClient';
+import { getPdfFromIndexedDb } from '@/lib/indexed-db-pdf';
 
 export default function ResultPage() {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
@@ -48,7 +48,7 @@ export default function ResultPage() {
         height: 'calc(100dvh - 64px)',
       }}
     >
-      <PDFViewerClient blob={pdfBlob} className="h-full" />
+      <PdfViewerClient blob={pdfBlob} className="h-full" />
     </Box>
   );
 }

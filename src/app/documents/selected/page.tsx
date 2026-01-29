@@ -25,11 +25,11 @@ import validator from '@rjsf/validator-ajv8';
 import { RJSFSchema } from '@rjsf/utils';
 
 import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
-import { documentApi, DocumentApiError } from '@/lib/documentApi';
+import { documentApi, DocumentApiError } from '@/lib/api/documents.api';
 import { useUserStore } from '@/store/user';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
-import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
+import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { IChangeEvent } from '@rjsf/core';
 import { JSONValue } from '@/types/json';
 

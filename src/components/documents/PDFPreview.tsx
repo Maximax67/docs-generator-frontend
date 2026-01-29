@@ -7,15 +7,15 @@ import { DriveFile } from '@/types/documents';
 import { useDocumentStore } from '@/store/documents';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
-import { PDFViewerClient } from '../PDFViewerClient';
+import { PdfViewerClient } from '../PdfViewerClient';
 
-interface PDFPreviewProps {
+interface PdfPreviewProps {
   showWebLink?: boolean;
   document?: DriveFile | null;
   onRefresh?: () => void;
 }
 
-export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefresh }) => {
+export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, onRefresh }) => {
   const { previews, fetchPreview } = useDocumentStore();
   const router = useRouter();
 
@@ -165,7 +165,7 @@ export const PDFPreview: FC<PDFPreviewProps> = ({ showWebLink, document, onRefre
           borderBottomRightRadius: 10,
         }}
       >
-        <PDFViewerClient url={preview.url} className="h-full" />
+        <PdfViewerClient url={preview.url} className="h-full" />
       </Box>
     );
   }

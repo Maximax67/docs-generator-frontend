@@ -35,45 +35,44 @@ import {
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useUserStore } from '@/store/user';
-import { useGenerationsStore } from '@/store/generations';
 import Link from 'next/link';
 import RoleChip from '@/components/RoleChip';
 import { formatDateTime } from '@/utils/dates';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
+import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
+import { generationsApi } from '@/lib/api';
+import { Generation } from '@/types/generations';
+import { Paginated } from '@/types/pagination';
 
 export default function GenerationsPage() {
   const { user } = useUserStore();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [generationsFetched, setGenerationsFetched] = useState(false);
-  const { generations, meta, fetchGenerations, deleteGeneration, regenerateGeneration } =
-    useGenerationsStore();
+  const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-
   const [disabledUI, setDisabledUI] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      await fetchGenerations(page);
+      const response = await generationsApi.getGenerations({ page });
+      setGenerations(response);
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
     } finally {
       setLoading(false);
     }
-  }, [fetchGenerations, page]);
+  }, [page]);
 
   useEffect(() => {
-    if (!generationsFetched && user && (user.role === 'admin' || user.role === 'god')) {
-      setGenerationsFetched(true);
+    if (user && (user.role === 'admin' || user.role === 'god')) {
       fetchData();
     }
-  }, [user, generationsFetched, fetchData]);
+  }, [user, fetchData]);
 
   if (!user) {
     return (
@@ -103,6 +102,11 @@ export default function GenerationsPage() {
     window.location.reload();
   };
 
+  const handlePageChange = (_: unknown, value: number) => {
+    setPage(value);
+    setExpanded(null);
+  };
+
   if (error) {
     return (
       <Container maxWidth="md" sx={{ py: 2 }}>
@@ -120,7 +124,7 @@ export default function GenerationsPage() {
     );
   }
 
-  if (!generations.length) {
+  if (!generations?.data.length) {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="info">Немає згенерованих документів</Alert>
@@ -131,7 +135,7 @@ export default function GenerationsPage() {
   const handleRegenerateGeneration = async (id: string, oldConstants: boolean) => {
     setDisabledUI(true);
     try {
-      const blob = await regenerateGeneration(id, oldConstants);
+      const blob = await generationsApi.regenerateGeneration(id, oldConstants);
       await savePdfToIndexedDb('generatedPdf', blob);
 
       window.open('/documents/result/', '_blank', 'noopener,noreferrer');
@@ -145,17 +149,20 @@ export default function GenerationsPage() {
   const handleDeleteGeneration = async (id: string) => {
     setDisabledUI(true);
     try {
-      await deleteGeneration(id);
+      await generationsApi.deleteGeneration(id);
+      const isLastItemOnPage = generations.data.length === 1;
+      const isNotFirstPage = page > 1;
+
+      if (isLastItemOnPage && isNotFirstPage) {
+        setPage((p) => p - 1);
+      } else {
+        await fetchData();
+      }
     } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
+      setError(toErrorMessage(e, 'Не вдалось видалити PDF'));
     } finally {
       setDisabledUI(false);
     }
-  };
-
-  const handleChangePage = async (page: number) => {
-    setPage(page);
-    setGenerationsFetched(false);
   };
 
   return (
@@ -166,7 +173,7 @@ export default function GenerationsPage() {
 
       {isMobile ? (
         <Stack spacing={2}>
-          {generations.map((generation) => {
+          {generations.data.map((generation) => {
             const isExpanded = expanded === generation._id;
             return (
               <Card key={generation._id} variant="outlined">
@@ -289,7 +296,7 @@ export default function GenerationsPage() {
           </TableHead>
 
           <TableBody>
-            {generations.map((generation, index) => {
+            {generations.data.map((generation, index) => {
               const isExpanded = expanded === generation._id;
               return (
                 <Fragment key={index}>
@@ -408,19 +415,17 @@ export default function GenerationsPage() {
         </Table>
       )}
 
-      {meta && (
-        <Box display="flex" justifyContent="center" mt={3}>
-          <Pagination
-            count={meta.total_pages}
-            page={page}
-            onChange={(_, value) => handleChangePage(value)}
-            disabled={disabledUI}
-            color="primary"
-            showFirstButton
-            showLastButton
-          />
-        </Box>
-      )}
+      <Box display="flex" justifyContent="center" mt={3}>
+        <Pagination
+          count={generations.meta.total_pages}
+          page={page}
+          onChange={handlePageChange}
+          disabled={disabledUI}
+          color="primary"
+          showFirstButton
+          showLastButton
+        />
+      </Box>
     </Box>
   );
 }

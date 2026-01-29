@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import RegisterSW from '../components/RegisterSW';
-import AppThemeProvider from './providers';
+import RegisterServiceWorker from '../components/RegisterServiceWorker';
+import AppThemeProvider from '../providers/AppThemeProvider';
 import EmotionCacheProvider from './emotion';
 import Header from '@/components/Header';
 import RateLimitOverlay from '../components/RateLimitOverlay';
 
 import './globals.css';
-import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import PWAInstallPrompt from '@/components/PwaInstallPrompt';
+import UserProvider from '@/providers/UserProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -43,11 +44,13 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <EmotionCacheProvider>
           <AppThemeProvider>
-            <RegisterSW />
-            <PWAInstallPrompt />
-            <Header />
-            {children}
-            <RateLimitOverlay />
+            <UserProvider>
+              <RegisterServiceWorker />
+              <PWAInstallPrompt />
+              <Header />
+              {children}
+              <RateLimitOverlay />
+            </UserProvider>
           </AppThemeProvider>
         </EmotionCacheProvider>
       </body>

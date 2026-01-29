@@ -23,7 +23,7 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { ProfileTab } from '@/types/profile';
 import GenerationSection from './sections/GenerationSection';
 import { useGenerationsStore } from '@/store/generations';
-import { savePdfToIndexedDb } from '@/lib/indexedDbPdf';
+import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { JSONValue } from '@/types/json';
 
 export default function ProfilePage() {

@@ -3,7 +3,7 @@
 import { FC, useState } from 'react';
 import { Box, Paper, useTheme, useMediaQuery, Divider } from '@mui/material';
 import { DocumentTree } from './DocumentTree';
-import { PDFPreview } from './PDFPreview';
+import { PdfPreview } from './PdfPreview';
 import { useDocumentStore } from '@/store/documents';
 import { VariableSchemaEditor } from './VariableSchemaEditor';
 
@@ -43,7 +43,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
         <Paper elevation={1} sx={{ height: '80dvh' }}>
           {typeof variableSettings === 'undefined' ? (
-            <PDFPreview
+            <PdfPreview
               showWebLink={showWebLink}
               document={selectedDocument}
               onRefresh={handleRefreshPreview}
@@ -71,7 +71,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
       <Paper elevation={1} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ flex: 1, overflow: 'hidden' }}>
           {typeof variableSettings === 'undefined' ? (
-            <PDFPreview
+            <PdfPreview
               showWebLink={showWebLink}
               document={selectedDocument}
               onRefresh={handleRefreshPreview}

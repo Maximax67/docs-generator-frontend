@@ -1,4 +1,4 @@
-import { api } from './core';
+import { api } from '../core';
 import { useUserStore } from '@/store/user';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 

@@ -9,15 +9,3 @@ export type Generation = {
   created_at: string;
   updated_at: string;
 };
-
-export type PaginationMeta = {
-  total_items: number;
-  total_pages: number;
-  current_page: number;
-  page_size: number;
-};
-
-export type PaginatedGenerations = {
-  data: Generation[];
-  meta: PaginationMeta;
-};

@@ -2,13 +2,29 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { api, bootstrapApi } from '@/lib/api/core';
-import { UserState, SessionInfo, User } from '@/types/user';
+import {
+  authApi,
+  userApi,
+  type LoginCredentials,
+  type RegisterPayload,
+  type ChangePasswordPayload,
+} from '@/lib/api';
+import { UserState } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { markBootstrapComplete } from '@/lib/api/bootstrap';
+import { markBootstrapComplete } from '@/lib/api/setup/bootstrap';
 import { isAxiosError } from '@/utils/is-axios-error';
-import { Paginated } from '@/types/pagination';
 
+/**
+ * User Store - State management for authentication and user data
+ * 
+ * This store handles:
+ * - Authentication state (login, logout, registration)
+ * - Current user data
+ * - Rate limiting state
+ * - Loading and error states
+ * 
+ * All API calls have been moved to the API layer (src/lib/api)
+ */
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -16,11 +32,17 @@ export const useUserStore = create<UserState>()(
       loading: false,
       error: null,
       rateLimitedUntil: null,
+
+      // Rate limiting
       setRateLimit: (until) => set({ rateLimitedUntil: until }),
       clearRateLimit: () => set({ rateLimitedUntil: null }),
+
+      // Basic state management
       setUser: (u) => set({ user: u }),
       clearError: () => set({ error: null }),
       logoutLocal: () => set({ user: null }),
+
+      // Bootstrap - check auth status on app start
       bootstrap: async () => {
         const storedUser = get().user;
         if (!storedUser) {
@@ -29,9 +51,8 @@ export const useUserStore = create<UserState>()(
         }
 
         try {
-          await bootstrapApi.post('/auth/refresh');
-          const me = await bootstrapApi.get<User>('/auth/me');
-          set({ user: me.data, error: null });
+          const user = await authApi.bootstrap();
+          set({ user, error: null });
         } catch (error: unknown) {
           if (isAxiosError(error)) {
             const status = error.response?.status;
@@ -39,11 +60,9 @@ export const useUserStore = create<UserState>()(
               case 401:
                 set({ user: null });
                 break;
-
               case 429:
                 set({ error: 'Too many requests, please try again later.' });
                 break;
-
               default:
                 const message = toErrorMessage(error, `Server error: ${status ?? 'unknown'}`);
                 set({ error: message });
@@ -58,282 +77,117 @@ export const useUserStore = create<UserState>()(
           markBootstrapComplete();
         }
       },
+
+      // Authentication operations
       loginWithCredentials: async (email, password) => {
         set({ loading: true, error: null });
         try {
-          await api.post('/auth/login', {
-            email,
-            password,
-          });
-          const me = await api.get<User>('/auth/me');
-          set({ user: me.data, loading: false });
+          const credentials: LoginCredentials = { email, password };
+          const user = await authApi.login(credentials);
+          set({ user, loading: false });
           return true;
         } catch (e) {
           set({ error: toErrorMessage(e) || 'Помилка входу', loading: false });
           return false;
         }
       },
+
       registerWithCredentials: async (payload) => {
         set({ loading: true, error: null });
         try {
-          await api.post('/auth/register', {
+          const registerPayload: RegisterPayload = {
             email: payload.email,
             first_name: payload.first_name,
             last_name: payload.last_name,
             password: payload.password,
-          });
-          const me = await api.get<User>('/auth/me');
-          set({ user: me.data, loading: false });
+          };
+          const user = await authApi.register(registerPayload);
+          set({ user, loading: false });
           return true;
         } catch (e) {
           set({ error: toErrorMessage(e) || 'Помилка реєстрації', loading: false });
           return false;
         }
       },
-      requestPasswordReset: async (email: string) => {
-        await api.post('/auth/password/forgot', { email });
-      },
-      changePasswordWithToken: async (token: string, newPassword: string) => {
-        await api.post(`/auth/password/reset?token=${encodeURIComponent(token)}`, {
-          new_password: newPassword,
-        });
-      },
-      logoutEverywhere: async () => {
-        try {
-          await api.post('/auth/logout_all');
-        } finally {
-          set({ user: null });
-        }
-      },
+
       logout: async () => {
         try {
-          await api.post('/auth/logout');
+          await authApi.logout();
         } finally {
           set({ user: null });
         }
       },
-      refeshSession: async () => {
-        await api.post('/auth/refresh');
-        const me = await api.get<User>('/auth/me');
-        set({ user: me.data });
-      },
-      sendEmailConfirmation: async () => {
-        await api.post('/auth/email/send-confirmation');
-      },
-      confirmEmail: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'admin' && u?.role !== 'god')
-          throw new Error('Потрібен акаунт адміністратора');
 
-        await api.post(`/users/${userId}/email/verify`);
-      },
-      revokeConfirmEmail: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'admin' && u?.role !== 'god')
-          throw new Error('Потрібен акаунт адміністратора');
-
-        await api.post(`/users/${userId}/email/revoke-verification`);
-      },
-      changeUserEmail: async (userId: string, newEmail: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        await api.patch(`/users/${userId}`, { email: newEmail });
-      },
-      banUser: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'admin' && u?.role !== 'god')
-          throw new Error('Потрібен акаунт адміністратора');
-
-        await api.post(`/users/${userId}/ban`);
-      },
-      unbanUser: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'admin' && u?.role !== 'god')
-          throw new Error('Потрібен акаунт адміністратора');
-
-        await api.post(`/users/${userId}/unban`);
-      },
-      promoteUser: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        await api.patch(`/users/${userId}`, { role: 'admin' });
-      },
-      demoteUser: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        await api.patch(`/users/${userId}`, { role: 'user' });
-      },
-      deleteUser: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        await api.delete(`/users/${userId}`);
-      },
-      verifyEmail: async (token: string) => {
-        await api.post(`/auth/email/verify?token=${encodeURIComponent(token)}`);
-        const u = get().user;
-        if (u?._id) {
-          set(state => ({
-            user: state.user ? { ...state.user, email_verified: true } : null
-          }));
+      logoutEverywhere: async () => {
+        try {
+          await authApi.logoutEverywhere();
+        } finally {
+          set({ user: null });
         }
       },
+
+      refeshSession: async () => {
+        const user = await authApi.refreshSession();
+        set({ user });
+      },
+
+      // Email operations
+      sendEmailConfirmation: async () => {
+        await authApi.sendEmailConfirmation();
+      },
+
+      verifyEmail: async (token: string) => {
+        await authApi.verifyEmail(token);
+        set(state => ({
+          user: state.user
+            ? { ...state.user, email_verified: true }
+            : null
+        }));
+      },
+
       changeEmail: async (newEmail: string) => {
-        await api.post('/auth/email/change', { new_email: newEmail });
+        await authApi.changeEmail(newEmail);
         set({ user: null });
       },
+
+      // Password operations
+      requestPasswordReset: async (email: string) => {
+        await authApi.requestPasswordReset(email);
+      },
+
+      changePasswordWithToken: async (token: string, newPassword: string) => {
+        await authApi.resetPasswordWithToken(token, newPassword);
+      },
+
       changePassword: async (oldPassword: string, newPassword: string) => {
         const u = get().user;
         if (!u?.email) throw new Error('Електронна пошта відсутня');
-        await api.post('/auth/password/change', {
+
+        const payload: ChangePasswordPayload = {
           email: u.email,
           old_password: oldPassword,
           new_password: newPassword,
-        });
+        };
+        await authApi.changePassword(payload);
         set({ user: null });
       },
+
+      // Profile operations
+      updateNames: async (firstName: string, lastName?: string | null) => {
+        const u = get().user;
+        if (!u?._id) throw new Error('Користувач не знайдений');
+
+        const user = await userApi.updateNames(u._id, firstName, lastName);
+        set({ user });
+      },
+
       deleteAccount: async () => {
         const u = get().user;
         if (!u?._id) throw new Error('Користувач не знайдений');
 
-        await api.delete(`/users/${u._id}`);
+        await userApi.deleteAccount(u._id);
         set({ user: null });
       },
-      updateNames: async (firstName: string, lastName?: string | null) => {
-        const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
-        await api.patch<User>(`/users/${u._id}`, {
-          first_name: firstName,
-          last_name: lastName ?? null,
-        });
-        const me = await api.get<User>('/auth/me');
-        set({ user: me.data });
-      },
-      updateUserNames: async (userId: string, firstName: string, lastName?: string | null) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        await api.patch<User>(`/users/${userId}`, {
-          first_name: firstName,
-          last_name: lastName ?? null,
-        });
-      },
-      listSessions: async () => {
-        const res = await api.get<SessionInfo[]>('/auth/sessions');
-        return res.data;
-      },
-      revokeSession: async (sessionId: string) => {
-        await api.delete(`/auth/sessions/${encodeURIComponent(sessionId)}`);
-      },
-      getSavedVariables: async () => {
-        const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
-        const res = await api.get<Record<string, string>>(`/users/${u._id}/saved_variables`);
-        return res.data;
-      },
-      setSavedVariables: async (vars: Record<string, string>) => {
-        const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
-        const me = await api.put<User>(`/users/${u._id}/saved_variables`, vars);
-        set({ user: me.data });
-
-        return me.data;
-      },
-      updateSavedVariable: async (key: string, value: string) => {
-        const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
-        const me = await api.patch<User>(
-          `/users/${u._id}/saved_variables/${encodeURIComponent(key)}?value=${encodeURIComponent(value)}`,
-        );
-        set({ user: me.data });
-
-        return me.data;
-      },
-      deleteSavedVariable: async (key: string) => {
-        const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
-        const me = await api.delete<User>(
-          `/users/${u._id}/saved_variables/${encodeURIComponent(key)}`,
-        );
-        set({ user: me.data });
-
-        return me.data;
-      },
-      clearSavedVariables: async () => {
-        const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
-        const me = await api.delete<User>(`/users/${u._id}/saved_variables`);
-        set({ user: me.data });
-
-        return me.data;
-      },
-      getUserSavedVariables: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'admin' && u?.role !== 'god')
-          throw new Error('Потрібен акаунт адміністратора');
-        const res = await api.get<Record<string, string>>(`/users/${userId}/saved_variables`);
-
-        return res.data;
-      },
-      setUserSavedVariables: async (userId: string, vars: Record<string, string>) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        const res = await api.put<User>(`/users/${userId}/saved_variables`, vars);
-        return res.data;
-      },
-      updateUserSavedVariable: async (userId: string, key: string, value: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        const res = await api.patch<User>(
-          `/users/${userId}/saved_variables/${encodeURIComponent(key)}?value=${encodeURIComponent(value)}`,
-        );
-        return res.data;
-      },
-      deleteUserSavedVariable: async (userId: string, key: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-
-        const res = await api.delete<User>(
-          `/users/${userId}/saved_variables/${encodeURIComponent(key)}`,
-        );
-        return res.data;
-      },
-      clearUserSavedVariables: async (userId: string) => {
-        const u = get().user;
-        if (u?.role !== 'god') throw new Error('Потрібно бути богом');
-        const res = await api.delete<User>(`/users/${userId}/saved_variables`);
-
-        return res.data;
-      },
-      getUsers: async (
-        page: number = 1,
-        pageSize: number = 25,
-        search?: string,
-        role?: string,
-        status?: string
-      ) => {
-        const u = get().user;
-        if (u?.role !== 'admin' && u?.role !== 'god')
-          throw new Error('Потрібен акаунт адміністратора');
-
-        const params: Record<string, string | number> = {
-          page,
-          page_size: pageSize,
-        };
-
-        if (search) params.q = search;
-        if (role && role !== 'all') params.role = role;
-        if (status && status !== 'all') params.status = status;
-
-        const resp = await api.get<Paginated<User>>('/users', { params });
-
-        return resp.data;
-      }
     }),
     {
       name: 'user-store',

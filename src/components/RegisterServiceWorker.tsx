@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-export default function RegisterSW() {
+export default function RegisterServiceWorker() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

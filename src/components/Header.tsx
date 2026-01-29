@@ -27,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useUserStore } from '@/store/user';
-import { useThemeMode } from '@/app/providers';
+import { useThemeMode } from '@/providers/AppThemeProvider';
 import { useState, useMemo } from 'react';
 
 export default function Header() {

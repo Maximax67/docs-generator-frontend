@@ -2,11 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
-import { useUserStore } from '@/store/user';
 import { ThemeMode, ThemeModeContextValue } from '@/types/theme';
-
-import '@/lib/api/request-interceptor';
-import '@/lib/api/response-interceptor';
 
 const THEME_KEY = 'app-theme-mode';
 const ThemeModeContext = createContext<ThemeModeContextValue | undefined>(undefined);
@@ -20,7 +16,6 @@ export function useThemeMode() {
 export default function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>('light');
   const [mounted, setMounted] = useState(false);
-  const { bootstrap } = useUserStore();
 
   useEffect(() => {
     try {
@@ -47,10 +42,6 @@ export default function AppThemeProvider({ children }: { children: React.ReactNo
   }, [mode, mounted]);
 
   const toggle = () => setMode((m) => (m === 'light' ? 'dark' : 'light'));
-
-  useEffect(() => {
-    bootstrap();
-  }, [bootstrap]);
 
   const theme = useMemo(
     () =>

@@ -2,23 +2,22 @@
 
 import { FC, useEffect, useRef, useState } from 'react';
 import { PDFViewer, Scale, Theme } from 'pdf-generator-api-pdfviewer';
-import { useThemeMode } from '@/app/providers';
+import { useThemeMode } from '@/providers/AppThemeProvider';
 import { ThemeMode } from '@/types/theme';
 
-interface PDFViewerClientProps {
+interface PdfViewerClientProps {
   blob?: Blob;
   url?: string;
   className?: string;
 }
 
-export const PDFViewerClient: FC<PDFViewerClientProps> = ({ blob, url, className }) => {
+export const PdfViewerClient: FC<PdfViewerClientProps> = ({ blob, url, className }) => {
   const { mode } = useThemeMode();
   const [loadedTheme, setLoadedTheme] = useState<ThemeMode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current || loadedTheme) return;
-    if (loadedTheme === mode) return;
+    if (!containerRef.current) return;
 
     containerRef.current.innerHTML = '';
 

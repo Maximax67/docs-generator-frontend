@@ -45,9 +45,10 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Paginated } from '@/types/pagination';
 import { LoadingContent } from '@/components/LoadingContent';
+import { adminApi } from '@/lib/api';
 
 export default function UsersPage() {
-  const { user, getUsers } = useUserStore();
+  const { user } = useUserStore();
   const [searchResult, setSearchResult] = useState<Paginated<User> | null>(null);
   const [searchInput, setSearchInput] = useState('');
 
@@ -73,7 +74,13 @@ export default function UsersPage() {
     (async () => {
       try {
         setLoading(true);
-        const response = await getUsers(page, pageSize, appliedSearch, roleFilter, statusFilter);
+        const response = await adminApi.getUsers(
+          page,
+          pageSize,
+          appliedSearch || undefined,
+          roleFilter !== 'all' ? roleFilter : undefined,
+          statusFilter !== 'all' ? statusFilter : undefined,
+        );
         if (!cancelled) {
           setSearchResult(response);
         }
@@ -91,7 +98,7 @@ export default function UsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [user, getUsers, page, pageSize, appliedSearch, roleFilter, statusFilter]);
+  }, [user, page, pageSize, appliedSearch, roleFilter, statusFilter]);
 
   if (!user) {
     return (
