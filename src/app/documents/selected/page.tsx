@@ -25,7 +25,7 @@ import validator from '@rjsf/validator-ajv8';
 import { RJSFSchema } from '@rjsf/utils';
 
 import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
-import { documentApi, DocumentApiError } from '@/lib/api/documents.api';
+import { documentsApi } from '@/lib/api/documents.api';
 import { useUserStore } from '@/store/user';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
@@ -61,7 +61,7 @@ export default function DocumentVariablesPage() {
         setLoading(true);
         setError(null);
 
-        const details = await documentApi.getDocumentDetails(documentId);
+        const details = await documentsApi.getDocumentDetails(documentId);
         setDocumentDetails(details);
 
         const initialValues: Record<string, JSONValue> = {};
@@ -71,10 +71,8 @@ export default function DocumentVariablesPage() {
         });
 
         setFormValues(initialValues);
-      } catch (err) {
-        setError(
-          err instanceof DocumentApiError ? err.message : 'Не вдалося завантажити дані документа',
-        );
+      } catch {
+        setError('Не вдалося завантажити дані документа');
       } finally {
         setLoading(false);
       }
@@ -126,14 +124,12 @@ export default function DocumentVariablesPage() {
       setIsGenerating(true);
       setGenerateError(null);
 
-      const blob = await documentApi.generateDocument(documentId, formValues, user?._id);
+      const blob = await documentsApi.generateDocument(documentId, formValues, user?._id);
 
       await savePdfToIndexedDb('generatedPdf', blob);
       router.push('/documents/result/');
-    } catch (err) {
-      setGenerateError(
-        err instanceof DocumentApiError ? err.message : 'Не вдалося згенерувати документ',
-      );
+    } catch {
+      setGenerateError('Не вдалося згенерувати документ');
     } finally {
       setIsGenerating(false);
     }

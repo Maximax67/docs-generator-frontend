@@ -20,7 +20,7 @@ const FrequentlyAskedQuestions = () => {
       properties: {},
       required: [],
     });
-  
+
   return (
     <Container sx={{ py: 6, maxWidth: '1000px' }}>
       <SchemaVisualEditor schema={schema} readOnly={false} onChange={setSchema} />

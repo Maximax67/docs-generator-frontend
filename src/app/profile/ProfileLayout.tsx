@@ -1,12 +1,12 @@
-import React from 'react';
 import { Box } from '@mui/material';
 import { ProfileTab } from '@/types/profile';
+import { ReactNode } from 'react';
 
 type ProfileLayoutProps = {
   active: string;
   onChangeActive: (value: ProfileTab) => void;
-  sidebar?: React.ReactNode;
-  children?: React.ReactNode;
+  sidebar?: ReactNode;
+  children?: ReactNode;
 };
 
 export default function ProfileLayout({ sidebar, children }: ProfileLayoutProps) {

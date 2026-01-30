@@ -84,9 +84,12 @@ export const ProfileContent: FC<ProfileContentProps> = ({
       {handlers.activeTab === 'vars' && isOwnProfile && (
         <VariablesSection
           savedVars={handlers.savedVars}
+          loading={handlers.loading}
           onRefresh={handlers.handleRefreshSavedVars}
           onClear={handlers.handleClearSavedVariables}
           onDelete={handlers.handleDeleteVariable}
+          onUpdate={handlers.handleUpdateVariable}
+          onPageChange={handlers.handleSavedVarsPageChange}
         />
       )}
 

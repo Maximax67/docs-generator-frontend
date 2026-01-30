@@ -1,5 +1,6 @@
 import { api } from './core';
 import { FolderTreeResponse } from '@/types/documents';
+import { JSONValue } from '@/types/json';
 import { DocumentDetails } from '@/types/variables';
 
 /**
@@ -38,7 +39,7 @@ export const documentsApi = {
    */
   async generateDocument(
     documentId: string,
-    variables: Record<string, string>,
+    variables: Record<string, JSONValue>,
     userId?: string,
   ): Promise<Blob> {
     const url = userId

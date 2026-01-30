@@ -43,3 +43,12 @@ export interface SavedVariable {
   created_at: string;
   updated_at: string;
 }
+
+export interface ValidateVariableRequest {
+  value: JSONValue;
+}
+
+export interface ValidateVariableResponse {
+  detail: string;
+  errors?: string[];
+}

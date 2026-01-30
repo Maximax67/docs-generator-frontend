@@ -8,6 +8,7 @@ import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { JSONValue } from '@/types/json';
 import { Paginated } from '@/types/pagination';
 import { Generation } from '@/types/generations';
+import { SavedVariable } from '@/types/variables';
 
 export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolean) {
   const router = useRouter();
@@ -37,7 +38,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
   // Data States
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [savedVars, setSavedVars] = useState<Record<string, JSONValue>>({});
+  const [savedVars, setSavedVars] = useState<Paginated<SavedVariable> | null>(null);
+  const [savedVarsPage, setSavedVarsPage] = useState(1);
   const [generationPage, setGenerationPage] = useState(1);
   const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
 
@@ -236,7 +238,17 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!targetUser) return;
 
     await withAsyncHandler(async () => {
-      const vars = await userApi.getSavedVariables()
+      const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+      setSavedVars(vars);
+    }, 'Не вдалося завантажити дані');
+  }, [targetUser, savedVarsPage, withAsyncHandler]);
+
+  const handleSavedVarsPageChange = useCallback(async (page: number) => {
+    if (!targetUser) return;
+
+    await withAsyncHandler(async () => {
+      const vars = await userApi.getSavedVariables(page, 25);
+      setSavedVarsPage(page);
       setSavedVars(vars);
     }, 'Не вдалося завантажити дані');
   }, [targetUser, withAsyncHandler]);
@@ -246,7 +258,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
     await withAsyncHandler(async () => {
       await userApi.clearSavedVariables();
-      setSavedVars({});
+      setSavedVars(null);
+      setSavedVarsPage(1);
     }, 'Не вдалося очистити дані');
   }, [targetUser, withAsyncHandler]);
 
@@ -255,13 +268,22 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
     await withAsyncHandler(async () => {
       await userApi.deleteSavedVariable(variable);
-      setSavedVars(prev => {
-        const newVars = { ...prev };
-        delete newVars[variable];
-        return newVars;
-      });
+      // Refresh current page
+      const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+      setSavedVars(vars);
     }, 'Не вдалося видалити змінну');
-  }, [targetUser, withAsyncHandler]);
+  }, [targetUser, savedVarsPage, withAsyncHandler]);
+
+  const handleUpdateVariable = useCallback(async (variable: string, value: JSONValue) => {
+    if (!targetUser) return;
+
+    await withAsyncHandler(async () => {
+      await userApi.updateSavedVariable(variable, value);
+      // Refresh current page
+      const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+      setSavedVars(vars);
+    }, 'Не вдалося оновити змінну');
+  }, [targetUser, savedVarsPage, withAsyncHandler]);
 
   // Generation Handlers
   const handleRefreshGenerations = useCallback(async () => {
@@ -321,7 +343,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         }
 
         try {
-          const vars = await userApi.getSavedVariables();
+          const vars = await userApi.getSavedVariables(1, 25);
           setSavedVars(vars);
         } catch (e) {
           setError(toErrorMessage(e, 'Помилка завантаження змінних'));
@@ -346,6 +368,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     error,
     sessions,
     savedVars,
+    savedVarsPage,
     generationPage,
     generations: generations,
 
@@ -394,8 +417,10 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     handleLogout,
     handleLogoutEverywhere,
     handleRefreshSavedVars,
+    handleSavedVarsPageChange,
     handleClearSavedVariables,
     handleDeleteVariable,
+    handleUpdateVariable,
     handleRefreshGenerations,
     handleChangeGenerationPage,
     handleRegenerateGeneration,

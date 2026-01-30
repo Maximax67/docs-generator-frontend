@@ -7,7 +7,6 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   Security as SecurityIcon,
 } from '@mui/icons-material';
-import React from 'react';
 
 const keyFeatures = [
   {
