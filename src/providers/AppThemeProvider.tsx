@@ -46,6 +46,7 @@ export default function AppThemeProvider({ children }: { children: React.ReactNo
   const theme = useMemo(
     () =>
       createTheme({
+        cssVariables: true,
         palette: { mode },
         typography: {
           fontFamily:

@@ -9,6 +9,7 @@ import { DriveFile, FolderTree, DocumentPreview } from '@/types/documents';
 import { documentsApi } from '@/lib/api';
 import { PreviewCache } from '@/lib/cache/preview-cache';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface DocumentSelectorProps {
   showWebLink?: boolean;
@@ -31,6 +32,10 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const [variableSettings, setVariableSettings] = useState<string | null | undefined>(undefined);
   const [variableSettingsName, setVariableSettingsName] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Confirmation dialog state
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   // Load folder tree on mount
   useEffect(() => {
@@ -88,29 +93,49 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     }
   }, []);
 
+  // Show confirmation dialog with pending action
+  const confirmWithUnsavedChanges = useCallback((action: () => void) => {
+    setPendingAction(() => action);
+    setShowConfirmDialog(true);
+  }, []);
+
+  // Handle confirmation dialog responses
+  const handleConfirmProceed = useCallback(() => {
+    setShowConfirmDialog(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+    setHasUnsavedChanges(false);
+  }, [pendingAction]);
+
+  const handleConfirmCancel = useCallback(() => {
+    setShowConfirmDialog(false);
+    setPendingAction(null);
+  }, []);
+
   // Handle document selection
   const handleDocumentSelect = useCallback(
     (document: DriveFile) => {
-      if (hasUnsavedChanges && variableSettings !== undefined) {
-        const confirmLeave = window.confirm(
-          'У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?',
-        );
-        if (!confirmLeave) {
-          return;
+      const selectDocument = () => {
+        setSelectedDocument(document);
+        setVariableSettings(undefined);
+        setVariableSettingsName(null);
+        setHasUnsavedChanges(false);
+
+        // Auto-fetch preview if not cached
+        if (!previewCache.has(document.id)) {
+          fetchPreview(document.id);
         }
-      }
+      };
 
-      setSelectedDocument(document);
-      setVariableSettings(undefined);
-      setVariableSettingsName(null);
-      setHasUnsavedChanges(false);
-
-      // Auto-fetch preview if not cached
-      if (!previewCache.has(document.id)) {
-        fetchPreview(document.id);
+      if (hasUnsavedChanges && variableSettings !== undefined) {
+        confirmWithUnsavedChanges(selectDocument);
+      } else {
+        selectDocument();
       }
     },
-    [hasUnsavedChanges, variableSettings, fetchPreview],
+    [hasUnsavedChanges, variableSettings, fetchPreview, confirmWithUnsavedChanges],
   );
 
   const handleRefreshPreview = useCallback(() => {
@@ -121,36 +146,34 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
   const handleSettingsOpen = useCallback(
     (id: string, name: string) => {
-      if (hasUnsavedChanges && variableSettings !== undefined) {
-        const confirmLeave = window.confirm(
-          'У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?',
-        );
-        if (!confirmLeave) {
-          return;
-        }
-      }
+      const openSettings = () => {
+        setVariableSettings(id);
+        setVariableSettingsName(name);
+        setHasUnsavedChanges(false);
+      };
 
-      setVariableSettings(id);
-      setVariableSettingsName(name);
-      setHasUnsavedChanges(false);
+      if (hasUnsavedChanges && variableSettings !== undefined) {
+        confirmWithUnsavedChanges(openSettings);
+      } else {
+        openSettings();
+      }
     },
-    [hasUnsavedChanges, variableSettings],
+    [hasUnsavedChanges, variableSettings, confirmWithUnsavedChanges],
   );
 
   const handleSettingsClose = useCallback(() => {
-    if (hasUnsavedChanges) {
-      const confirmLeave = window.confirm(
-        'У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?',
-      );
-      if (!confirmLeave) {
-        return;
-      }
-    }
+    const closeSettings = () => {
+      setVariableSettings(undefined);
+      setVariableSettingsName(null);
+      setHasUnsavedChanges(false);
+    };
 
-    setVariableSettings(undefined);
-    setVariableSettingsName(null);
-    setHasUnsavedChanges(false);
-  }, [hasUnsavedChanges]);
+    if (hasUnsavedChanges) {
+      confirmWithUnsavedChanges(closeSettings);
+    } else {
+      closeSettings();
+    }
+  }, [hasUnsavedChanges, confirmWithUnsavedChanges]);
 
   const handleSchemaChange = useCallback(() => {
     setHasUnsavedChanges(true);
@@ -196,6 +219,16 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
             />
           )}
         </Paper>
+        <ConfirmDialog
+          open={showConfirmDialog}
+          title="Незбережені зміни"
+          message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
+          confirmText="Вийти без збереження"
+          cancelText="Скасувати"
+          onConfirm={handleConfirmProceed}
+          onCancel={handleConfirmCancel}
+          severity="warning"
+        />
       </Box>
     );
   }
@@ -237,6 +270,16 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
           )}
         </Box>
       </Paper>
+      <ConfirmDialog
+        open={showConfirmDialog}
+        title="Незбережені зміни"
+        message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
+        confirmText="Вийти без збереження"
+        cancelText="Скасувати"
+        onConfirm={handleConfirmProceed}
+        onCancel={handleConfirmCancel}
+        severity="warning"
+      />
     </Box>
   );
 };

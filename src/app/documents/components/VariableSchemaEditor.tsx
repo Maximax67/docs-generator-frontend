@@ -12,9 +12,11 @@ import {
 import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
 import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
-import 'jsonjoy-builder/styles.css';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { variablesApi } from '@/lib/api';
+
+import 'jsonjoy-builder/styles.css';
+import '../jsonjoy-builder.css';
 
 interface VariableSchemaEditorProps {
   scope: string | null;
@@ -99,19 +101,6 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
     }
   };
 
-  const handleClose = () => {
-    if (hasChanges) {
-      const confirmLeave = window.confirm(
-        'У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?',
-      );
-      if (!confirmLeave) {
-        return;
-      }
-    }
-
-    onClose();
-  };
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Paper
@@ -163,7 +152,7 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
           >
             <SaveIcon />
           </IconButton>
-          <IconButton onClick={handleClose} title="Закрити">
+          <IconButton onClick={onClose} title="Закрити">
             <CloseIcon />
           </IconButton>
         </Box>
