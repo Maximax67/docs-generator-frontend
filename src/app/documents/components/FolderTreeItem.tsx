@@ -19,27 +19,29 @@ import {
   ExpandMore,
 } from '@mui/icons-material';
 import { DriveFile, FolderTree } from '@/types/documents';
-import { useDocumentStore } from '@/store/documents';
 import { formatFilename } from '@/utils/format-filename';
 
 interface FolderTreeItemProps {
   item: FolderTree;
+  selectedDocument: DriveFile | null;
   level?: number;
   showSettings?: boolean;
+  onDocumentSelect: (document: DriveFile) => void;
   onSettingsOpen?: (id: string, name: string) => void;
 }
 
 export const FolderTreeItem: FC<FolderTreeItemProps> = ({
   item,
+  selectedDocument,
   level = 0,
   showSettings = false,
+  onDocumentSelect,
   onSettingsOpen,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const { selectedDocument, selectDocument } = useDocumentStore();
 
   const handleDocumentClick = (document: DriveFile) => {
-    selectDocument(document);
+    onDocumentSelect(document);
   };
 
   const handleFolderToggle = () => {
@@ -47,8 +49,8 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
   };
 
   const handleOpenSchemaEditor = (e: React.MouseEvent, id: string, name: string) => {
-    onSettingsOpen?.(id, name);
     e.stopPropagation();
+    onSettingsOpen?.(id, name);
   };
 
   const hasChildren = item.folders.length > 0 || item.documents.length > 0;
@@ -81,7 +83,12 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
                     onClick={(e) =>
                       handleOpenSchemaEditor(e, item.current_folder.id, item.current_folder.name)
                     }
-                    sx={{ ml: 'auto' }}
+                    sx={{
+                      ml: 'auto',
+                      '&.MuiIconButton-root': {
+                        padding: '4px',
+                      },
+                    }}
                   >
                     <SettingsIcon fontSize="small" />
                   </IconButton>
@@ -98,13 +105,16 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
               <FolderTreeItem
                 key={subfolder.current_folder.id}
                 item={subfolder}
+                selectedDocument={selectedDocument}
                 level={level + 1}
                 showSettings={showSettings}
+                onDocumentSelect={onDocumentSelect}
+                onSettingsOpen={onSettingsOpen}
               />
             ))}
 
             {item.documents.map((document) => (
-              <ListItem key={document.id} disablePadding sx={{ pl: (level + 1) * 2 + 2 }}>
+              <ListItem key={document.id} disablePadding sx={{ pl: (level + 1) * 2 }}>
                 <ListItemButton
                   onClick={() => handleDocumentClick(document)}
                   selected={selectedDocument?.id === document.id}
@@ -129,11 +139,16 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
                             onClick={(e) =>
                               handleOpenSchemaEditor(
                                 e,
-                                item.current_folder.id,
-                                item.current_folder.name,
+                                document.id,
+                                formatFilename(document.name, document.mime_type),
                               )
                             }
-                            sx={{ ml: 'auto' }}
+                            sx={{
+                              ml: 'auto',
+                              '&.MuiIconButton-root': {
+                                padding: '4px',
+                              },
+                            }}
                           >
                             <SettingsIcon fontSize="small" />
                           </IconButton>

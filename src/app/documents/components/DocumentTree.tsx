@@ -1,36 +1,34 @@
 'use client';
 
-import { FC, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  List,
-  Container,
-  Button,
-} from '@mui/material';
+import { FC } from 'react';
+import { Box, Typography, CircularProgress, Alert, List, Container, Button } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
-import { useDocumentStore } from '@/store/documents';
 import { useUserStore } from '@/store/user';
 import { FolderTreeItem } from './FolderTreeItem';
+import { DriveFile, FolderTree } from '@/types/documents';
 
 interface DocumentTreeProps {
+  folderTree: FolderTree[] | null;
+  treeLoading: boolean;
+  treeError: string | null;
+  selectedDocument: DriveFile | null;
+  onDocumentSelect: (document: DriveFile) => void;
   onSettingsOpen?: (id: string, name: string) => void;
+  onRetry: () => void;
 }
 
-export const DocumentTree: FC<DocumentTreeProps> = ({ onSettingsOpen }) => {
-  const { folderTree, treeLoading, treeError, fetchFolderTree, clearTreeError } =
-    useDocumentStore();
+export const DocumentTree: FC<DocumentTreeProps> = ({
+  folderTree,
+  treeLoading,
+  treeError,
+  selectedDocument,
+  onDocumentSelect,
+  onSettingsOpen,
+  onRetry,
+}) => {
   const { user } = useUserStore();
 
   const isAdmin = user?.role === 'admin' || user?.role === 'god';
-
-  useEffect(() => {
-    if (!folderTree && !treeLoading && !treeError) {
-      fetchFolderTree();
-    }
-  }, [folderTree, treeLoading, treeError, fetchFolderTree]);
 
   if (treeError) {
     return (
@@ -38,7 +36,7 @@ export const DocumentTree: FC<DocumentTreeProps> = ({ onSettingsOpen }) => {
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={clearTreeError}>
+            <Button color="inherit" size="small" onClick={onRetry}>
               <RefreshIcon sx={{ mr: 1 }} />
             </Button>
           }
@@ -81,7 +79,9 @@ export const DocumentTree: FC<DocumentTreeProps> = ({ onSettingsOpen }) => {
           <FolderTreeItem
             key={folder.current_folder.id}
             item={folder}
+            selectedDocument={selectedDocument}
             showSettings={isAdmin}
+            onDocumentSelect={onDocumentSelect}
             onSettingsOpen={onSettingsOpen}
           />
         ))}

@@ -25,7 +25,7 @@ import validator from '@rjsf/validator-ajv8';
 import { RJSFSchema } from '@rjsf/utils';
 
 import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
-import { documentsApi } from '@/lib/api/documents.api';
+import { documentsApi } from '@/lib/api';
 import { useUserStore } from '@/store/user';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';

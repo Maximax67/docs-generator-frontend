@@ -2,7 +2,7 @@
 
 import { Container, Stack, Alert, Box } from '@mui/material';
 import { useUserStore } from '@/store/user';
-import { DocumentSelector } from '@/components/documents/DocumentSelector';
+import { DocumentSelector } from '@/app/documents/components/DocumentSelector';
 import { useState } from 'react';
 
 export default function DocumentsPage() {

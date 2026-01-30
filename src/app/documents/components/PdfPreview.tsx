@@ -1,25 +1,22 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Typography, CircularProgress, Alert, Paper, IconButton, Button } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { Launch as LaunchIcon } from '@mui/icons-material';
-import { DriveFile } from '@/types/documents';
-import { useDocumentStore } from '@/store/documents';
+import { DriveFile, DocumentPreview } from '@/types/documents';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
-import { PdfViewerClient } from '../PdfViewerClient';
+import { PdfViewerClient } from '../../../components/PdfViewerClient';
 
 interface PdfPreviewProps {
   showWebLink?: boolean;
   document?: DriveFile | null;
+  preview?: DocumentPreview | null;
   onRefresh?: () => void;
 }
 
-export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, onRefresh }) => {
-  const { previews, fetchPreview } = useDocumentStore();
+export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview, onRefresh }) => {
   const router = useRouter();
-
-  const preview = document ? previews[document.id] : null;
 
   const documentSelectHandler = () => {
     if (document) {
@@ -32,12 +29,6 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, onRefre
       window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
     }
   };
-
-  useEffect(() => {
-    if (document && !preview) {
-      fetchPreview(document.id);
-    }
-  }, [document, preview, fetchPreview]);
 
   if (!document) {
     return (
