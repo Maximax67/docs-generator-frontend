@@ -46,8 +46,6 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
   const [fetchingSchema, setFetchingSchema] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Track if schema has actually changed
   const hasChanges = JSON.stringify(schema) !== JSON.stringify(initialSchema);
 
   useEffect(() => {

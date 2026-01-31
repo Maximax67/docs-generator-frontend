@@ -11,9 +11,11 @@ interface DocumentTreeProps {
   folderTree: FolderTree[] | null;
   treeLoading: boolean;
   treeError: string | null;
-  selectedDocument: DriveFile | null;
+  highlight?: string | null;
+  expandedFolders: Set<string>;
   onDocumentSelect: (document: DriveFile) => void;
   onSettingsOpen?: (id: string, name: string) => void;
+  onFolderToggle: (folderId: string, isExpanded: boolean) => void;
   onRetry: () => void;
 }
 
@@ -21,9 +23,11 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
   folderTree,
   treeLoading,
   treeError,
-  selectedDocument,
+  highlight,
+  expandedFolders,
   onDocumentSelect,
   onSettingsOpen,
+  onFolderToggle,
   onRetry,
 }) => {
   const { user } = useUserStore();
@@ -79,10 +83,12 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
           <FolderTreeItem
             key={folder.current_folder.id}
             item={folder}
-            selectedDocument={selectedDocument}
+            highlight={highlight}
+            expandedFolders={expandedFolders}
             showSettings={isAdmin}
             onDocumentSelect={onDocumentSelect}
             onSettingsOpen={onSettingsOpen}
+            onFolderToggle={onFolderToggle}
           />
         ))}
       </List>
