@@ -313,12 +313,25 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     }, 'Не вдалось перегенерувати PDF');
   }, [withAsyncHandler]);
 
-  const handleDeleteGeneration = useCallback(async (id: string) => {
-    await withAsyncHandler(
-      () => generationsApi.deleteGeneration(id),
-      'Не вдалось видалити генерацію'
-    );
-  }, [withAsyncHandler]);
+  const handleDeleteGeneration = useCallback(
+    async (id: string) => {
+      if (!targetUser) return;
+
+      await withAsyncHandler(async () => {
+        await generationsApi.deleteGeneration(id);
+
+        const isLastItemOnPage = generations?.data.length === 1;
+        const isNotFirstPage = generationPage > 1;
+
+        if (isLastItemOnPage && isNotFirstPage) {
+          await handleChangeGenerationPage(generationPage - 1);
+        } else {
+          await handleRefreshGenerations();
+        }
+      }, 'Не вдалось видалити генерацію');
+    },
+    [targetUser, generations, generationPage, handleChangeGenerationPage, handleRefreshGenerations, withAsyncHandler]
+  );
 
   const handleDeleteAllGenerations = useCallback(async () => {
     if (!targetUser) return;
@@ -327,7 +340,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       () => generationsApi.deleteAllUserGenerations(targetUser._id),
       'Не вдалось видалити всі генерації'
     );
-  }, [targetUser, withAsyncHandler]);
+
+    await handleChangeGenerationPage(1);
+  }, [targetUser, handleChangeGenerationPage, withAsyncHandler]);
 
   // Initialize data on mount
   useEffect(() => {
