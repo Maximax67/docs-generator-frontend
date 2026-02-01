@@ -1,14 +1,15 @@
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, SxProps, Theme } from '@mui/material';
 import { FC, memo } from 'react';
 
 interface LoadingContentProps {
   loading: boolean;
   children: React.ReactNode;
+  sx?: SxProps<Theme>;
 }
 
-const LoadingContentComponent: FC<LoadingContentProps> = ({ loading, children }) => {
+const LoadingContentComponent: FC<LoadingContentProps> = ({ loading, children, sx }) => {
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative', ...sx }}>
       <Box
         sx={{
           pointerEvents: loading ? 'none' : 'auto',

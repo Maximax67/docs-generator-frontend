@@ -9,3 +9,15 @@ export type Paginated<T> = {
   data: T[];
   meta: PaginationMetadata;
 }
+
+export type PaginationParams = {
+  page: number;
+  pageSize: number;
+};
+
+export type PaginationFilterParams = Record<string, string | number | boolean | undefined>;
+
+export type UsePaginationParamsOptions = {
+  defaultPageSize?: number;
+  filterDefaults?: PaginationFilterParams;
+};

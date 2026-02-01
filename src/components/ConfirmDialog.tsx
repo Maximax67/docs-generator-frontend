@@ -6,6 +6,7 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  AlertColor,
 } from '@mui/material';
 import { Warning as WarningIcon } from '@mui/icons-material';
 
@@ -17,7 +18,7 @@ interface ConfirmDialogProps {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  severity?: 'warning' | 'error' | 'info';
+  severity?: AlertColor;
 }
 
 export const ConfirmDialog: FC<ConfirmDialogProps> = ({
@@ -53,12 +54,7 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
         <Button onClick={onCancel} color="inherit">
           {cancelText}
         </Button>
-        <Button
-          onClick={onConfirm}
-          variant="contained"
-          color={severity === 'error' ? 'error' : 'warning'}
-          autoFocus
-        >
+        <Button onClick={onConfirm} variant="contained" color={severity} autoFocus>
           {confirmText}
         </Button>
       </DialogActions>

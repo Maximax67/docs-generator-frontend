@@ -12,6 +12,7 @@ module.exports = {
     '/profile',
     '/users',
     '/generations',
+    '/documents/selected',
     '/documents/result',
   ],
   changefreq: 'monthly',

@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState, ChangeEvent, KeyboardEvent, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Box,
-  TextField,
   Table,
   TableHead,
   TableRow,
@@ -19,13 +18,7 @@ import {
   Stack,
   useMediaQuery,
   Divider,
-  MenuItem,
-  FormControl,
-  Select,
-  SelectChangeEvent,
   Button,
-  Pagination,
-  InputAdornment,
 } from '@mui/material';
 import {
   Launch as LaunchIcon,
@@ -33,7 +26,6 @@ import {
   ErrorOutline as ErrorOutlineIcon,
   Block as BlockIcon,
   Refresh as RefreshIcon,
-  Search as SearchIcon,
 } from '@mui/icons-material';
 import { formatDate } from '@/utils/dates';
 import Link from 'next/link';
@@ -42,11 +34,28 @@ import { useUserStore } from '@/store/user';
 import { useTheme } from '@mui/material/styles';
 import RoleChip from '@/components/RoleChip';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Paginated } from '@/types/pagination';
 import { LoadingContent } from '@/components/LoadingContent';
 import { adminApi } from '@/lib/api';
 import { isAdminUser } from '@/utils/is-admin';
+import { usePaginationParams } from '@/hooks/use-pagination-params';
+import { SearchField } from '@/components/SearchField';
+import { FilterSelect, FilterOption } from '@/components/FilterSelect';
+import { PaginationControls } from '@/components/PaginationControls';
+import { PageSizeControl } from '@/components/PageSizeControls';
+
+const ROLE_OPTIONS: FilterOption[] = [
+  { value: 'all', label: 'Всі ролі' },
+  { value: 'user', label: 'Користувач' },
+  { value: 'admin', label: 'Адмін' },
+  { value: 'god', label: 'Бог' },
+];
+
+const STATUS_OPTIONS: FilterOption[] = [
+  { value: 'all', label: 'Всі статуси' },
+  { value: 'active', label: 'Активні' },
+  { value: 'banned', label: 'Заблоковані' },
+];
 
 export default function UsersPage() {
   const { user } = useUserStore();
@@ -57,17 +66,21 @@ export default function UsersPage() {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const page = Number(searchParams.get('page') ?? 1);
-  const pageSize = Number(searchParams.get('page_size') ?? 25);
-  const appliedSearch = searchParams.get('q') ?? '';
-  const roleFilter = searchParams.get('role') ?? 'all';
-  const statusFilter = searchParams.get('status') ?? 'all';
+  const { page, pageSize, filters, setPage, setPageSize, setFilter } = usePaginationParams({
+    defaultPageSize: 25,
+    filterDefaults: {
+      q: '',
+      role: 'all',
+      status: 'all',
+    },
+  });
+
+  const searchQuery = (filters.q as string) || '';
+  const roleFilter = (filters.role as string) || 'all';
+  const statusFilter = (filters.status as string) || 'all';
 
   const [searchResult, setSearchResult] = useState<Paginated<User> | null>(null);
-  const [searchInput, setSearchInput] = useState(appliedSearch);
 
   const cancelledRef = useRef(false);
 
@@ -77,7 +90,7 @@ export default function UsersPage() {
       const response = await adminApi.getUsers(
         page,
         pageSize,
-        appliedSearch || undefined,
+        searchQuery || undefined,
         roleFilter !== 'all' ? roleFilter : undefined,
         statusFilter !== 'all' ? statusFilter : undefined,
       );
@@ -94,7 +107,7 @@ export default function UsersPage() {
         setLoading(false);
       }
     }
-  }, [appliedSearch, page, pageSize, roleFilter, statusFilter]);
+  }, [searchQuery, page, pageSize, roleFilter, statusFilter]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -107,10 +120,6 @@ export default function UsersPage() {
       cancelledRef.current = true;
     };
   }, [loadUsers, isAdmin]);
-
-  useEffect(() => {
-    setSearchInput(appliedSearch);
-  }, [appliedSearch]);
 
   if (!user) {
     return (
@@ -145,88 +154,6 @@ export default function UsersPage() {
     );
   }
 
-  const handleSearchInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
-  };
-
-  const updateURL = (
-    patch: Partial<{
-      page: number;
-      pageSize: number;
-      search: string;
-      role: string;
-      status: string;
-    }>,
-  ) => {
-    const params = new URLSearchParams();
-    const next = {
-      page,
-      pageSize,
-      search: appliedSearch,
-      role: roleFilter,
-      status: statusFilter,
-      ...patch,
-    };
-
-    params.set('page', String(next.page));
-    params.set('page_size', String(next.pageSize));
-
-    if (next.search) {
-      params.set('q', next.search);
-    } else {
-      params.delete('q');
-    }
-
-    if (next.role !== 'all') {
-      params.set('role', next.role);
-    } else {
-      params.delete('role');
-    }
-
-    if (next.status !== 'all') {
-      params.set('status', next.status);
-    } else {
-      params.delete('status');
-    }
-
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
-
-  const performSearch = () => {
-    const normalizedInput = searchInput.trim();
-    const normalizedApplied = appliedSearch.trim();
-
-    if (normalizedInput !== normalizedApplied) {
-      updateURL({ page: 1, search: normalizedInput });
-    }
-  };
-
-  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      performSearch();
-    }
-  };
-
-  const handleSearchBlur = () => {
-    performSearch();
-  };
-
-  const handleRoleFilter = (e: SelectChangeEvent) => {
-    updateURL({ page: 1, role: e.target.value });
-  };
-
-  const handleStatusFilter = (e: SelectChangeEvent) => {
-    updateURL({ page: 1, status: e.target.value });
-  };
-
-  const handlePageChange = (_e: unknown, newPage: number) => {
-    updateURL({ page: newPage });
-  };
-
-  const handlePageSizeChange = (e: SelectChangeEvent<number>) => {
-    updateURL({ page: 1, pageSize: e.target.value });
-  };
-
   return (
     <Box p={2}>
       <Typography variant="h4" gutterBottom>
@@ -241,83 +168,52 @@ export default function UsersPage() {
         alignItems="center"
         spacing={{ md: 2 }}
       >
-        <TextField
-          label="Пошук"
-          variant="outlined"
-          value={searchInput}
-          onChange={handleSearchInputChange}
-          onKeyDown={handleSearchKeyDown}
-          onBlur={handleSearchBlur}
-          sx={{
-            flex: { xs: '1 1 100%', md: '1 1 auto' },
-            minWidth: 0,
-          }}
-          slotProps={{
-            input: {
-              endAdornment: searchInput.trim() !== appliedSearch && (
-                <InputAdornment position="end">
-                  <IconButton onClick={performSearch} edge="end" aria-label="Шукати" size="small">
-                    <SearchIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
+        <SearchField
+          value={searchQuery}
+          onSearch={(value) => setFilter('q', value)}
+          disabled={loading}
         />
 
-        <FormControl
-          variant="outlined"
+        <FilterSelect
+          value={roleFilter}
+          onChange={(value) => setFilter('role', value)}
+          options={ROLE_OPTIONS}
+          disabled={loading}
           sx={{
             flex: { xs: '1 1 auto', md: '0 0 auto' },
             minWidth: { xs: 0, md: 200 },
             mt: { xs: 1, md: 0 },
             mr: { xs: 0.5, md: 0 },
           }}
-        >
-          <Select value={roleFilter} onChange={handleRoleFilter}>
-            <MenuItem value="all">Всі ролі</MenuItem>
-            <MenuItem value="user">Користувач</MenuItem>
-            <MenuItem value="admin">Адмін</MenuItem>
-            <MenuItem value="god">Бог</MenuItem>
-          </Select>
-        </FormControl>
+        />
 
-        <FormControl
-          variant="outlined"
+        <FilterSelect
+          value={statusFilter}
+          onChange={(value) => setFilter('status', value)}
+          options={STATUS_OPTIONS}
+          disabled={loading}
           sx={{
             flex: { xs: '1 1 auto', md: '0 0 auto' },
             minWidth: { xs: 0, md: 200 },
             mt: { xs: 1, md: 0 },
             ml: { xs: 0.5, md: 0 },
           }}
-        >
-          <Select value={statusFilter} onChange={handleStatusFilter}>
-            <MenuItem value="all">Всі статуси</MenuItem>
-            <MenuItem value="active">Активні</MenuItem>
-            <MenuItem value="banned">Заблоковані</MenuItem>
-          </Select>
-        </FormControl>
+        />
       </Stack>
 
-      <Box mb={2} display="flex" alignItems="center" gap={2}>
-        <Typography variant="body2">Елементів на сторінці:</Typography>
-        <FormControl size="small" variant="outlined">
-          <Select value={pageSize} onChange={handlePageSizeChange}>
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={25}>25</MenuItem>
-            <MenuItem value={50}>50</MenuItem>
-            <MenuItem value={100}>100</MenuItem>
-          </Select>
-        </FormControl>
-        {searchResult && (
-          <Typography variant="body2" color="text.secondary">
-            Всього: {searchResult.meta.total_items}
-          </Typography>
-        )}
-      </Box>
+      {searchResult && (
+        <Box my={2}>
+          <PageSizeControl
+            pageSize={pageSize}
+            totalItems={searchResult.meta.total_items}
+            onPageSizeChange={setPageSize}
+            disabled={loading}
+          />
+        </Box>
+      )}
 
-      {isMobile ? (
-        <LoadingContent loading={loading}>
+      <LoadingContent loading={loading} sx={{ mb: 2 }}>
+        {isMobile ? (
           <Stack spacing={2}>
             {searchResult?.data.map((user) => (
               <Card key={user._id} variant="outlined">
@@ -392,9 +288,7 @@ export default function UsersPage() {
               </Card>
             ))}
           </Stack>
-        </LoadingContent>
-      ) : (
-        <LoadingContent loading={loading}>
+        ) : (
           <Table>
             <TableHead>
               <TableRow>
@@ -458,22 +352,12 @@ export default function UsersPage() {
               ))}
             </TableBody>
           </Table>
-        </LoadingContent>
-      )}
-
-      <Box display="flex" justifyContent="center" mt={3}>
-        {searchResult && (
-          <Pagination
-            count={searchResult.meta.total_pages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            showFirstButton
-            showLastButton
-            disabled={loading}
-          />
         )}
-      </Box>
+      </LoadingContent>
+
+      {searchResult && (
+        <PaginationControls meta={searchResult.meta} onPageChange={setPage} disabled={loading} />
+      )}
     </Box>
   );
 }

@@ -76,7 +76,7 @@ export const ProfileContent: FC<ProfileContentProps> = ({
           generations={handlers.generations}
           onDelete={handlers.handleDeleteGeneration}
           onRefresh={handlers.handleRefreshGenerations}
-          onChangePage={handlers.handleChangeGenerationPage}
+          onPageChange={handlers.handleChangeGenerationPage}
           onRegenerate={handlers.handleRegenerateGeneration}
           onDeleteAll={handlers.handleDeleteAllGenerations}
         />

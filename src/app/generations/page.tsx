@@ -4,7 +4,6 @@ import {
   Box,
   Typography,
   Alert,
-  CircularProgress,
   Table,
   TableHead,
   TableRow,
@@ -14,13 +13,11 @@ import {
   Collapse,
   Stack,
   Button,
-  Chip,
   Container,
   Card,
   CardContent,
   Divider,
   useMediaQuery,
-  Pagination,
 } from '@mui/material';
 import {
   ExpandMore,
@@ -32,7 +29,7 @@ import {
   Restore as RestoreIcon,
   HorizontalRule as HorizontalRuleIcon,
 } from '@mui/icons-material';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState, useRef } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useUserStore } from '@/store/user';
 import Link from 'next/link';
@@ -44,36 +41,58 @@ import { generationsApi } from '@/lib/api';
 import { Generation } from '@/types/generations';
 import { Paginated } from '@/types/pagination';
 import { isAdminUser } from '@/utils/is-admin';
+import { usePaginationParams } from '@/hooks/use-pagination-params';
+import { LoadingContent } from '@/components/LoadingContent';
+import { PaginationControls } from '@/components/PaginationControls';
+import { PageSizeControl } from '@/components/PageSizeControls';
 
 export default function GenerationsPage() {
   const { user } = useUserStore();
   const isAdmin = isAdminUser(user);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [disabledUI, setDisabledUI] = useState(false);
 
+  const { page, pageSize, setPage, setPageSize } = usePaginationParams({
+    defaultPageSize: 25,
+  });
+
+  const cancelledRef = useRef(false);
+
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
-      const response = await generationsApi.getGenerations({ page });
-      setGenerations(response);
+      setLoading(true);
+      const response = await generationsApi.getGenerations({ page, pageSize });
+
+      if (!cancelledRef.current) {
+        setGenerations(response);
+      }
     } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
+      if (!cancelledRef.current) {
+        setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
+      }
     } finally {
-      setLoading(false);
+      if (!cancelledRef.current) {
+        setLoading(false);
+      }
     }
-  }, [page]);
+  }, [page, pageSize]);
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchData();
-    }
+    if (!isAdmin) return;
+
+    cancelledRef.current = false;
+    setError(null);
+    fetchData();
+
+    return () => {
+      cancelledRef.current = true;
+    };
   }, [isAdmin, fetchData]);
 
   if (!user) {
@@ -92,15 +111,7 @@ export default function GenerationsPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  const handlePageChange = (_: unknown, value: number) => {
+  const handlePageChange = (value: number) => {
     setPage(value);
     setExpanded(null);
   };
@@ -118,14 +129,6 @@ export default function GenerationsPage() {
         >
           {error}
         </Alert>
-      </Container>
-    );
-  }
-
-  if (!generations?.data.length) {
-    return (
-      <Container sx={{ py: 6 }}>
-        <Alert severity="info">Немає згенерованих документів</Alert>
       </Container>
     );
   }
@@ -148,11 +151,11 @@ export default function GenerationsPage() {
     setDisabledUI(true);
     try {
       await generationsApi.deleteGeneration(id);
-      const isLastItemOnPage = generations.data.length === 1;
+      const isLastItemOnPage = generations?.data.length === 1;
       const isNotFirstPage = page > 1;
 
       if (isLastItemOnPage && isNotFirstPage) {
-        setPage((p) => p - 1);
+        setPage(page - 1);
       } else {
         await fetchData();
       }
@@ -169,261 +172,279 @@ export default function GenerationsPage() {
         Генерації
       </Typography>
 
-      {isMobile ? (
-        <Stack spacing={2}>
-          {generations.data.map((generation) => {
-            const isExpanded = expanded === generation._id;
-            return (
-              <Card key={generation._id} variant="outlined">
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight="bold">{generation.template_name}</Typography>
-                      <Stack direction="row" spacing={0.5}>
-                        <IconButton
-                          component={Link}
-                          href={`https://docs.google.com/document/d/${generation.template_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          size="small"
-                          title="Відкрити шаблон"
-                        >
-                          <LaunchIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          disabled={disabledUI}
-                          onClick={() => handleRegenerateGeneration(generation._id, false)}
-                          title="Перегенерувати"
-                        >
-                          <ReplayIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          disabled={disabledUI}
-                          onClick={() => handleRegenerateGeneration(generation._id, true)}
-                          title="Перегенерувати зі старими значеннями"
-                        >
-                          <RestoreIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          disabled={disabledUI}
-                          onClick={() => handleDeleteGeneration(generation._id)}
-                          title="Видалити"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                    </Box>
-
-                    {generation.user ? (
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography variant="body2">
-                          {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
-                        </Typography>
-                        <RoleChip role={generation.user.role} />
-                        <IconButton
-                          component={Link}
-                          href={`/profile?id=${generation.user.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          size="small"
-                        >
-                          <LaunchIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                    ) : (
-                      <Typography variant="body2">Не авторизований</Typography>
-                    )}
-
-                    <Typography variant="body2" color="text.secondary">
-                      {formatDateTime(new Date(generation.created_at))}
-                    </Typography>
-
-                    {Object.entries(generation.variables).length > 0 && (
-                      <>
-                        <Divider />
-                        <Button
-                          variant="text"
-                          size="small"
-                          startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
-                          onClick={() => setExpanded(isExpanded ? null : generation._id)}
-                          sx={{ alignSelf: 'flex-start' }}
-                        >
-                          {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
-                        </Button>
-
-                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <Box
-                            sx={{
-                              p: 1.5,
-                              borderRadius: 2,
-                              fontFamily: 'monospace',
-                              fontSize: 13,
-                              overflowX: 'auto',
-                            }}
-                          >
-                            <pre
-                              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                            >
-                              {JSON.stringify(generation.variables, null, 2)}
-                            </pre>
-                          </Box>
-                        </Collapse>
-                      </>
-                    )}
-                  </Stack>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Stack>
+      {!generations || generations.data.length === 0 ? (
+        <Alert severity="info">Немає згенерованих документів</Alert>
       ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Шаблон</TableCell>
-              <TableCell>Користувач</TableCell>
-              <TableCell>Роль</TableCell>
-              <TableCell>Дата генерації</TableCell>
-              <TableCell>Змінні</TableCell>
-              <TableCell align="right">Дії</TableCell>
-            </TableRow>
-          </TableHead>
+        <>
+          <PageSizeControl
+            pageSize={pageSize}
+            totalItems={generations.meta.total_items}
+            onPageSizeChange={setPageSize}
+            disabled={disabledUI || loading}
+          />
 
-          <TableBody>
-            {generations.data.map((generation, index) => {
-              const isExpanded = expanded === generation._id;
-              return (
-                <Fragment key={index}>
-                  <TableRow key={generation._id}>
-                    <TableCell>
-                      <Typography fontWeight="bold">{generation.template_name}</Typography>
-                    </TableCell>
-
-                    <TableCell>
-                      {generation.user ? (
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Typography>
-                            {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
-                          </Typography>
-                          <IconButton
-                            component={Link}
-                            href={`/profile?id=${generation.user.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            size="small"
-                          >
-                            <LaunchIcon fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      ) : (
-                        <Chip label="Не авторизований"></Chip>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      {generation.user ? (
-                        <RoleChip role={generation.user.role} />
-                      ) : (
-                        <HorizontalRuleIcon color="disabled" />
-                      )}
-                    </TableCell>
-
-                    <TableCell>{formatDateTime(new Date(generation.created_at))}</TableCell>
-
-                    <TableCell>
-                      {Object.entries(generation.variables).length > 0 ? (
-                        <IconButton onClick={() => setExpanded(isExpanded ? null : generation._id)}>
-                          {isExpanded ? <ExpandLess /> : <ExpandMore />}
-                        </IconButton>
-                      ) : (
-                        <IconButton disabled={true}>
-                          <HorizontalRuleIcon></HorizontalRuleIcon>
-                        </IconButton>
-                      )}
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <IconButton
-                          component={Link}
-                          href={`https://docs.google.com/document/d/${generation.template_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Відкрити шаблон"
-                        >
-                          <LaunchIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleRegenerateGeneration(generation._id, false)}
-                          disabled={disabledUI}
-                          title="Перегенерувати"
-                        >
-                          <ReplayIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleRegenerateGeneration(generation._id, true)}
-                          disabled={disabledUI}
-                          title="Перегенерувати зі старими значеннями"
-                        >
-                          <RestoreIcon />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteGeneration(generation._id)}
-                          disabled={disabledUI}
-                          title="Видалити"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-
-                  <TableRow>
-                    <TableCell colSpan={6} sx={{ p: 0 }}>
-                      {Object.entries(generation.variables).length > 0 && (
-                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <Box
-                            sx={{
-                              p: 1.5,
-                              borderRadius: 2,
-                              fontFamily: 'monospace',
-                              fontSize: 13,
-                              overflowX: 'auto',
-                            }}
-                          >
-                            <pre
-                              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                            >
-                              {JSON.stringify(generation.variables, null, 2)}
-                            </pre>
+          <LoadingContent loading={loading} sx={{ my: 2 }}>
+            {isMobile ? (
+              <Stack spacing={2}>
+                {generations.data.map((generation) => {
+                  const isExpanded = expanded === generation._id;
+                  return (
+                    <Card key={generation._id} variant="outlined">
+                      <CardContent>
+                        <Stack spacing={1}>
+                          <Box display="flex" justifyContent="space-between" alignItems="center">
+                            <Typography fontWeight="bold">{generation.template_name}</Typography>
+                            <Stack direction="row" spacing={0.5}>
+                              <IconButton
+                                component={Link}
+                                href={`https://docs.google.com/document/d/${generation.template_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                size="small"
+                                title="Відкрити шаблон"
+                              >
+                                <LaunchIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                disabled={disabledUI}
+                                onClick={() => handleRegenerateGeneration(generation._id, false)}
+                                title="Перегенерувати"
+                              >
+                                <ReplayIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                disabled={disabledUI}
+                                onClick={() => handleRegenerateGeneration(generation._id, true)}
+                                title="Перегенерувати зі старими значеннями"
+                              >
+                                <RestoreIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                disabled={disabledUI}
+                                onClick={() => handleDeleteGeneration(generation._id)}
+                                title="Видалити"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Stack>
                           </Box>
-                        </Collapse>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                </Fragment>
-              );
-            })}
-          </TableBody>
-        </Table>
-      )}
 
-      <Box display="flex" justifyContent="center" mt={3}>
-        <Pagination
-          count={generations.meta.total_pages}
-          page={page}
-          onChange={handlePageChange}
-          disabled={disabledUI}
-          color="primary"
-          showFirstButton
-          showLastButton
-        />
-      </Box>
+                          {generation.user ? (
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Typography variant="body2">
+                                {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
+                              </Typography>
+                              <RoleChip role={generation.user.role} />
+                              <IconButton
+                                component={Link}
+                                href={`/profile?id=${generation.user.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                size="small"
+                              >
+                                <LaunchIcon fontSize="small" />
+                              </IconButton>
+                            </Stack>
+                          ) : (
+                            <Typography variant="body2">Не авторизований</Typography>
+                          )}
+
+                          <Typography variant="body2" color="text.secondary">
+                            {formatDateTime(new Date(generation.created_at))}
+                          </Typography>
+
+                          {Object.entries(generation.variables).length > 0 && (
+                            <>
+                              <Divider />
+                              <Button
+                                variant="text"
+                                size="small"
+                                startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
+                                onClick={() => setExpanded(isExpanded ? null : generation._id)}
+                                sx={{ alignSelf: 'flex-start' }}
+                              >
+                                {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
+                              </Button>
+
+                              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                <Box
+                                  sx={{
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    fontFamily: 'monospace',
+                                    fontSize: 13,
+                                    overflowX: 'auto',
+                                  }}
+                                >
+                                  <pre
+                                    style={{
+                                      margin: 0,
+                                      whiteSpace: 'pre-wrap',
+                                      wordBreak: 'break-word',
+                                    }}
+                                  >
+                                    {JSON.stringify(generation.variables, null, 2)}
+                                  </pre>
+                                </Box>
+                              </Collapse>
+                            </>
+                          )}
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </Stack>
+            ) : (
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Шаблон</TableCell>
+                    <TableCell>Користувач</TableCell>
+                    <TableCell>Роль</TableCell>
+                    <TableCell>Дата генерації</TableCell>
+                    <TableCell>Змінні</TableCell>
+                    <TableCell align="right">Дії</TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {generations.data.map((generation, index) => {
+                    const isExpanded = expanded === generation._id;
+                    return (
+                      <Fragment key={index}>
+                        <TableRow key={generation._id}>
+                          <TableCell>
+                            <Typography fontWeight="bold">{generation.template_name}</Typography>
+                          </TableCell>
+
+                          <TableCell>
+                            {generation.user ? (
+                              <Stack direction="row" alignItems="center" spacing={1}>
+                                <Typography>
+                                  {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
+                                </Typography>
+                                <IconButton
+                                  component={Link}
+                                  href={`/profile?id=${generation.user.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  size="small"
+                                >
+                                  <LaunchIcon fontSize="small" />
+                                </IconButton>
+                              </Stack>
+                            ) : (
+                              <Typography>Не авторизований</Typography>
+                            )}
+                          </TableCell>
+
+                          <TableCell>
+                            {generation.user ? (
+                              <RoleChip role={generation.user.role} />
+                            ) : (
+                              <HorizontalRuleIcon color="disabled" />
+                            )}
+                          </TableCell>
+
+                          <TableCell>{formatDateTime(new Date(generation.created_at))}</TableCell>
+
+                          <TableCell>
+                            {Object.entries(generation.variables).length > 0 ? (
+                              <IconButton
+                                onClick={() => setExpanded(isExpanded ? null : generation._id)}
+                              >
+                                {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                              </IconButton>
+                            ) : (
+                              <IconButton disabled={true}>
+                                <HorizontalRuleIcon></HorizontalRuleIcon>
+                              </IconButton>
+                            )}
+                          </TableCell>
+
+                          <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <IconButton
+                                component={Link}
+                                href={`https://docs.google.com/document/d/${generation.template_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Відкрити шаблон"
+                              >
+                                <LaunchIcon />
+                              </IconButton>
+                              <IconButton
+                                onClick={() => handleRegenerateGeneration(generation._id, false)}
+                                disabled={disabledUI}
+                                title="Перегенерувати"
+                              >
+                                <ReplayIcon />
+                              </IconButton>
+                              <IconButton
+                                onClick={() => handleRegenerateGeneration(generation._id, true)}
+                                disabled={disabledUI}
+                                title="Перегенерувати зі старими значеннями"
+                              >
+                                <RestoreIcon />
+                              </IconButton>
+                              <IconButton
+                                color="error"
+                                onClick={() => handleDeleteGeneration(generation._id)}
+                                disabled={disabledUI}
+                                title="Видалити"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+
+                        <TableRow>
+                          <TableCell colSpan={6} sx={{ p: 0 }}>
+                            {Object.entries(generation.variables).length > 0 && (
+                              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                <Box
+                                  sx={{
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    fontFamily: 'monospace',
+                                    fontSize: 13,
+                                    overflowX: 'auto',
+                                  }}
+                                >
+                                  <pre
+                                    style={{
+                                      margin: 0,
+                                      whiteSpace: 'pre-wrap',
+                                      wordBreak: 'break-word',
+                                    }}
+                                  >
+                                    {JSON.stringify(generation.variables, null, 2)}
+                                  </pre>
+                                </Box>
+                              </Collapse>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      </Fragment>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </LoadingContent>
+          <PaginationControls
+            meta={generations.meta}
+            onPageChange={handlePageChange}
+            disabled={disabledUI || loading}
+          />
+        </>
+      )}
     </Box>
   );
 }
