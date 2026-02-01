@@ -1,9 +1,8 @@
 'use client';
 
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { PDFViewer, Scale, Theme } from 'pdf-generator-api-pdfviewer';
 import { useThemeMode } from '@/providers/AppThemeProvider';
-import { ThemeMode } from '@/types/theme';
 
 interface PdfViewerClientProps {
   blob?: Blob;
@@ -13,16 +12,19 @@ interface PdfViewerClientProps {
 
 export const PdfViewerClient: FC<PdfViewerClientProps> = ({ blob, url, className }) => {
   const { mode } = useThemeMode();
-  const [loadedTheme, setLoadedTheme] = useState<ThemeMode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const viewerRef = useRef<PDFViewer | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    containerRef.current.innerHTML = '';
+    const container = containerRef.current;
+
+    container.innerHTML = '';
+    viewerRef.current = null;
 
     const viewer = new PDFViewer({
-      container: containerRef.current,
+      container,
       options: {
         theme: mode === 'light' ? Theme.Light : Theme.Dark,
         initialScale: Scale.PageFit,
@@ -37,15 +39,22 @@ export const PdfViewerClient: FC<PdfViewerClientProps> = ({ blob, url, className
       },
     });
 
+    viewerRef.current = viewer;
+
+    let objectUrl: string | null = null;
     if (blob) {
-      const url = URL.createObjectURL(blob);
-      viewer.loadUrl(url);
+      objectUrl = URL.createObjectURL(blob);
+      viewer.loadUrl(objectUrl);
     } else if (url) {
       viewer.loadUrl(url);
     }
 
-    setTimeout(() => setLoadedTheme(mode), 0);
-  }, [url, blob, mode, loadedTheme]);
+    return () => {
+      container.innerHTML = '';
+      viewerRef.current = null;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [mode, blob, url]);
 
   return <div ref={containerRef} className={className} />;
 };

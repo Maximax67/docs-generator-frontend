@@ -1,4 +1,4 @@
-.jsonjoy {
+:global(.jsonjoy) {
   /* Base colors from MUI theme */
   --jsonjoy-background: var(--mui-palette-background-default);
   --jsonjoy-foreground: var(--mui-palette-text-primary);

@@ -9,7 +9,10 @@ const ThemeModeContext = createContext<ThemeModeContextValue | undefined>(undefi
 
 export function useThemeMode() {
   const ctx = useContext(ThemeModeContext);
-  if (!ctx) throw new Error('useThemeMode must be used within AppThemeProvider');
+  if (!ctx) {
+    throw new Error('useThemeMode must be used within AppThemeProvider');
+  }
+
   return ctx;
 }
 

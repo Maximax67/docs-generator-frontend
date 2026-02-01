@@ -43,9 +43,11 @@ import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { generationsApi } from '@/lib/api';
 import { Generation } from '@/types/generations';
 import { Paginated } from '@/types/pagination';
+import { isAdminUser } from '@/utils/is-admin';
 
 export default function GenerationsPage() {
   const { user } = useUserStore();
+  const isAdmin = isAdminUser(user);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
@@ -69,10 +71,10 @@ export default function GenerationsPage() {
   }, [page]);
 
   useEffect(() => {
-    if (user && (user.role === 'admin' || user.role === 'god')) {
+    if (isAdmin) {
       fetchData();
     }
-  }, [user, fetchData]);
+  }, [isAdmin, fetchData]);
 
   if (!user) {
     return (
@@ -82,7 +84,7 @@ export default function GenerationsPage() {
     );
   }
 
-  if (user.role !== 'admin' && user.role !== 'god') {
+  if (!isAdmin) {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="error">Сторінка доступна лише модераторам</Alert>
@@ -98,10 +100,6 @@ export default function GenerationsPage() {
     );
   }
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
   const handlePageChange = (_: unknown, value: number) => {
     setPage(value);
     setExpanded(null);
@@ -113,7 +111,7 @@ export default function GenerationsPage() {
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={handleRefresh}>
+            <Button color="inherit" size="small" onClick={fetchData}>
               <RefreshIcon sx={{ mr: 1 }} />
             </Button>
           }

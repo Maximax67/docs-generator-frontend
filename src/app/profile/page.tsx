@@ -1,15 +1,16 @@
 'use client';
 
-import { Suspense } from 'react';
 import { Container, Alert, CircularProgress, Box } from '@mui/material';
 import { useUserStore } from '@/store/user';
 import { useProfileData } from './hooks/useProfileData';
 import { useProfileHandlers } from './hooks/useProfileHandlers';
 import { ProfileContent } from './components/ProfileContent';
 import { ProfileDialogs } from './components/ProfileDialogs';
+import { isAdminUser } from '@/utils/is-admin';
 
-function ProfilePageContent() {
+export default function ProfilePage() {
   const { user: currentUser } = useUserStore();
+  const isAdmin = isAdminUser(currentUser);
   const { targetUser, isOwnProfile, loading, error } = useProfileData();
   const handlers = useProfileHandlers(targetUser, isOwnProfile);
 
@@ -21,7 +22,7 @@ function ProfilePageContent() {
     );
   }
 
-  if (!isOwnProfile && currentUser.role !== 'admin' && currentUser.role !== 'god') {
+  if (!isOwnProfile && !isAdmin) {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="error">Лише модератор може переглядати профіль інших</Alert>
@@ -55,13 +56,5 @@ function ProfilePageContent() {
       />
       <ProfileDialogs targetUser={targetUser} handlers={handlers} />
     </Container>
-  );
-}
-
-export default function ProfilePage() {
-  return (
-    <Suspense fallback={<CircularProgress />}>
-      <ProfilePageContent />
-    </Suspense>
   );
 }

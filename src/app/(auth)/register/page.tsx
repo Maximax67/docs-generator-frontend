@@ -20,16 +20,19 @@ import { useUserStore } from '@/store/user';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword, validateName } from '@/utils/validators';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { user, registerWithCredentials, loading, error, clearError } = useUserStore();
+  const { user, registerWithCredentials } = useUserStore();
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTos, setAgreeTos] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [registerError, setRegisterError] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [firstNameError, setFirstNameError] = useState<string>('');
@@ -83,21 +86,25 @@ export default function RegisterPage() {
     }
   }, [router, user]);
 
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreeTos) return;
 
-    const ok = await registerWithCredentials({
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      password,
-    });
-    if (ok) router.push('/profile/');
+    setLoading(true);
+    setRegisterError('');
+
+    try {
+      await registerWithCredentials({
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        password,
+      });
+      router.push('/profile/');
+    } catch (e) {
+      setRegisterError(toErrorMessage(e) || 'Помилка реєстрації');
+      setLoading(false);
+    }
   };
 
   return (
@@ -107,7 +114,7 @@ export default function RegisterPage() {
     >
       <Box component="form" onSubmit={onSubmit} noValidate>
         <Stack spacing={2.25} mt={3}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {registerError && <Alert severity="error">{registerError}</Alert>}
           <TextField
             label="Ім'я"
             value={firstName}

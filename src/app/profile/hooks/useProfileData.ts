@@ -4,12 +4,14 @@ import { useUserStore } from '@/store/user';
 import { adminApi } from '@/lib/api';
 import { User } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { isAdminUser } from '@/utils/is-admin';
 
 export function useProfileData() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get('id');
-  const currentUser = useUserStore((state) => state.user);
+  const { user: currentUser } = useUserStore();
+  const isAdmin = isAdminUser(currentUser);
 
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export function useProfileData() {
     }
 
     // Only admins can view other profiles
-    if (currentUser.role !== 'admin' && currentUser.role !== 'god') {
+    if (!isAdmin) {
       router.replace('/profile');
       return;
     }
@@ -45,7 +47,7 @@ export function useProfileData() {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, userId, router]);
+  }, [currentUser, isAdmin, userId, router]);
 
   useEffect(() => {
     fetchUser();

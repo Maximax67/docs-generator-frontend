@@ -1,11 +1,12 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import { Box, Typography, CircularProgress, Alert, List, Container, Button } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { useUserStore } from '@/store/user';
 import { FolderTreeItem } from './FolderTreeItem';
 import { DriveFile, FolderTree } from '@/types/documents';
+import { isAdminUser } from '@/utils/is-admin';
 
 interface DocumentTreeProps {
   folderTree: FolderTree[] | null;
@@ -19,7 +20,7 @@ interface DocumentTreeProps {
   onRetry: () => void;
 }
 
-export const DocumentTree: FC<DocumentTreeProps> = ({
+const DocumentTreeComponent: FC<DocumentTreeProps> = ({
   folderTree,
   treeLoading,
   treeError,
@@ -31,8 +32,22 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
   onRetry,
 }) => {
   const { user } = useUserStore();
+  const isAdmin = isAdminUser(user);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'god';
+  if (treeLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          py: 4,
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (treeError) {
     return (
@@ -48,21 +63,6 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
           {treeError}
         </Alert>
       </Container>
-    );
-  }
-
-  if (treeLoading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          py: 4,
-        }}
-      >
-        <CircularProgress />
-      </Box>
     );
   }
 
@@ -95,3 +95,7 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
     </Box>
   );
 };
+
+export const DocumentTree = memo(DocumentTreeComponent);
+
+DocumentTree.displayName = 'DocumentTree';

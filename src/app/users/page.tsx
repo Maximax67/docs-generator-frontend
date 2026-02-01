@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, ChangeEvent, KeyboardEvent } from 'react';
+import { useEffect, useState, ChangeEvent, KeyboardEvent, useCallback, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -46,14 +46,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Paginated } from '@/types/pagination';
 import { LoadingContent } from '@/components/LoadingContent';
 import { adminApi } from '@/lib/api';
+import { isAdminUser } from '@/utils/is-admin';
 
 export default function UsersPage() {
   const { user } = useUserStore();
-  const [searchResult, setSearchResult] = useState<Paginated<User> | null>(null);
-  const [searchInput, setSearchInput] = useState('');
+  const isAdmin = isAdminUser(user);
 
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -66,39 +66,51 @@ export default function UsersPage() {
   const roleFilter = searchParams.get('role') ?? 'all';
   const statusFilter = searchParams.get('status') ?? 'all';
 
-  useEffect(() => {
-    if (user?.role !== 'admin' && user?.role !== 'god') return;
+  const [searchResult, setSearchResult] = useState<Paginated<User> | null>(null);
+  const [searchInput, setSearchInput] = useState(appliedSearch);
 
-    let cancelled = false;
+  const cancelledRef = useRef(false);
 
-    (async () => {
-      try {
-        setLoading(true);
-        const response = await adminApi.getUsers(
-          page,
-          pageSize,
-          appliedSearch || undefined,
-          roleFilter !== 'all' ? roleFilter : undefined,
-          statusFilter !== 'all' ? statusFilter : undefined,
-        );
-        if (!cancelled) {
-          setSearchResult(response);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(toErrorMessage(e, 'Не вдалось завантажити список користувачів'));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+  const loadUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await adminApi.getUsers(
+        page,
+        pageSize,
+        appliedSearch || undefined,
+        roleFilter !== 'all' ? roleFilter : undefined,
+        statusFilter !== 'all' ? statusFilter : undefined,
+      );
+
+      if (!cancelledRef.current) {
+        setSearchResult(response);
       }
-    })();
+    } catch (e) {
+      if (!cancelledRef.current) {
+        setError(toErrorMessage(e, 'Не вдалось завантажити список користувачів'));
+      }
+    } finally {
+      if (!cancelledRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [appliedSearch, page, pageSize, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    cancelledRef.current = false;
+    setError(null);
+    loadUsers();
 
     return () => {
-      cancelled = true;
+      cancelledRef.current = true;
     };
-  }, [user, page, pageSize, appliedSearch, roleFilter, statusFilter]);
+  }, [loadUsers, isAdmin]);
+
+  useEffect(() => {
+    setSearchInput(appliedSearch);
+  }, [appliedSearch]);
 
   if (!user) {
     return (
@@ -108,7 +120,7 @@ export default function UsersPage() {
     );
   }
 
-  if (user.role !== 'admin' && user.role !== 'god') {
+  if (!isAdmin) {
     return (
       <Container sx={{ py: 6 }}>
         <Alert severity="error">Сторінка лише для адміністраторів</Alert>
@@ -116,17 +128,13 @@ export default function UsersPage() {
     );
   }
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
   if (error) {
     return (
       <Container maxWidth="md" sx={{ py: 2 }}>
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={handleRefresh}>
+            <Button color="inherit" size="small" onClick={loadUsers}>
               <RefreshIcon sx={{ mr: 1 }} />
             </Button>
           }
@@ -142,24 +150,54 @@ export default function UsersPage() {
   };
 
   const updateURL = (
-    newPage: number,
-    newPageSize: number,
-    search: string,
-    role: string,
-    status: string,
+    patch: Partial<{
+      page: number;
+      pageSize: number;
+      search: string;
+      role: string;
+      status: string;
+    }>,
   ) => {
     const params = new URLSearchParams();
-    params.set('page', newPage.toString());
-    params.set('page_size', newPageSize.toString());
-    if (search) params.set('q', search);
-    if (role !== 'all') params.set('role', role);
-    if (status !== 'all') params.set('status', status);
+    const next = {
+      page,
+      pageSize,
+      search: appliedSearch,
+      role: roleFilter,
+      status: statusFilter,
+      ...patch,
+    };
+
+    params.set('page', String(next.page));
+    params.set('page_size', String(next.pageSize));
+
+    if (next.search) {
+      params.set('q', next.search);
+    } else {
+      params.delete('q');
+    }
+
+    if (next.role !== 'all') {
+      params.set('role', next.role);
+    } else {
+      params.delete('role');
+    }
+
+    if (next.status !== 'all') {
+      params.set('status', next.status);
+    } else {
+      params.delete('status');
+    }
+
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
   const performSearch = () => {
-    if (searchInput.trim() !== appliedSearch) {
-      updateURL(1, pageSize, searchInput.trim(), roleFilter, statusFilter);
+    const normalizedInput = searchInput.trim();
+    const normalizedApplied = appliedSearch.trim();
+
+    if (normalizedInput !== normalizedApplied) {
+      updateURL({ page: 1, search: normalizedInput });
     }
   };
 
@@ -174,19 +212,19 @@ export default function UsersPage() {
   };
 
   const handleRoleFilter = (e: SelectChangeEvent) => {
-    updateURL(1, pageSize, appliedSearch, e.target.value, statusFilter);
+    updateURL({ page: 1, role: e.target.value });
   };
 
   const handleStatusFilter = (e: SelectChangeEvent) => {
-    updateURL(1, pageSize, appliedSearch, roleFilter, e.target.value);
+    updateURL({ page: 1, status: e.target.value });
   };
 
-  const handlePageChange = (_event: unknown, newPage: number) => {
-    updateURL(newPage, pageSize, appliedSearch, roleFilter, statusFilter);
+  const handlePageChange = (_e: unknown, newPage: number) => {
+    updateURL({ page: newPage });
   };
 
-  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
-    updateURL(1, Number(event.target.value), appliedSearch, roleFilter, statusFilter);
+  const handlePageSizeChange = (e: SelectChangeEvent<number>) => {
+    updateURL({ page: 1, pageSize: e.target.value });
   };
 
   return (

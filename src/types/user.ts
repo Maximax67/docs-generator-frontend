@@ -23,47 +23,26 @@ export type SessionInfo = {
 };
 
 export type UserState = {
-  // --- State ---
   user: User | null;
-  loading: boolean;
-  error: string | null;
-  rateLimitedUntil: number | null;
-
-  // --- Basic state setters ---
-  setUser: (user: User | null) => void;
-  clearError: () => void;
+  setUser: (user: User) => void;
   logoutLocal: () => void;
-
-  // --- Rate limiting ---
-  setRateLimit: (until: number | null) => void;
-  clearRateLimit: () => void;
-
-  // --- Bootstrap ---
   bootstrap: () => Promise<void>;
-
-  // --- Auth ---
-  loginWithCredentials: (email: string, password: string) => Promise<boolean>;
+  loginWithCredentials: (email: string, password: string) => Promise<void>;
   registerWithCredentials: (payload: {
     email: string;
     first_name: string;
     last_name?: string;
     password: string;
-  }) => Promise<boolean>;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   logoutEverywhere: () => Promise<void>;
   refeshSession: () => Promise<void>;
-
-  // --- Email ---
   sendEmailConfirmation: () => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
   changeEmail: (newEmail: string) => Promise<void>;
-
-  // --- Password ---
   requestPasswordReset: (email: string) => Promise<void>;
   changePasswordWithToken: (token: string, newPassword: string) => Promise<void>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
-
-  // --- Profile ---
   updateNames: (firstName: string, lastName?: string | null) => Promise<void>;
   deleteAccount: () => Promise<void>;
 };

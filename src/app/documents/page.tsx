@@ -4,12 +4,14 @@ import { Container, Stack, Alert, Box } from '@mui/material';
 import { useUserStore } from '@/store/user';
 import { DocumentSelector } from '@/app/documents/components/DocumentSelector';
 import { useState } from 'react';
+import { isAdminUser } from '@/utils/is-admin';
 
 export default function DocumentsPage() {
   const { user } = useUserStore();
   const [showAlert, setShowAlert] = useState(true);
-
   const handleCloseAlert = () => setShowAlert(false);
+
+  const isAdmin = isAdminUser(user);
 
   return (
     <Container
@@ -23,14 +25,14 @@ export default function DocumentsPage() {
           </Alert>
         )}
 
-        {user && user.role !== 'admin' && user.role !== 'god' && !user.email_verified && (
+        {user && !isAdmin && !user.email_verified && (
           <Alert severity="info" onClose={handleCloseAlert}>
             Підтвердіть пошту, щоб зберігати введені значення
           </Alert>
         )}
 
         <Box sx={{ flex: 1, minHeight: 0 }}>
-          <DocumentSelector showWebLink={user?.role === 'admin' || user?.role === 'god'} />
+          <DocumentSelector showWebLink={isAdmin} />
         </Box>
       </Stack>
     </Container>

@@ -1,5 +1,6 @@
 import { api } from '../core';
 import { useUserStore } from '@/store/user';
+import { useRateLimitStore } from '@/store/rate-limit';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 let isRefreshing = false;
@@ -64,7 +65,7 @@ api.interceptors.response.use(
       }
 
       const until = Date.now() + (retryAfterMs ?? 15000);
-      useUserStore.getState().setRateLimit(until);
+      useRateLimitStore.getState().setRateLimit(until);
     }
 
     return Promise.reject(error);

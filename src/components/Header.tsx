@@ -29,11 +29,13 @@ import { useTheme } from '@mui/material/styles';
 import { useUserStore } from '@/store/user';
 import { useThemeMode } from '@/providers/AppThemeProvider';
 import { useState, useMemo } from 'react';
+import { isAdminUser } from '@/utils/is-admin';
 
 export default function Header() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'), { noSsr: true });
   const { user } = useUserStore();
+  const isAdmin = isAdminUser(user);
   const { mode, toggle, mounted } = useThemeMode();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -45,13 +47,13 @@ export default function Header() {
       { href: '/faq', label: 'FAQ', icon: <HelpOutlineIcon /> },
     ];
 
-    if (user?.role === 'admin' || user?.role === 'god') {
+    if (isAdmin) {
       links.push({ href: '/generations', label: 'Генерації', icon: <PictureAsPdfIcon /> });
       links.push({ href: '/users', label: 'Користувачі', icon: <PersonIcon /> });
     }
 
     return links;
-  }, [user]);
+  }, [isAdmin]);
 
   if (!mounted) return null;
 

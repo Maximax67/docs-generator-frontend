@@ -1,17 +1,8 @@
 'use client';
 
-import { FC, useState, useEffect, useCallback } from 'react';
+import { FC, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import {
-  Box,
-  Paper,
-  useTheme,
-  useMediaQuery,
-  Divider,
-  Snackbar,
-  Alert,
-  SxProps,
-} from '@mui/material';
+import { Box, Paper, useTheme, useMediaQuery, Divider } from '@mui/material';
 import { DocumentTree } from './DocumentTree';
 import { PdfPreview } from './PdfPreview';
 import { VariableSchemaEditor } from './VariableSchemaEditor';
@@ -23,6 +14,8 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUserStore } from '@/store/user';
 import { convertBlobToUrl } from '@/utils/convert-blob-to-url';
 import { findInTree, getExpandPath } from '@/utils/document-tree';
+import { isAdminUser } from '@/utils/is-admin';
+import { useNotify } from '@/providers/NotificationProvider';
 
 interface DocumentSelectorProps {
   showWebLink?: boolean;
@@ -35,11 +28,11 @@ const previewCache = new PreviewCache();
 export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const notify = useNotify();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useUserStore();
-
-  const isAdmin = user?.role === 'admin' || user?.role === 'god';
+  const isAdmin = isAdminUser(user);
 
   // Local state instead of global store
   const [folderTree, setFolderTree] = useState<FolderTree[] | null>(null);
@@ -48,6 +41,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const [selectedDocument, setSelectedDocument] = useState<DriveFile | null>(null);
   const [previews, setPreviews] = useState<Record<string, DocumentPreview>>({});
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const isInitFromUrlParamsDoneRef = useRef(false);
 
   // Settings editor state
   const [variableSettings, setVariableSettings] = useState<string | null | undefined>(undefined);
@@ -58,49 +52,37 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
-  // Notification state
-  const [notification, setNotification] = useState<{
-    message: string;
-    severity: 'error' | 'warning' | 'info';
-  } | null>(null);
-
-  // URL params
   const scope = searchParams.get('scope');
   const mode = searchParams.get('mode') as ViewMode | null;
 
-  // Load folder tree on mount
-  useEffect(() => {
-    const loadFolderTree = async () => {
-      setTreeLoading(true);
-      setTreeError(null);
+  const loadFolderTree = useCallback(async () => {
+    setTreeLoading(true);
+    setTreeError(null);
 
-      try {
-        const data = await documentsApi.getFolderTree();
-        setFolderTree(data.tree);
-      } catch (error) {
-        setTreeError(toErrorMessage(error, 'Не вдалося завантажити структуру папок'));
-      } finally {
-        setTreeLoading(false);
-      }
-    };
-
-    loadFolderTree();
+    try {
+      const data = await documentsApi.getFolderTree();
+      setFolderTree(data.tree);
+    } catch (error) {
+      setTreeError(toErrorMessage(error, 'Не вдалося завантажити структуру папок'));
+    } finally {
+      setTreeLoading(false);
+    }
   }, []);
 
-  // Preview fetch function
+  useEffect(() => {
+    loadFolderTree();
+  }, [loadFolderTree]);
+
   const fetchPreview = useCallback(async (documentId: string) => {
-    // Skip if already loading
     const current = previewCache.get(documentId);
     if (current?.loading) {
       return;
     }
 
-    // Use cached version if valid
     if (previewCache.has(documentId)) {
       return;
     }
 
-    // Set loading state
     const loadingPreview = previewCache.createLoadingPreview(documentId);
     previewCache.set(documentId, loadingPreview);
     setPreviews(previewCache.toRecord());
@@ -122,14 +104,14 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     }
   }, []);
 
-  // Handle URL params once tree is loaded
   useEffect(() => {
-    if (!folderTree || !scope) return;
+    if (isInitFromUrlParamsDoneRef.current || !folderTree || !scope) return;
+
+    isInitFromUrlParamsDoneRef.current = true;
 
     const result = findInTree(folderTree, scope);
-
     if (!result) {
-      setNotification({
+      notify({
         message: 'Документ або папку не знайдено',
         severity: 'error',
       });
@@ -137,16 +119,18 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     }
 
     if (mode === 'settings' && !isAdmin) {
-      setNotification({
+      notify({
         message: user ? 'Доступ заборонено' : 'Увійдіть для доступу до налаштувань',
         severity: 'warning',
       });
       return;
     }
 
-    const pathToExpand = getExpandPath(folderTree, scope);
-    if (pathToExpand) {
-      setExpandedFolders(new Set(pathToExpand));
+    if (expandedFolders.size === 0) {
+      const pathToExpand = getExpandPath(folderTree, scope);
+      if (pathToExpand) {
+        setExpandedFolders(new Set(pathToExpand));
+      }
     }
 
     if (mode === 'settings') {
@@ -168,7 +152,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         fetchPreview(result.item.id);
       }
     }
-  }, [folderTree, scope, mode, isAdmin, user, fetchPreview]);
+  }, [folderTree, scope, mode, isAdmin, user, fetchPreview, expandedFolders, notify]);
 
   const updateUrl = useCallback(
     (newScope: string | null, newMode: ViewMode | null) => {
@@ -232,7 +216,6 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
   const handleSettingsOpen = useCallback(
     (id: string, name: string) => {
-      console.log(name);
       const openSettings = () => {
         setVariableSettings(id);
         setVariableSettingsName(name);
@@ -287,94 +270,103 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
   const preview = selectedDocument ? previews[selectedDocument.id] : null;
 
-  const MainContent = () =>
-    typeof variableSettings === 'undefined' ? (
-      <PdfPreview
-        showWebLink={showWebLink}
-        document={selectedDocument}
-        preview={preview}
-        onRefresh={handleRefreshPreview}
-      />
-    ) : (
+  const mainContent = useMemo(() => {
+    if (typeof variableSettings === 'undefined') {
+      return (
+        <PdfPreview
+          showWebLink={showWebLink}
+          document={selectedDocument}
+          preview={preview}
+          onRefresh={handleRefreshPreview}
+        />
+      );
+    }
+
+    return (
       <VariableSchemaEditor
         scope={variableSettings}
         scopeName={variableSettingsName!}
         onClose={handleSettingsClose}
         onSave={handleSchemaSave}
         onChange={handleSchemaChange}
-        hasUnsavedChanges={hasUnsavedChanges}
       />
     );
-
-  const DocumentTreePanel = ({ sx }: { sx?: SxProps }) => (
-    <Paper elevation={1} sx={sx}>
-      <DocumentTree
-        folderTree={folderTree}
-        treeLoading={treeLoading}
-        treeError={treeError}
-        highlight={scope}
-        expandedFolders={expandedFolders}
-        onDocumentSelect={handleDocumentSelect}
-        onSettingsOpen={handleSettingsOpen}
-        onFolderToggle={handleFolderToggle}
-        onRetry={() => window.location.reload()}
-      />
-    </Paper>
-  );
-
-  const GlobalOverlays = () => (
-    <>
-      <ConfirmDialog
-        open={showConfirmDialog}
-        title="Незбережені зміни"
-        message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
-        confirmText="Вийти без збереження"
-        cancelText="Скасувати"
-        onConfirm={handleConfirmProceed}
-        onCancel={handleConfirmCancel}
-        severity="warning"
-      />
-
-      <Snackbar
-        open={!!notification}
-        autoHideDuration={6000}
-        onClose={() => setNotification(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setNotification(null)}
-          severity={notification?.severity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {notification?.message}
-        </Alert>
-      </Snackbar>
-    </>
-  );
+  }, [
+    variableSettings,
+    showWebLink,
+    selectedDocument,
+    preview,
+    handleRefreshPreview,
+    variableSettingsName,
+    handleSettingsClose,
+    handleSchemaSave,
+    handleSchemaChange,
+  ]);
 
   if (isMobile) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <DocumentTreePanel />
-        <Paper elevation={1} sx={{ height: '80dvh' }}>
-          <MainContent />
+        <Paper elevation={1}>
+          <DocumentTree
+            folderTree={folderTree}
+            treeLoading={treeLoading}
+            treeError={treeError}
+            highlight={scope}
+            expandedFolders={expandedFolders}
+            onDocumentSelect={handleDocumentSelect}
+            onSettingsOpen={handleSettingsOpen}
+            onFolderToggle={handleFolderToggle}
+            onRetry={loadFolderTree}
+          />
         </Paper>
-        <GlobalOverlays />
+        <Paper elevation={1} sx={{ height: '80dvh' }}>
+          {mainContent}
+        </Paper>
+
+        <ConfirmDialog
+          open={showConfirmDialog}
+          title="Незбережені зміни"
+          message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
+          confirmText="Вийти без збереження"
+          cancelText="Скасувати"
+          onConfirm={handleConfirmProceed}
+          onCancel={handleConfirmCancel}
+          severity="warning"
+        />
       </Box>
     );
   }
 
   return (
     <Box sx={{ height: '100%', display: 'flex', gap: 2 }}>
-      <DocumentTreePanel sx={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }} />
+      <Paper elevation={1} sx={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
+        <DocumentTree
+          folderTree={folderTree}
+          treeLoading={treeLoading}
+          treeError={treeError}
+          highlight={scope}
+          expandedFolders={expandedFolders}
+          onDocumentSelect={handleDocumentSelect}
+          onSettingsOpen={handleSettingsOpen}
+          onFolderToggle={handleFolderToggle}
+          onRetry={loadFolderTree}
+        />
+      </Paper>
       <Divider orientation="vertical" flexItem />
       <Paper elevation={1} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ flex: 1, overflow: 'hidden' }}>
-          <MainContent />
-        </Box>
+        <Box sx={{ flex: 1, overflow: 'hidden' }}>{mainContent}</Box>
       </Paper>
-      <GlobalOverlays />
+
+      <ConfirmDialog
+        open={showConfirmDialog}
+        title="Незбережені зміни"
+        message="У вас є незбережені зміни. Ви впевнені, що хочете війти без збереження?"
+        confirmText="Вийти без збереження"
+        cancelText="Скасувати"
+        onConfirm={handleConfirmProceed}
+        onCancel={handleConfirmCancel}
+        severity="warning"
+      />
     </Box>
   );
 };

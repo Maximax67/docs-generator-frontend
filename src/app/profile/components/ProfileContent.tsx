@@ -9,6 +9,7 @@ import GenerationSection from '../sections/GenerationSection';
 import VariablesSection from '../sections/VariablesSection';
 import SessionsSection from '../sections/SessionsSection';
 import LogoutSection from '../sections/LogoutSection';
+import { isAdminRole } from '@/utils/is-admin';
 
 interface ProfileContentProps {
   currentUser: User;
@@ -24,9 +25,9 @@ export const ProfileContent: FC<ProfileContentProps> = ({
   handlers,
 }) => {
   const isGod = currentUser.role === 'god';
+  const isAdmin = isAdminRole(currentUser.role);
   const canDeleteGenerations =
     currentUser.role === 'god' || (currentUser.role === 'admin' && targetUser.role === 'user');
-  const isAdmin = currentUser.role === 'admin' || currentUser.role === 'god';
 
   return (
     <ProfileLayout

@@ -1,14 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Paper,
-  IconButton,
-  Snackbar,
-  Alert,
-  Tooltip,
-} from '@mui/material';
+import { Box, Typography, CircularProgress, Paper, IconButton, Tooltip } from '@mui/material';
 import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
 import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
@@ -16,7 +7,8 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { variablesApi } from '@/lib/api';
 
 import 'jsonjoy-builder/styles.css';
-import '../jsonjoy-builder.css';
+import './VariableSchemaEditor.module.css';
+import { useNotify } from '@/providers/NotificationProvider';
 
 interface VariableSchemaEditorProps {
   scope: string | null;
@@ -24,7 +16,6 @@ interface VariableSchemaEditorProps {
   onClose: () => void;
   onSave?: () => void;
   onChange?: () => void;
-  hasUnsavedChanges?: boolean;
 }
 
 const emptySchema: JSONSchema = {
@@ -40,12 +31,11 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
   onSave,
   onChange,
 }) => {
+  const notify = useNotify();
   const [schema, setSchema] = useState<JSONSchema>(emptySchema);
   const [initialSchema, setInitialSchema] = useState<JSONSchema>(emptySchema);
   const [loading, setLoading] = useState(false);
   const [fetchingSchema, setFetchingSchema] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const hasChanges = JSON.stringify(schema) !== JSON.stringify(initialSchema);
 
   useEffect(() => {
@@ -63,14 +53,14 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
         }
       } catch (err) {
         console.error('Failed to load existing schema:', err);
-        setError(toErrorMessage(err, 'Не вдалося завантажити схему'));
+        notify({ message: toErrorMessage(err, 'Не вдалося завантажити схему'), severity: 'error' });
       } finally {
         setFetchingSchema(false);
       }
     };
 
     loadExistingSchema();
-  }, [scope]);
+  }, [notify, scope]);
 
   const handleSchemaChange = (newSchema: JSONSchema) => {
     setSchema(newSchema);
@@ -79,21 +69,20 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
 
   const handleSave = async () => {
     if (!hasChanges) {
-      setSuccessMessage('Немає змін для збереження');
+      notify({ message: 'Немає змін для збереження', severity: 'info' });
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       await variablesApi.updateValidationSchema(scope, schema);
 
       setInitialSchema(schema);
-      setSuccessMessage('Схему успішно збережено');
+      notify({ message: 'Схему успішно збережено', severity: 'success' });
       onSave?.();
     } catch (err) {
-      setError(toErrorMessage(err, 'Не вдалося зберегти схему'));
+      notify({ message: toErrorMessage(err, 'Не вдалося зберегти схему'), severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -163,38 +152,6 @@ export const VariableSchemaEditor: FC<VariableSchemaEditorProps> = ({
       ) : (
         <SchemaVisualEditor schema={schema} onChange={handleSchemaChange} readOnly={false} />
       )}
-
-      <Snackbar
-        open={!!error}
-        autoHideDuration={5000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setError(null)}
-          severity="error"
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={3000}
-        onClose={() => setSuccessMessage(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setSuccessMessage(null)}
-          severity="success"
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {successMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

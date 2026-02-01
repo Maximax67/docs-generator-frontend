@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -49,37 +49,37 @@ export default function DocumentVariablesPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!documentId) {
       setError('Документ не обрано!');
       setLoading(false);
       return;
     }
 
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        const details = await documentsApi.getDocumentDetails(documentId);
-        setDocumentDetails(details);
+      const details = await documentsApi.getDocumentDetails(documentId);
+      setDocumentDetails(details);
 
-        const initialValues: Record<string, JSONValue> = {};
-        details.variables.variables.forEach((v: DocumentVariableInfo) => {
-          if (v.value != null) initialValues[v.variable] = v.value;
-          else if (v.saved_value != null) initialValues[v.variable] = v.saved_value;
-        });
+      const initialValues: Record<string, JSONValue> = {};
+      details.variables.variables.forEach((v: DocumentVariableInfo) => {
+        if (v.value != null) initialValues[v.variable] = v.value;
+        else if (v.saved_value != null) initialValues[v.variable] = v.saved_value;
+      });
 
-        setFormValues(initialValues);
-      } catch {
-        setError('Не вдалося завантажити дані документа');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
+      setFormValues(initialValues);
+    } catch {
+      setError('Не вдалося завантажити дані документа');
+    } finally {
+      setLoading(false);
+    }
   }, [documentId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const schema: RJSFSchema = useMemo(() => {
     const properties: Record<string, JSONValue> = {};
@@ -135,10 +135,6 @@ export default function DocumentVariablesPage() {
     }
   };
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
@@ -156,7 +152,7 @@ export default function DocumentVariablesPage() {
           severity="error"
           action={
             documentId && (
-              <Button color="inherit" size="small" onClick={handleRefresh}>
+              <Button color="inherit" size="small" onClick={loadData}>
                 <RefreshIcon sx={{ mr: 1 }} />
                 Спробувати знову
               </Button>

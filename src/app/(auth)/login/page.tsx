@@ -18,13 +18,16 @@ import { useUserStore } from '@/store/user';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword } from '@/utils/validators';
+import { toErrorMessage } from '@/utils/errors-messages';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loginWithCredentials, loading, error, clearError } = useUserStore();
+  const { user, loginWithCredentials } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
 
@@ -46,8 +49,15 @@ export default function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await loginWithCredentials(email, password);
-    if (ok) router.push('/profile/');
+    setLoading(true);
+    setLoginError('');
+    try {
+      await loginWithCredentials(email, password);
+      router.push('/profile/');
+    } catch (e) {
+      setLoginError(toErrorMessage(e) || 'Помилка входу');
+      setLoading(false);
+    }
   };
 
   const isFormValid = email && password && !emailError && !passwordError;
@@ -58,10 +68,6 @@ export default function LoginPage() {
     }
   }, [router, user]);
 
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
-
   return (
     <AuthScaffold
       title="Увійти"
@@ -69,7 +75,7 @@ export default function LoginPage() {
     >
       <Box component="form" onSubmit={onSubmit} noValidate>
         <Stack spacing={2.25} mt={3}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {loginError && <Alert severity="error">{loginError}</Alert>}
           <TextField
             label="Ел. пошта"
             type="email"

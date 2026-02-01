@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import { useUserStore } from '@/store/user';
+import { useRateLimitStore } from '@/store/rate-limit';
 
 export default function RateLimitOverlay() {
-  const rateLimitedUntil = useUserStore((s) => s.rateLimitedUntil);
-  const clearRateLimit = useUserStore((s) => s.clearRateLimit);
+  const rateLimitedUntil = useRateLimitStore((s) => s.rateLimitedUntil);
+  const clearRateLimit = useRateLimitStore((s) => s.clearRateLimit);
 
   const [now, setNow] = useState<number>(() => Date.now());
 
