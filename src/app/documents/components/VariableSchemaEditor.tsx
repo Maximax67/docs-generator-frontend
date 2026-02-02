@@ -1,15 +1,26 @@
 import deepEqual from 'fast-deep-equal';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { Box, Typography, CircularProgress, Paper, IconButton, Tooltip } from '@mui/material';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Paper,
+  IconButton,
+  Tooltip,
+  Tabs,
+  Tab,
+} from '@mui/material';
 import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
 import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import { toErrorMessage } from '@/utils/errors-messages';
 import { variablesApi } from '@/lib/api';
+import { VariableCompactResponse } from '@/types/variables';
 
 import 'jsonjoy-builder/styles.css';
 import './VariableSchemaEditor.module.css';
 import { useNotify } from '@/providers/NotificationProvider';
+import { ConstantsTable } from './ConstantsTable';
 
 interface VariableSchemaEditorProps {
   scope: string | null;
@@ -30,8 +41,10 @@ const emptySchema: JSONSchema = {
 export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, VariableSchemaEditorProps>(
   ({ scope, scopeName, onClose }, ref) => {
     const notify = useNotify();
+    const [activeTab, setActiveTab] = useState<'validation' | 'constants'>('validation');
     const [schema, setSchema] = useState<JSONSchema>({ ...emptySchema });
     const [initialSchema, setInitialSchema] = useState<JSONSchema>({ ...emptySchema });
+    const [variables, setVariables] = useState<VariableCompactResponse[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingSchema, setFetchingSchema] = useState(false);
     const hasChanges = useMemo(() => !deepEqual(schema, initialSchema), [schema, initialSchema]);
@@ -44,32 +57,33 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       [hasChanges],
     );
 
-    useEffect(() => {
-      const loadExistingSchema = async () => {
-        setFetchingSchema(true);
-        try {
-          const response = await variablesApi.getValidationSchema(scope);
-          const schema = response.validation_schema;
-          if (Object.keys(schema).length === 0) {
-            setSchema({ ...emptySchema });
-            setInitialSchema({ ...emptySchema });
-          } else {
-            setSchema(schema);
-            setInitialSchema(schema);
-          }
-        } catch (err) {
-          console.error('Failed to load existing schema:', err);
-          notify({
-            message: toErrorMessage(err, 'Не вдалося завантажити схему'),
-            severity: 'error',
-          });
-        } finally {
-          setFetchingSchema(false);
+    const loadExistingSchema = useCallback(async () => {
+      setFetchingSchema(true);
+      try {
+        const response = await variablesApi.getValidationSchema(scope);
+        const schema = response.validation_schema;
+        if (Object.keys(schema).length === 0) {
+          setSchema({ ...emptySchema });
+          setInitialSchema({ ...emptySchema });
+        } else {
+          setSchema(schema);
+          setInitialSchema(schema);
         }
-      };
-
-      loadExistingSchema();
+        setVariables(response.variables);
+      } catch (err) {
+        console.error('Failed to load existing schema:', err);
+        notify({
+          message: toErrorMessage(err, 'Не вдалося завантажити схему'),
+          severity: 'error',
+        });
+      } finally {
+        setFetchingSchema(false);
+      }
     }, [notify, scope]);
+
+    useEffect(() => {
+      loadExistingSchema();
+    }, [loadExistingSchema]);
 
     const handleSchemaChange = (newSchema: JSONSchema) => {
       setSchema(newSchema);
@@ -95,6 +109,17 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       }
     };
 
+    const handleTabChange = (
+      _event: React.SyntheticEvent,
+      newValue: 'validation' | 'constants',
+    ) => {
+      setActiveTab(newValue);
+    };
+
+    const handleVariableChange = () => {
+      loadExistingSchema();
+    };
+
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Paper
@@ -114,7 +139,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="h6">Налаштування змінних для {scopeName}</Typography>
 
-            {hasChanges && (
+            {hasChanges && activeTab === 'validation' && (
               <Tooltip
                 title="Незбережені зміни"
                 arrow
@@ -138,27 +163,53 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
             )}
           </Box>
           <Box>
-            <IconButton
-              color="primary"
-              onClick={handleSave}
-              disabled={loading || fetchingSchema || !hasChanges}
-              title={hasChanges ? 'Зберегти зміни' : 'Немає змін для збереження'}
-            >
-              <SaveIcon />
-            </IconButton>
+            {activeTab === 'validation' && (
+              <IconButton
+                color="primary"
+                onClick={handleSave}
+                disabled={loading || fetchingSchema || !hasChanges}
+                title={hasChanges ? 'Зберегти зміни' : 'Немає змін для збереження'}
+              >
+                <SaveIcon />
+              </IconButton>
+            )}
             <IconButton onClick={onClose} title="Закрити">
               <CloseIcon />
             </IconButton>
           </Box>
         </Paper>
 
-        {fetchingSchema ? (
-          <Box display="flex" justifyContent="center" alignItems="center" py={4}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <SchemaVisualEditor schema={schema} onChange={handleSchemaChange} readOnly={false} />
-        )}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={activeTab} onChange={handleTabChange}>
+            <Tab label="Валідація" value="validation" />
+            <Tab label="Константи" value="constants" />
+          </Tabs>
+        </Box>
+
+        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+          {fetchingSchema ? (
+            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              {activeTab === 'validation' && (
+                <SchemaVisualEditor
+                  schema={schema}
+                  onChange={handleSchemaChange}
+                  readOnly={false}
+                />
+              )}
+              {activeTab === 'constants' && (
+                <ConstantsTable
+                  scope={scope}
+                  variables={variables}
+                  onVariableChange={handleVariableChange}
+                />
+              )}
+            </>
+          )}
+        </Box>
       </Box>
     );
   },

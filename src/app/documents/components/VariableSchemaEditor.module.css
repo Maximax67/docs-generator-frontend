@@ -32,3 +32,9 @@
   --jsonjoy-input: var(--mui-palette-divider);
   --jsonjoy-ring: var(--mui-palette-primary-main);
 }
+
+/* Fix ui bug with popper showing wrong */
+:global([data-radix-popper-content-wrapper]>[data-side="top"]) {
+  position: absolute;
+  bottom: 0;
+}

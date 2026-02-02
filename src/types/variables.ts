@@ -29,10 +29,6 @@ export interface DocumentDetails {
   variables: DocumentVariablesResponse;
 }
 
-export interface VariableSchemaUpdateRequest {
-  schema: Record<string, JSONValue>;
-}
-
 export interface SavedVariable {
   variable: string;
   value: JSONValue;
@@ -56,7 +52,23 @@ export interface VariableCompactResponse {
   value: JSONValue;
 }
 
-export interface VariablesSchemaResponse {
+export interface VariableCompactResponse {
+  id: string;
+  scope: string | null;
+  variable: string;
+  value: JSONValue;
+}
+
+export interface VariableSchemaResponse {
   validation_schema: Record<string, JSONValue>;
   variables: VariableCompactResponse[];
+}
+
+export interface VariableCreate {
+  variable: string;
+  scope: string | null;
+  value?: JSONValue;
+  validation_schema?: Record<string, JSONValue> | null;
+  required: boolean;
+  allow_save: boolean;
 }
