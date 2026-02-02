@@ -46,8 +46,11 @@ import { usePaginationParams } from '@/hooks/use-pagination-params';
 import { LoadingContent } from '@/components/LoadingContent';
 import { PaginationControls } from '@/components/PaginationControls';
 import { PageSizeControl } from '@/components/PageSizeControls';
+import { JSONValue } from '@/types/json';
+import { useRouter } from 'next/navigation';
 
 export default function GenerationsPage() {
+  const router = useRouter();
   const { user } = useUserStore();
   const isAdmin = isAdminUser(user);
   const [error, setError] = useState<string | null>(null);
@@ -136,13 +139,12 @@ export default function GenerationsPage() {
     );
   }
 
-  const handleRegenerateGeneration = async (id: string, oldConstants: boolean) => {
+  const handleRegenerateGeneration = async (id: string, variables?: Record<string, JSONValue>) => {
     setDisabledUI(true);
     try {
-      const blob = await generationsApi.regenerateGeneration(id, oldConstants);
+      const blob = await generationsApi.regenerateGeneration(id, variables);
       await savePdfToIndexedDb('generatedPdf', blob);
-
-      window.open('/documents/result/', '_blank', 'noopener,noreferrer');
+      router.push('/documents/result');
     } catch (e) {
       setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
     } finally {
@@ -219,7 +221,9 @@ export default function GenerationsPage() {
                               <IconButton
                                 size="small"
                                 disabled={disabledUI}
-                                onClick={() => handleRegenerateGeneration(generation._id, false)}
+                                onClick={() =>
+                                  handleRegenerateGeneration(generation._id, generation.variables)
+                                }
                                 title="Перегенерувати"
                               >
                                 <ReplayIcon fontSize="small" />
@@ -227,7 +231,7 @@ export default function GenerationsPage() {
                               <IconButton
                                 size="small"
                                 disabled={disabledUI}
-                                onClick={() => handleRegenerateGeneration(generation._id, true)}
+                                onClick={() => handleRegenerateGeneration(generation._id)}
                                 title="Перегенерувати зі старими значеннями"
                               >
                                 <RestoreIcon fontSize="small" />
@@ -390,14 +394,16 @@ export default function GenerationsPage() {
                                 <LaunchIcon />
                               </IconButton>
                               <IconButton
-                                onClick={() => handleRegenerateGeneration(generation._id, false)}
+                                onClick={() =>
+                                  handleRegenerateGeneration(generation._id, generation.variables)
+                                }
                                 disabled={disabledUI}
                                 title="Перегенерувати"
                               >
                                 <ReplayIcon />
                               </IconButton>
                               <IconButton
-                                onClick={() => handleRegenerateGeneration(generation._id, true)}
+                                onClick={() => handleRegenerateGeneration(generation._id)}
                                 disabled={disabledUI}
                                 title="Перегенерувати зі старими значеннями"
                               >

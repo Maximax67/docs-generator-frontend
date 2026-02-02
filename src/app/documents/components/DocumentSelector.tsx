@@ -275,6 +275,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         ref={editorRef}
         scope={variableSettings}
         scopeName={variableSettingsName!}
+        folderTree={folderTree}
         onClose={handleSettingsClose}
       />
     );
@@ -285,6 +286,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     preview,
     handleRefreshPreview,
     variableSettingsName,
+    folderTree,
     handleSettingsClose,
   ]);
 
@@ -346,7 +348,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         open={showConfirmDialog}
         title="Незбережені зміни"
         message="У вас є незбережені зміни. Ви впевнені, що хочете війти без збереження?"
-        confirmText="Вийти без збереження"
+        confirmText="Війти без збереження"
         cancelText="Скасувати"
         onConfirm={handleConfirmProceed}
         onCancel={handleConfirmCancel}

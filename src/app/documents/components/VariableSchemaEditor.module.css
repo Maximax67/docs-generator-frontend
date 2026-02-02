@@ -34,7 +34,12 @@
 }
 
 /* Fix ui bug with popper showing wrong */
-:global([data-radix-popper-content-wrapper]>[data-side="top"]) {
+:global([data-radix-popper-content-wrapper] > [data-side='top']) {
   position: absolute;
   bottom: 0;
+}
+
+:global(body > div.jsonjoy) {
+  overflow-y: auto;
+  min-height: unset;
 }

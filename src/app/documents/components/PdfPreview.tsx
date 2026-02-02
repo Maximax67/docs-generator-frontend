@@ -24,12 +24,6 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
     }
   };
 
-  const openWebViewHandler = () => {
-    if (document?.web_view_link) {
-      window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   if (!document) {
     return (
       <Box
@@ -47,6 +41,10 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
       </Box>
     );
   }
+
+  const openWebViewHandler = () => {
+    window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
+  };
 
   const header = (
     <Paper

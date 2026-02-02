@@ -121,11 +121,7 @@ export default function Header() {
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>{renderLinks()}</Box>
         )}
 
-        <IconButton
-          color="inherit"
-          onClick={toggle}
-          aria-label="Змінити тему"
-        >
+        <IconButton color="inherit" onClick={toggle} aria-label="Змінити тему">
           {mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
         </IconButton>
 

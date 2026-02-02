@@ -35,7 +35,6 @@ export async function savePdfToIndexedDb(key: string, blob: Blob): Promise<void>
   });
 }
 
-
 export async function getPdfFromIndexedDb(key: string): Promise<Blob | null> {
   const db = await openDb();
   return new Promise((resolve, reject) => {

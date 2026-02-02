@@ -12,6 +12,7 @@ import {
   Radio,
   RadioGroup,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import { VariableCompactResponse } from '@/types/variables';
 import { variablesApi } from '@/lib/api';
@@ -24,6 +25,7 @@ type VariableType = 'text' | 'number' | 'boolean' | 'json';
 interface ConstantVariableModalProps {
   open: boolean;
   scope: string | null;
+  scopeName: string;
   editingVariable: VariableCompactResponse | null;
   existingVariables: VariableCompactResponse[];
   onClose: () => void;
@@ -33,6 +35,7 @@ interface ConstantVariableModalProps {
 export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   open,
   scope,
+  scopeName,
   editingVariable,
   existingVariables,
   onClose,
@@ -44,7 +47,8 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   const [variableValue, setVariableValue] = useState('');
   const [booleanValue, setBooleanValue] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
-  const [nameError, setNameError] = useState('');
+  const [overrideWarning, setOverrideWarning] = useState<string>('');
+  const [isEditingParentScope, setIsEditingParentScope] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -60,15 +64,23 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
         } else {
           setVariableValue(String(editingVariable.value));
         }
+
+        // Check if editing variable from parent scope
+        if (editingVariable.scope !== scope) {
+          setIsEditingParentScope(true);
+        } else {
+          setIsEditingParentScope(false);
+        }
       } else {
         setVariableName('');
         setVariableType('text');
         setVariableValue('');
         setBooleanValue(false);
+        setIsEditingParentScope(false);
       }
-      setNameError('');
+      setOverrideWarning('');
     }
-  }, [open, editingVariable]);
+  }, [open, editingVariable, scope]);
 
   const getVariableType = (value: JSONValue): VariableType => {
     if (typeof value === 'boolean') return 'boolean';
@@ -89,11 +101,11 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
     );
 
     if (existingInOtherScope) {
-      setNameError(
-        `Увага: Ця змінна вже визначена в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'} і буде перевизначена`,
+      setOverrideWarning(
+        `Ця змінна вже визначена в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'} і буде перевизначена`,
       );
     } else {
-      setNameError('');
+      setOverrideWarning('');
     }
   };
 
@@ -131,7 +143,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
 
       const payload = {
         variable: variableName.trim(),
-        scope: scope,
+        scope: editingVariable ? editingVariable.scope : scope,
         value: value,
         validation_schema: null,
         required: false,
@@ -188,7 +200,6 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
             value={variableValue}
             onChange={(e) => setVariableValue(e.target.value)}
             disabled={loading}
-            helperText="Введіть коректний JSON"
           />
         );
       case 'text':
@@ -212,14 +223,24 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
       <DialogTitle>{editingVariable ? 'Редагувати константу' : 'Додати константу'}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+          {isEditingParentScope && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Ви редагуєте константу з вищого scope: {scopeName}.
+            </Alert>
+          )}
+
+          {overrideWarning && !isEditingParentScope && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              {overrideWarning}
+            </Alert>
+          )}
+
           <TextField
             fullWidth
             label="Назва змінної"
             value={variableName}
             onChange={(e) => handleNameChange(e.target.value)}
             disabled={loading || !!editingVariable}
-            error={!!nameError}
-            helperText={nameError}
           />
 
           <TextField

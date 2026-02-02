@@ -4,17 +4,13 @@ import { JSONSchema } from 'jsonjoy-builder';
 
 export const variablesApi = {
   async getValidationSchema(scope: string | null): Promise<VariableSchemaResponse> {
-    const response = await api.get<VariableSchemaResponse>(
-      '/variables/schema',
-      { params: { scope } }
-    );
+    const response = await api.get<VariableSchemaResponse>('/variables/schema', {
+      params: { scope },
+    });
     return response.data;
   },
 
-  async updateValidationSchema(
-    scope: string | null,
-    schema: JSONSchema
-  ): Promise<void> {
+  async updateValidationSchema(scope: string | null, schema: JSONSchema): Promise<void> {
     await api.put('/variables/schema', {
       scope,
       validation_schema: schema,

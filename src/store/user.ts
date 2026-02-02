@@ -13,7 +13,6 @@ import { UserState } from '@/types/user';
 import { markBootstrapComplete } from '@/lib/api/setup/bootstrap';
 import { isAxiosError } from '@/utils/is-axios-error';
 
-
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -88,10 +87,8 @@ export const useUserStore = create<UserState>()(
 
       verifyEmail: async (token) => {
         await authApi.verifyEmail(token);
-        set(state => ({
-          user: state.user
-            ? { ...state.user, email_verified: true }
-            : null
+        set((state) => ({
+          user: state.user ? { ...state.user, email_verified: true } : null,
         }));
       },
 

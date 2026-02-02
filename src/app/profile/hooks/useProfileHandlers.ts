@@ -15,7 +15,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   const userStore = useUserStore();
 
   // UI State
-  const [activeTab, setActiveTab] = useState<'info' | 'generations' | 'vars' | 'sessions' | 'logout'>('info');
+  const [activeTab, setActiveTab] = useState<
+    'info' | 'generations' | 'vars' | 'sessions' | 'logout'
+  >('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,20 +46,20 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
 
   // Generic async handler wrapper
-  const withAsyncHandler = useCallback(async (
-    action: () => Promise<void>,
-    errorMessage: string
-  ) => {
-    setError(null);
-    setLoading(true);
-    try {
-      await action();
-    } catch (e) {
-      setError(toErrorMessage(e, errorMessage));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const withAsyncHandler = useCallback(
+    async (action: () => Promise<void>, errorMessage: string) => {
+      setError(null);
+      setLoading(true);
+      try {
+        await action();
+      } catch (e) {
+        setError(toErrorMessage(e, errorMessage));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Email Handlers
   const handleOpenEmailDialog = useCallback(() => {
@@ -110,7 +112,11 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (isOwnProfile) {
         await userStore.updateNames(namesForm.firstName, namesForm.lastName || null);
       } else {
-        await adminApi.updateUserNames(targetUser._id, namesForm.firstName, namesForm.lastName || null);
+        await adminApi.updateUserNames(
+          targetUser._id,
+          namesForm.firstName,
+          namesForm.lastName || null,
+        );
         targetUser.first_name = namesForm.firstName;
         targetUser.last_name = namesForm.lastName || null;
       }
@@ -119,66 +125,73 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   }, [targetUser, isOwnProfile, namesForm, withAsyncHandler, userStore]);
 
   // Account Actions
-  const handleSendEmailConfirm = useCallback(() =>
-    withAsyncHandler(
-      () => userStore.sendEmailConfirmation(),
-      'Не вдалося надіслати лист підтвердження'
-    ),
-    [withAsyncHandler, userStore]
+  const handleSendEmailConfirm = useCallback(
+    () =>
+      withAsyncHandler(
+        () => userStore.sendEmailConfirmation(),
+        'Не вдалося надіслати лист підтвердження',
+      ),
+    [withAsyncHandler, userStore],
   );
 
-  const handleConfirmEmail = useCallback(() =>
-    withAsyncHandler(async () => {
-      if (!targetUser) return;
-      await adminApi.confirmUserEmail(targetUser._id);
-      targetUser.email_verified = true;
-    }, 'Не вдалося підтвердити пошту'),
-    [targetUser, withAsyncHandler]
+  const handleConfirmEmail = useCallback(
+    () =>
+      withAsyncHandler(async () => {
+        if (!targetUser) return;
+        await adminApi.confirmUserEmail(targetUser._id);
+        targetUser.email_verified = true;
+      }, 'Не вдалося підтвердити пошту'),
+    [targetUser, withAsyncHandler],
   );
 
-  const handleRevokeConfirmEmail = useCallback(() =>
-    withAsyncHandler(async () => {
-      if (!targetUser) return;
-      await adminApi.revokeUserEmailConfirmation(targetUser._id);
-      targetUser.email_verified = false;
-    }, 'Не вдалося зняти підтвердження пошту'),
-    [targetUser, withAsyncHandler]
+  const handleRevokeConfirmEmail = useCallback(
+    () =>
+      withAsyncHandler(async () => {
+        if (!targetUser) return;
+        await adminApi.revokeUserEmailConfirmation(targetUser._id);
+        targetUser.email_verified = false;
+      }, 'Не вдалося зняти підтвердження пошту'),
+    [targetUser, withAsyncHandler],
   );
 
-  const handleBanUser = useCallback(() =>
-    withAsyncHandler(async () => {
-      if (!targetUser) return;
-      await adminApi.banUser(targetUser._id);
-      targetUser.is_banned = true;
-    }, 'Не вдалося заблокувати користувача'),
-    [targetUser, withAsyncHandler]
+  const handleBanUser = useCallback(
+    () =>
+      withAsyncHandler(async () => {
+        if (!targetUser) return;
+        await adminApi.banUser(targetUser._id);
+        targetUser.is_banned = true;
+      }, 'Не вдалося заблокувати користувача'),
+    [targetUser, withAsyncHandler],
   );
 
-  const handleUnbanUser = useCallback(() =>
-    withAsyncHandler(async () => {
-      if (!targetUser) return;
-      await adminApi.unbanUser(targetUser._id);
-      targetUser.is_banned = false;
-    }, 'Не вдалося розблокувати користувача'),
-    [targetUser, withAsyncHandler]
+  const handleUnbanUser = useCallback(
+    () =>
+      withAsyncHandler(async () => {
+        if (!targetUser) return;
+        await adminApi.unbanUser(targetUser._id);
+        targetUser.is_banned = false;
+      }, 'Не вдалося розблокувати користувача'),
+    [targetUser, withAsyncHandler],
   );
 
-  const handlePromoteUser = useCallback(() =>
-    withAsyncHandler(async () => {
-      if (!targetUser) return;
-      await adminApi.promoteUserToAdmin(targetUser._id);
-      targetUser.role = 'admin';
-    }, 'Не вдалося підвищити користувача'),
-    [targetUser, withAsyncHandler]
+  const handlePromoteUser = useCallback(
+    () =>
+      withAsyncHandler(async () => {
+        if (!targetUser) return;
+        await adminApi.promoteUserToAdmin(targetUser._id);
+        targetUser.role = 'admin';
+      }, 'Не вдалося підвищити користувача'),
+    [targetUser, withAsyncHandler],
   );
 
-  const handleDemoteUser = useCallback(() =>
-    withAsyncHandler(async () => {
-      if (!targetUser) return;
-      await adminApi.demoteAdminToUser(targetUser._id);
-      targetUser.role = 'user';
-    }, 'Не вдалося понизити користувача'),
-    [targetUser, withAsyncHandler]
+  const handleDemoteUser = useCallback(
+    () =>
+      withAsyncHandler(async () => {
+        if (!targetUser) return;
+        await adminApi.demoteAdminToUser(targetUser._id);
+        targetUser.role = 'user';
+      }, 'Не вдалося понизити користувача'),
+    [targetUser, withAsyncHandler],
   );
 
   const handleOpenDeleteDialog = useCallback(() => {
@@ -189,7 +202,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!targetUser) return;
 
     try {
-      setDeleteForm(prev => ({ ...prev, error: '' }));
+      setDeleteForm((prev) => ({ ...prev, error: '' }));
       if (isOwnProfile) {
         await userStore.deleteAccount();
       } else {
@@ -198,7 +211,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       setDeleteDialogOpen(false);
       router.push(isOwnProfile ? '/' : '/users');
     } catch {
-      setDeleteForm(prev => ({ ...prev, error: 'Помилка при видаленні акаунта.' }));
+      setDeleteForm((prev) => ({ ...prev, error: 'Помилка при видаленні акаунта.' }));
     }
   }, [targetUser, isOwnProfile, router, userStore]);
 
@@ -212,16 +225,19 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     }, 'Не вдалося завантажити сесії');
   }, [targetUser, withAsyncHandler]);
 
-  const handleRevokeSession = useCallback(async (sessionId: string, isCurrent: boolean) => {
-    await withAsyncHandler(async () => {
-      await authApi.revokeSession(sessionId);
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
-      if (isCurrent) {
-        userStore.logoutLocal();
-        router.push('/');
-      }
-    }, 'Не вдалося видалити сесію');
-  }, [router, withAsyncHandler, userStore]);
+  const handleRevokeSession = useCallback(
+    async (sessionId: string, isCurrent: boolean) => {
+      await withAsyncHandler(async () => {
+        await authApi.revokeSession(sessionId);
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+        if (isCurrent) {
+          userStore.logoutLocal();
+          router.push('/');
+        }
+      }, 'Не вдалося видалити сесію');
+    },
+    [router, withAsyncHandler, userStore],
+  );
 
   const handleLogout = useCallback(async () => {
     await userStore.logout();
@@ -243,15 +259,18 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     }, 'Не вдалося завантажити дані');
   }, [targetUser, savedVarsPage, withAsyncHandler]);
 
-  const handleSavedVarsPageChange = useCallback(async (page: number) => {
-    if (!targetUser) return;
+  const handleSavedVarsPageChange = useCallback(
+    async (page: number) => {
+      if (!targetUser) return;
 
-    await withAsyncHandler(async () => {
-      const vars = await userApi.getSavedVariables(page, 25);
-      setSavedVarsPage(page);
-      setSavedVars(vars);
-    }, 'Не вдалося завантажити дані');
-  }, [targetUser, withAsyncHandler]);
+      await withAsyncHandler(async () => {
+        const vars = await userApi.getSavedVariables(page, 25);
+        setSavedVarsPage(page);
+        setSavedVars(vars);
+      }, 'Не вдалося завантажити дані');
+    },
+    [targetUser, withAsyncHandler],
+  );
 
   const handleClearSavedVariables = useCallback(async () => {
     if (!targetUser) return;
@@ -263,55 +282,70 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     }, 'Не вдалося очистити дані');
   }, [targetUser, withAsyncHandler]);
 
-  const handleDeleteVariable = useCallback(async (variable: string) => {
-    if (!targetUser) return;
+  const handleDeleteVariable = useCallback(
+    async (variable: string) => {
+      if (!targetUser) return;
 
-    await withAsyncHandler(async () => {
-      await userApi.deleteSavedVariable(variable);
-      // Refresh current page
-      const vars = await userApi.getSavedVariables(savedVarsPage, 25);
-      setSavedVars(vars);
-    }, 'Не вдалося видалити змінну');
-  }, [targetUser, savedVarsPage, withAsyncHandler]);
+      await withAsyncHandler(async () => {
+        await userApi.deleteSavedVariable(variable);
+        // Refresh current page
+        const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+        setSavedVars(vars);
+      }, 'Не вдалося видалити змінну');
+    },
+    [targetUser, savedVarsPage, withAsyncHandler],
+  );
 
-  const handleUpdateVariable = useCallback(async (variable: string, value: JSONValue) => {
-    if (!targetUser) return;
+  const handleUpdateVariable = useCallback(
+    async (variable: string, value: JSONValue) => {
+      if (!targetUser) return;
 
-    await withAsyncHandler(async () => {
-      await userApi.updateSavedVariable(variable, value);
-      // Refresh current page
-      const vars = await userApi.getSavedVariables(savedVarsPage, 25);
-      setSavedVars(vars);
-    }, 'Не вдалося оновити змінну');
-  }, [targetUser, savedVarsPage, withAsyncHandler]);
+      await withAsyncHandler(async () => {
+        await userApi.updateSavedVariable(variable, value);
+        // Refresh current page
+        const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+        setSavedVars(vars);
+      }, 'Не вдалося оновити змінну');
+    },
+    [targetUser, savedVarsPage, withAsyncHandler],
+  );
 
   // Generation Handlers
   const handleRefreshGenerations = useCallback(async () => {
     if (!targetUser) return;
 
     await withAsyncHandler(async () => {
-      const results = await generationsApi.getGenerations({ page: generationPage, userId: targetUser._id });
+      const results = await generationsApi.getGenerations({
+        page: generationPage,
+        userId: targetUser._id,
+      });
       setGenerations(results);
     }, 'Не вдалось отримати список генерацій');
   }, [targetUser, generationPage, withAsyncHandler]);
 
-  const handleChangeGenerationPage = useCallback(async (page: number) => {
-    if (!targetUser) return;
+  const handleChangeGenerationPage = useCallback(
+    async (page: number) => {
+      if (!targetUser) return;
 
-    await withAsyncHandler(async () => {
-      const results = await generationsApi.getGenerations({ page, userId: targetUser._id });
-      setGenerationPage(page);
-      setGenerations(results);
-    }, 'Не вдалось отримати список генерацій');
-  }, [targetUser, withAsyncHandler]);
+      await withAsyncHandler(async () => {
+        const results = await generationsApi.getGenerations({ page, userId: targetUser._id });
+        setGenerationPage(page);
+        setGenerations(results);
+      }, 'Не вдалось отримати список генерацій');
+    },
+    [targetUser, withAsyncHandler],
+  );
 
-  const handleRegenerateGeneration = useCallback(async (id: string, oldConstants: boolean) => {
-    await withAsyncHandler(async () => {
-      const blob = await generationsApi.regenerateGeneration(id, oldConstants);
-      await savePdfToIndexedDb('generatedPdf', blob);
-      window.open('/documents/result/', '_blank', 'noopener,noreferrer');
-    }, 'Не вдалось перегенерувати PDF');
-  }, [withAsyncHandler]);
+  const handleRegenerateGeneration = useCallback(
+    async (id: string, variables?: Record<string, JSONValue>) => {
+      await withAsyncHandler(async () => {
+        const blob = await generationsApi.regenerateGeneration(id, variables);
+        await savePdfToIndexedDb('generatedPdf', blob);
+        router.push('/documents/result');
+      }, 'Не вдалось перегенерувати PDF');
+    },
+    [router, withAsyncHandler],
+  );
 
   const handleDeleteGeneration = useCallback(
     async (id: string) => {
@@ -330,7 +364,14 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         }
       }, 'Не вдалось видалити генерацію');
     },
-    [targetUser, generations, generationPage, handleChangeGenerationPage, handleRefreshGenerations, withAsyncHandler]
+    [
+      targetUser,
+      generations,
+      generationPage,
+      handleChangeGenerationPage,
+      handleRefreshGenerations,
+      withAsyncHandler,
+    ],
   );
 
   const handleDeleteAllGenerations = useCallback(async () => {
@@ -338,7 +379,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
     await withAsyncHandler(
       () => generationsApi.deleteAllUserGenerations(targetUser._id),
-      'Не вдалось видалити всі генерації'
+      'Не вдалось видалити всі генерації',
     );
 
     await handleChangeGenerationPage(1);
@@ -366,7 +407,10 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       }
 
       try {
-        const generations = await generationsApi.getGenerations({ page: 1, userId: targetUser._id });
+        const generations = await generationsApi.getGenerations({
+          page: 1,
+          userId: targetUser._id,
+        });
         setGenerations(generations);
       } catch (e) {
         setError(toErrorMessage(e, 'Помилка завантаження генерацій'));

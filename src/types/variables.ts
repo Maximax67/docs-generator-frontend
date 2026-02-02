@@ -1,4 +1,4 @@
-import { JSONValue } from "./json";
+import { JSONValue } from './json';
 
 export interface DocumentVariableInfo {
   variable: string;

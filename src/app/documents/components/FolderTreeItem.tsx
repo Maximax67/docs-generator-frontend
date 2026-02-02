@@ -119,52 +119,47 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
             />
           ))}
 
-          {item.documents.map((document) => (
-            <ListItem key={document.id} disablePadding sx={{ pl: (level + 1) * 2 }}>
-              <ListItemButton
-                onClick={() => handleDocumentClick(document)}
-                selected={highlight === document.id}
-                sx={{
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <FileIcon sx={{ color: 'primary.main', fontSize: 16 }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2">
-                        {formatFilename(document.name, document.mime_type)}
-                      </Typography>
-                      {showSettings && (
-                        <IconButton
-                          size="small"
-                          onClick={(e) =>
-                            handleOpenSchemaEditor(
-                              e,
-                              document.id,
-                              formatFilename(document.name, document.mime_type),
-                            )
-                          }
-                          sx={{
-                            ml: 'auto',
-                            '&.MuiIconButton-root': {
-                              padding: '4px',
-                            },
-                          }}
-                        >
-                          <SettingsIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                    </Box>
-                  }
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
+          {item.documents.map((document) => {
+            const fileName = formatFilename(document.name, document.mime_type);
+            return (
+              <ListItem key={document.id} disablePadding sx={{ pl: (level + 1) * 2 }}>
+                <ListItemButton
+                  onClick={() => handleDocumentClick(document)}
+                  selected={highlight === document.id}
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32 }}>
+                    <FileIcon sx={{ color: 'primary.main', fontSize: 16 }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2">{fileName}</Typography>
+                        {showSettings && (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleOpenSchemaEditor(e, document.id, fileName)}
+                            sx={{
+                              ml: 'auto',
+                              '&.MuiIconButton-root': {
+                                padding: '4px',
+                              },
+                            }}
+                          >
+                            <SettingsIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
         </List>
       </Collapse>
     </>

@@ -1,4 +1,8 @@
-import { PaginationFilterParams, PaginationParams, UsePaginationParamsOptions } from '@/types/pagination';
+import {
+  PaginationFilterParams,
+  PaginationParams,
+  UsePaginationParamsOptions,
+} from '@/types/pagination';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 

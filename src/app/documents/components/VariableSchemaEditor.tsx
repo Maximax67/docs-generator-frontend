@@ -21,10 +21,12 @@ import 'jsonjoy-builder/styles.css';
 import './VariableSchemaEditor.module.css';
 import { useNotify } from '@/providers/NotificationProvider';
 import { ConstantsTable } from './ConstantsTable';
+import { FolderTree } from '@/types/documents';
 
 interface VariableSchemaEditorProps {
   scope: string | null;
   scopeName: string;
+  folderTree: FolderTree[] | null;
   onClose: () => void;
 }
 
@@ -39,7 +41,7 @@ const emptySchema: JSONSchema = {
 };
 
 export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, VariableSchemaEditorProps>(
-  ({ scope, scopeName, onClose }, ref) => {
+  ({ scope, scopeName, folderTree, onClose }, ref) => {
     const notify = useNotify();
     const [activeTab, setActiveTab] = useState<'validation' | 'constants'>('validation');
     const [schema, setSchema] = useState<JSONSchema>({ ...emptySchema });
@@ -137,7 +139,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">Налаштування змінних для {scopeName}</Typography>
+            <Typography variant="h6">Налаштування для {scopeName}</Typography>
 
             {hasChanges && activeTab === 'validation' && (
               <Tooltip
@@ -186,7 +188,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
           </Tabs>
         </Box>
 
-        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
           {fetchingSchema ? (
             <Box display="flex" justifyContent="center" alignItems="center" py={4}>
               <CircularProgress />
@@ -203,6 +205,8 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
               {activeTab === 'constants' && (
                 <ConstantsTable
                   scope={scope}
+                  scopeName={scopeName}
+                  folderTree={folderTree}
                   variables={variables}
                   onVariableChange={handleVariableChange}
                 />

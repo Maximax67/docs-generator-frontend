@@ -36,6 +36,7 @@ import { Generation } from '@/types/generations';
 import { Paginated } from '@/types/pagination';
 import { PaginationControls } from '@/components/PaginationControls';
 import { LoadingContent } from '@/components/LoadingContent';
+import { JSONValue } from '@/types/json';
 
 type GenerationSectionProps = {
   deleteAllowed: boolean;
@@ -44,7 +45,7 @@ type GenerationSectionProps = {
   isAdmin: boolean;
   onDelete: (id: string) => void;
   onDeleteAll: () => void;
-  onRegenerate: (id: string, oldValues: boolean) => void;
+  onRegenerate: (id: string, variables?: Record<string, JSONValue>) => void;
   onRefresh: () => void;
   onPageChange: (page: number) => void;
 };
@@ -118,7 +119,7 @@ export default function GenerationSection({
                               )}
                               <IconButton
                                 size="small"
-                                onClick={() => onRegenerate(generation._id, false)}
+                                onClick={() => onRegenerate(generation._id, generation.variables)}
                                 title="Перегенерувати"
                                 disabled={loading}
                               >
@@ -126,7 +127,7 @@ export default function GenerationSection({
                               </IconButton>
                               <IconButton
                                 size="small"
-                                onClick={() => onRegenerate(generation._id, true)}
+                                onClick={() => onRegenerate(generation._id)}
                                 title="Перегенерувати зі старими значеннями"
                                 disabled={loading}
                               >
@@ -237,14 +238,14 @@ export default function GenerationSection({
                                 </IconButton>
                               )}
                               <IconButton
-                                onClick={() => onRegenerate(generation._id, false)}
+                                onClick={() => onRegenerate(generation._id, generation.variables)}
                                 disabled={loading}
                                 title="Перегенерувати"
                               >
                                 <ReplayIcon />
                               </IconButton>
                               <IconButton
-                                onClick={() => onRegenerate(generation._id, true)}
+                                onClick={() => onRegenerate(generation._id)}
                                 disabled={loading}
                                 title="Перегенерувати зі старими значеннями"
                               >

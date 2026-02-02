@@ -1,6 +1,6 @@
 /**
  * Document Preview Cache
- * 
+ *
  * Manages caching of document previews with automatic expiration
  */
 

@@ -26,7 +26,6 @@ import { RJSFSchema } from '@rjsf/utils';
 
 import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
 import { documentsApi } from '@/lib/api';
-import { useUserStore } from '@/store/user';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
 import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
@@ -36,8 +35,6 @@ import { JSONValue } from '@/types/json';
 export default function DocumentVariablesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useUserStore();
-
   const documentId = searchParams.get('id');
 
   const [documentDetails, setDocumentDetails] = useState<DocumentDetails | null>(null);
@@ -124,7 +121,7 @@ export default function DocumentVariablesPage() {
       setIsGenerating(true);
       setGenerateError(null);
 
-      const blob = await documentsApi.generateDocument(documentId, formValues, user?._id);
+      const blob = await documentsApi.generateDocument(documentId, formValues);
 
       await savePdfToIndexedDb('generatedPdf', blob);
       router.push('/documents/result/');
