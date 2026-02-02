@@ -18,6 +18,7 @@ import {
   CardContent,
   Divider,
   useMediaQuery,
+  CircularProgress,
 } from '@mui/material';
 import {
   ExpandMore,
@@ -63,6 +64,7 @@ export default function GenerationsPage() {
   });
 
   const cancelledRef = useRef(false);
+  const isFetched = useRef(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -70,6 +72,7 @@ export default function GenerationsPage() {
       const response = await generationsApi.getGenerations({ page, pageSize });
 
       if (!cancelledRef.current) {
+        isFetched.current = true;
         setGenerations(response);
       }
     } catch (e) {
@@ -172,9 +175,17 @@ export default function GenerationsPage() {
         Генерації
       </Typography>
 
-      {!generations || generations.data.length === 0 ? (
+      {!isFetched.current && (
+        <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {isFetched.current && (!generations || generations.data.length === 0) && (
         <Alert severity="info">Немає згенерованих документів</Alert>
-      ) : (
+      )}
+
+      {isFetched.current && generations && generations.data.length && (
         <>
           <PageSizeControl
             pageSize={pageSize}

@@ -69,7 +69,7 @@ export const authApi = {
    * Logout from all sessions
    */
   async logoutEverywhere(): Promise<void> {
-    await api.post('/auth/logout_all');
+    await api.delete('/auth/sessions');
   },
 
   /**
@@ -203,7 +203,7 @@ export const userApi = {
    */
   async validateVariable(variableId: string, value: JSONValue): Promise<ValidateVariableResponse> {
     const response = await api.post<ValidateVariableResponse>(
-      `/variables/${encodeURIComponent(variableId)}/validate`,
+      `/variables/${encodeURIComponent(variableId)}/validation`,
       { value }
     );
     return response.data;

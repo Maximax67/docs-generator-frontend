@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Box, Paper, useTheme, useMediaQuery, Divider } from '@mui/material';
 import { DocumentTree } from './DocumentTree';
 import { PdfPreview } from './PdfPreview';
-import { VariableSchemaEditor } from './VariableSchemaEditor';
+import { VariableSchemaEditor, VariableSchemaEditorRef } from './VariableSchemaEditor';
 import { DriveFile, FolderTree, DocumentPreview } from '@/types/documents';
 import { documentsApi } from '@/lib/api';
 import { PreviewCache } from '@/lib/cache/preview-cache';
@@ -46,11 +46,11 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   // Settings editor state
   const [variableSettings, setVariableSettings] = useState<string | null | undefined>(undefined);
   const [variableSettingsName, setVariableSettingsName] = useState<string | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const editorRef = useRef<VariableSchemaEditorRef>(null);
 
   const scope = searchParams.get('scope');
   const mode = searchParams.get('mode') as ViewMode | null;
@@ -177,7 +177,6 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
       pendingAction();
       setPendingAction(null);
     }
-    setHasUnsavedChanges(false);
   }, [pendingAction]);
 
   const handleConfirmCancel = useCallback(() => {
@@ -191,7 +190,6 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         setSelectedDocument(document);
         setVariableSettings(undefined);
         setVariableSettingsName(null);
-        setHasUnsavedChanges(false);
         updateUrl(document.id, 'preview');
 
         if (!previewCache.has(document.id)) {
@@ -199,13 +197,13 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         }
       };
 
-      if (hasUnsavedChanges && variableSettings !== undefined) {
+      if (editorRef.current?.hasUnsavedChanges && variableSettings !== undefined) {
         confirmWithUnsavedChanges(selectDocument);
       } else {
         selectDocument();
       }
     },
-    [hasUnsavedChanges, variableSettings, fetchPreview, confirmWithUnsavedChanges, updateUrl],
+    [variableSettings, fetchPreview, confirmWithUnsavedChanges, updateUrl],
   );
 
   const handleRefreshPreview = useCallback(() => {
@@ -220,41 +218,31 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         setVariableSettings(id);
         setVariableSettingsName(name);
         setSelectedDocument(null);
-        setHasUnsavedChanges(false);
         updateUrl(id, 'settings');
       };
 
-      if (hasUnsavedChanges && variableSettings !== undefined) {
+      if (editorRef.current?.hasUnsavedChanges && variableSettings !== undefined) {
         confirmWithUnsavedChanges(openSettings);
       } else {
         openSettings();
       }
     },
-    [hasUnsavedChanges, variableSettings, confirmWithUnsavedChanges, updateUrl],
+    [variableSettings, confirmWithUnsavedChanges, updateUrl],
   );
 
   const handleSettingsClose = useCallback(() => {
     const closeSettings = () => {
       setVariableSettings(undefined);
       setVariableSettingsName(null);
-      setHasUnsavedChanges(false);
       updateUrl(null, null);
     };
 
-    if (hasUnsavedChanges) {
+    if (editorRef.current?.hasUnsavedChanges) {
       confirmWithUnsavedChanges(closeSettings);
     } else {
       closeSettings();
     }
-  }, [hasUnsavedChanges, confirmWithUnsavedChanges, updateUrl]);
-
-  const handleSchemaChange = useCallback(() => {
-    setHasUnsavedChanges(true);
-  }, []);
-
-  const handleSchemaSave = useCallback(() => {
-    setHasUnsavedChanges(false);
-  }, []);
+  }, [confirmWithUnsavedChanges, updateUrl]);
 
   const handleFolderToggle = useCallback((folderId: string, isExpanded: boolean) => {
     setExpandedFolders((prev) => {
@@ -284,11 +272,10 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
     return (
       <VariableSchemaEditor
+        ref={editorRef}
         scope={variableSettings}
         scopeName={variableSettingsName!}
         onClose={handleSettingsClose}
-        onSave={handleSchemaSave}
-        onChange={handleSchemaChange}
       />
     );
   }, [
@@ -299,8 +286,6 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     handleRefreshPreview,
     variableSettingsName,
     handleSettingsClose,
-    handleSchemaSave,
-    handleSchemaChange,
   ]);
 
   if (isMobile) {
