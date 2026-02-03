@@ -13,7 +13,7 @@ import Form from '@rjsf/mui';
 import validator from '@rjsf/validator-ajv8';
 import { RJSFSchema } from '@rjsf/utils';
 import { JSONValue } from '@/types/json';
-import { userApi } from '@/lib/api';
+import { variablesApi } from '@/lib/api';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { IChangeEvent } from '@rjsf/core';
 import { isAxiosError } from '@/utils/is-axios-error';
@@ -55,7 +55,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
       setError(null);
 
       try {
-        const varInfo = await userApi.getVariableInfo(variableId);
+        const varInfo = await variablesApi.getVariableInfo(variableId);
 
         if (varInfo.validation_schema) {
           setSchema(varInfo.validation_schema as RJSFSchema);
@@ -91,7 +91,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
       }
 
       try {
-        await userApi.validateVariable(variableId, valueToSave);
+        await variablesApi.validateVariable(variableId, valueToSave);
       } catch (error) {
         if (isAxiosError(error)) {
           const data = error.response?.data;
@@ -107,7 +107,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
         return;
       }
 
-      await userApi.updateSavedVariable(variableId, valueToSave);
+      await variablesApi.updateSavedVariable(variableId, valueToSave);
       onSave(valueToSave);
       onClose();
     } catch (err) {

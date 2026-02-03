@@ -72,3 +72,8 @@ export interface VariableCreate {
   required: boolean;
   allow_save: boolean;
 }
+
+export interface SaveVariableEntry {
+  id: string;
+  value: JSONValue;
+}

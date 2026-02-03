@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
-import { adminApi, authApi, generationsApi, userApi } from '@/lib/api';
+import { adminApi, authApi, generationsApi, variablesApi } from '@/lib/api';
 import { User, SessionInfo } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
@@ -254,7 +254,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!targetUser) return;
 
     await withAsyncHandler(async () => {
-      const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+      const vars = await variablesApi.getSavedVariables(savedVarsPage, 25);
       setSavedVars(vars);
     }, 'Не вдалося завантажити дані');
   }, [targetUser, savedVarsPage, withAsyncHandler]);
@@ -264,7 +264,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (!targetUser) return;
 
       await withAsyncHandler(async () => {
-        const vars = await userApi.getSavedVariables(page, 25);
+        const vars = await variablesApi.getSavedVariables(page, 25);
         setSavedVarsPage(page);
         setSavedVars(vars);
       }, 'Не вдалося завантажити дані');
@@ -276,7 +276,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!targetUser) return;
 
     await withAsyncHandler(async () => {
-      await userApi.clearSavedVariables();
+      await variablesApi.clearSavedVariables();
       setSavedVars(null);
       setSavedVarsPage(1);
     }, 'Не вдалося очистити дані');
@@ -287,9 +287,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (!targetUser) return;
 
       await withAsyncHandler(async () => {
-        await userApi.deleteSavedVariable(variable);
+        await variablesApi.deleteSavedVariable(variable);
         // Refresh current page
-        const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+        const vars = await variablesApi.getSavedVariables(savedVarsPage, 25);
         setSavedVars(vars);
       }, 'Не вдалося видалити змінну');
     },
@@ -301,9 +301,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (!targetUser) return;
 
       await withAsyncHandler(async () => {
-        await userApi.updateSavedVariable(variable, value);
+        await variablesApi.updateSavedVariable(variable, value);
         // Refresh current page
-        const vars = await userApi.getSavedVariables(savedVarsPage, 25);
+        const vars = await variablesApi.getSavedVariables(savedVarsPage, 25);
         setSavedVars(vars);
       }, 'Не вдалося оновити змінну');
     },
@@ -399,7 +399,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         }
 
         try {
-          const vars = await userApi.getSavedVariables(1, 25);
+          const vars = await variablesApi.getSavedVariables(1, 25);
           setSavedVars(vars);
         } catch (e) {
           setError(toErrorMessage(e, 'Помилка завантаження змінних'));
