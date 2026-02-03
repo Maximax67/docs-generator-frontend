@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Box, Typography, CircularProgress, Alert, Paper, IconButton, Button } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
@@ -42,10 +43,6 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
     );
   }
 
-  const openWebViewHandler = () => {
-    window.open(document.web_view_link, '_blank', 'noopener,noreferrer');
-  };
-
   const header = (
     <Paper
       elevation={1}
@@ -75,7 +72,10 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
         </Button>
         {showWebLink && document.web_view_link && (
           <IconButton
-            onClick={openWebViewHandler}
+            component={Link}
+            href={document.web_view_link}
+            target="_blank"
+            rel="noopener noreferrer"
             color="primary"
             size="small"
             aria-label="Open in new tab"

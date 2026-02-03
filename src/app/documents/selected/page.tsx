@@ -10,18 +10,10 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Divider,
   Stack,
   Chip,
 } from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-  Download as DownloadIcon,
-  Refresh as RefreshIcon,
-} from '@mui/icons-material';
-
-import Form from '@rjsf/mui';
-import validator from '@rjsf/validator-ajv8';
+import { ArrowBack as ArrowBackIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { RJSFSchema } from '@rjsf/utils';
 
 import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
@@ -31,8 +23,9 @@ import { formatFilename } from '@/utils/format-filename';
 import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { IChangeEvent } from '@rjsf/core';
 import { JSONValue } from '@/types/json';
+import { DocumentInputForm } from './DocumentInputForm';
 
-export default function DocumentVariablesPage() {
+export default function SelectedDocumentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const documentId = searchParams.get('id');
@@ -41,8 +34,7 @@ export default function DocumentVariablesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [formValues, setFormValues] = useState<Record<string, JSONValue>>({});
-  const [isValid, setIsValid] = useState(true);
+  const [initialFormData, setInitialFormData] = useState<Record<string, JSONValue>>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
@@ -66,7 +58,7 @@ export default function DocumentVariablesPage() {
         else if (v.saved_value != null) initialValues[v.variable] = v.saved_value;
       });
 
-      setFormValues(initialValues);
+      setInitialFormData(initialValues);
     } catch {
       setError('Не вдалося завантажити дані документа');
     } finally {
@@ -79,6 +71,32 @@ export default function DocumentVariablesPage() {
   }, [loadData]);
 
   const schema: RJSFSchema = useMemo(() => {
+    const applyTitleFallbacks = (
+      node: Record<string, JSONValue>,
+      propertyName: string,
+    ): Record<string, JSONValue> => {
+      const result: Record<string, JSONValue> = { ...node };
+
+      if (!result.title && typeof result.description === 'string') {
+        result.title = result.description;
+        delete result.description;
+      }
+
+      if (node.properties && typeof node.properties === 'object') {
+        const nestedProps: Record<string, JSONValue> = {};
+        for (const [key, value] of Object.entries(node.properties as Record<string, JSONValue>)) {
+          nestedProps[key] = applyTitleFallbacks(value as Record<string, JSONValue>, key);
+        }
+        result.properties = nestedProps;
+      }
+
+      if (node.items && typeof node.items === 'object' && !Array.isArray(node.items)) {
+        result.items = applyTitleFallbacks(node.items as Record<string, JSONValue>, propertyName);
+      }
+
+      return result;
+    };
+
     const properties: Record<string, JSONValue> = {};
     const required: string[] = [];
 
@@ -88,12 +106,10 @@ export default function DocumentVariablesPage() {
       const info = variableMap.get(name);
 
       if (info?.in_database && info.validation_schema) {
-        properties[name] = {
-          ...info.validation_schema,
-          title: info.validation_schema.title || name,
-        };
-
-        if (info.required) required.push(name);
+        properties[name] = applyTitleFallbacks(info.validation_schema, name);
+        if (info.required) {
+          required.push(name);
+        }
       } else {
         properties[name] = {
           type: 'string',
@@ -109,19 +125,14 @@ export default function DocumentVariablesPage() {
     } as RJSFSchema;
   }, [documentDetails?.variables.template_variables, documentDetails?.variables.variables]);
 
-  const handleFormChange = (e: IChangeEvent) => {
-    setFormValues(e.formData);
-    setIsValid(e.errors.length === 0);
-  };
-
-  const handleGenerate = async () => {
+  const handleGenerate = async (e: IChangeEvent) => {
     if (!documentId || !documentDetails) return;
 
     try {
       setIsGenerating(true);
       setGenerateError(null);
 
-      const blob = await documentsApi.generateDocument(documentId, formValues);
+      const blob = await documentsApi.generateDocument(documentId, e.formData);
 
       await savePdfToIndexedDb('generatedPdf', blob);
       router.push('/documents/result/');
@@ -147,9 +158,10 @@ export default function DocumentVariablesPage() {
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert
           severity="error"
+          sx={{ pt: 0 }}
           action={
             documentId && (
-              <Button color="inherit" size="small" onClick={loadData}>
+              <Button color="inherit" size="small" onClick={loadData} sx={{ pt: 1 }}>
                 <RefreshIcon sx={{ mr: 1 }} />
                 Спробувати знову
               </Button>
@@ -201,33 +213,14 @@ export default function DocumentVariablesPage() {
           )}
         </Box>
 
-        <Paper sx={{ p: 3 }}>
-          <Form
-            liveValidate
-            showErrorList={false}
+        <Paper sx={{ p: 3, pb: 1 }}>
+          <DocumentInputForm
             schema={schema}
-            formData={formValues}
-            validator={validator}
-            onChange={handleFormChange}
+            initialFormData={initialFormData}
             onSubmit={handleGenerate}
-          >
-            <Divider sx={{ my: 3 }} />
-
-            {generateError && <Alert severity="error">{generateError}</Alert>}
-
-            <Button
-              variant="contained"
-              size="large"
-              type="submit"
-              startIcon={isGenerating ? <CircularProgress size={20} /> : <DownloadIcon />}
-              disabled={!isValid || isGenerating}
-              sx={{
-                minWidth: { xs: '100%', sm: 200 },
-              }}
-            >
-              {isGenerating ? 'Генерація...' : 'Згенерувати PDF'}
-            </Button>
-          </Form>
+            error={generateError}
+            isGenerating={isGenerating}
+          />
         </Paper>
       </Stack>
     </Container>
