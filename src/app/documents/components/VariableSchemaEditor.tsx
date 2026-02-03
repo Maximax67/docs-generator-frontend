@@ -1,15 +1,6 @@
 import deepEqual from 'fast-deep-equal';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Paper,
-  IconButton,
-  Tooltip,
-  Tabs,
-  Tab,
-} from '@mui/material';
+import { Box, Typography, CircularProgress, Paper, IconButton, Tabs, Tab } from '@mui/material';
 import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
 import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
@@ -118,10 +109,6 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       setActiveTab(newValue);
     };
 
-    const handleVariableChange = () => {
-      loadExistingSchema();
-    };
-
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Paper
@@ -138,32 +125,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
             borderBottomRightRadius: 0,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">Налаштування для {scopeName}</Typography>
-
-            {hasChanges && activeTab === 'validation' && (
-              <Tooltip
-                title="Незбережені зміни"
-                arrow
-                slotProps={{
-                  popper: {
-                    disablePortal: true,
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: 'warning.main',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                />
-              </Tooltip>
-            )}
-          </Box>
+          <Typography variant="h6">Налаштування для {scopeName}</Typography>
           <Box>
             {activeTab === 'validation' && (
               <IconButton
@@ -183,8 +145,28 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab label="Валідація" value="validation" />
+            <Tab
+              value="validation"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography>Валідація</Typography>
+                  {hasChanges && (
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: 'warning.main',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </Box>
+              }
+              title={hasChanges ? 'Не збережені зміни' : undefined}
+            />
             <Tab label="Константи" value="constants" />
+            <Tab label="Збереження значень" value="saving" />
           </Tabs>
         </Box>
 
@@ -208,7 +190,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
                   scopeName={scopeName}
                   folderTree={folderTree}
                   variables={variables}
-                  onVariableChange={handleVariableChange}
+                  onVariableChange={loadExistingSchema}
                 />
               )}
             </>

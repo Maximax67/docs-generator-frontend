@@ -23,6 +23,7 @@ import { formatFilename } from '@/utils/format-filename';
 import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { IChangeEvent } from '@rjsf/core';
 import { JSONValue } from '@/types/json';
+import { SaveVariablesModal } from './SaveVariablesModal';
 import { DocumentInputForm } from './DocumentInputForm';
 
 export default function SelectedDocumentPage() {
@@ -37,6 +38,15 @@ export default function SelectedDocumentPage() {
   const [initialFormData, setInitialFormData] = useState<Record<string, JSONValue>>({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+
+  // ── save-modal state ───────────────────────────────────────────────────────
+  /** Snapshot of formValues at the moment generation succeeded.
+   *  We keep a separate copy so the modal always reflects what was actually
+   *  used for the PDF, even if the user tweaks the form afterwards. */
+  const [generatedFormValues, setGeneratedFormValues] = useState<Record<string, JSONValue> | null>(
+    null,
+  );
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!documentId) {
@@ -105,7 +115,7 @@ export default function SelectedDocumentPage() {
     documentDetails?.variables.template_variables.forEach((name) => {
       const info = variableMap.get(name);
 
-      if (info?.in_database && info.validation_schema) {
+      if (info?.id && info.validation_schema) {
         properties[name] = applyTitleFallbacks(info.validation_schema, name);
         if (info.required) {
           required.push(name);
@@ -125,6 +135,11 @@ export default function SelectedDocumentPage() {
     } as RJSFSchema;
   }, [documentDetails?.variables.template_variables, documentDetails?.variables.variables]);
 
+  const hasSaveableVariables = useMemo(() => {
+    if (!documentDetails) return false;
+    return documentDetails.variables.variables.some((v) => v.allow_save && v.id);
+  }, [documentDetails]);
+
   const handleGenerate = async (e: IChangeEvent) => {
     if (!documentId || !documentDetails) return;
 
@@ -135,12 +150,24 @@ export default function SelectedDocumentPage() {
       const blob = await documentsApi.generateDocument(documentId, e.formData);
 
       await savePdfToIndexedDb('generatedPdf', blob);
-      router.push('/documents/result/');
+
+      if (hasSaveableVariables) {
+        setGeneratedFormValues({ ...e.formData });
+        setShowSaveModal(true);
+      } else {
+        router.push('/documents/result/');
+      }
     } catch {
       setGenerateError('Не вдалося згенерувати документ');
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleAfterSaveModal = () => {
+    setShowSaveModal(false);
+    setGeneratedFormValues(null);
+    router.push('/documents/result/');
   };
 
   if (loading) {
@@ -223,6 +250,16 @@ export default function SelectedDocumentPage() {
           />
         </Paper>
       </Stack>
+
+      {showSaveModal && documentDetails && generatedFormValues && (
+        <SaveVariablesModal
+          open={showSaveModal}
+          variables={documentDetails.variables.variables}
+          formValues={generatedFormValues}
+          onClose={handleAfterSaveModal}
+          onSaved={handleAfterSaveModal}
+        />
+      )}
     </Container>
   );
 }

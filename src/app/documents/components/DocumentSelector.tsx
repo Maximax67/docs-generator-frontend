@@ -348,7 +348,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         open={showConfirmDialog}
         title="Незбережені зміни"
         message="У вас є незбережені зміни. Ви впевнені, що хочете війти без збереження?"
-        confirmText="Війти без збереження"
+        confirmText="Вийти без збереження"
         cancelText="Скасувати"
         onConfirm={handleConfirmProceed}
         onCancel={handleConfirmCancel}

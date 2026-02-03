@@ -34,12 +34,19 @@
 }
 
 /* Fix ui bug with popper showing wrong */
-:global([data-radix-popper-content-wrapper] > [data-side='top']) {
+:global(body > [data-radix-popper-content-wrapper] > [data-side='top']) {
   position: absolute;
   bottom: 0;
 }
 
+/* On mobile modal is not fully fit in screen, add scrollbar and fix height issue */
 :global(body > div.jsonjoy) {
   overflow-y: auto;
   min-height: unset;
+}
+
+/* Some tooltips were not visible fully, they are hidden */
+:global(body > div.jsonjoy .lucide-info),
+:global(body > div.jsonjoy .lucide-circle-question-mark) {
+  display: none;
 }

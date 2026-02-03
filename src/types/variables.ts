@@ -1,8 +1,8 @@
 import { JSONValue } from './json';
 
 export interface DocumentVariableInfo {
+  id: string | null;
   variable: string;
-  in_database: boolean;
   value: JSONValue;
   validation_schema: Record<string, JSONValue> | null;
   required: boolean;
@@ -43,13 +43,6 @@ export interface ValidateVariableRequest {
 export interface ValidateVariableResponse {
   detail: string;
   errors?: string[];
-}
-
-export interface VariableCompactResponse {
-  id: string;
-  scope: string | null;
-  variable: string;
-  value: JSONValue;
 }
 
 export interface VariableCompactResponse {

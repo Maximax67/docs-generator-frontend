@@ -1,6 +1,13 @@
 import { Paginated } from '@/types/pagination';
 import { api } from './core';
-import { VariableSchemaResponse, VariableCreate, DocumentVariableInfo, SaveVariableEntry, SavedVariable, ValidateVariableResponse } from '@/types/variables';
+import {
+  VariableSchemaResponse,
+  VariableCreate,
+  DocumentVariableInfo,
+  SaveVariableEntry,
+  SavedVariable,
+  ValidateVariableResponse,
+} from '@/types/variables';
 import { JSONSchema } from 'jsonjoy-builder';
 import { JSONValue } from '@/types/json';
 

@@ -92,21 +92,40 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   const handleNameChange = (name: string) => {
     setVariableName(name);
 
-    // Check if variable name already exists in other scopes
+    const nameTrimmed = name.trim();
+    const existingValidationInCurrentScope = existingVariables.find(
+      (v) => v.variable === nameTrimmed && v.scope === scope && v.value === null,
+    );
+
+    if (existingValidationInCurrentScope) {
+      setOverrideWarning(
+        `Ця змінна вже задана в розіділі "Валідація". Ви дійсно впевнені, що хочете зробити її константою?`,
+      );
+      return;
+    }
+
     const existingInOtherScope = existingVariables.find(
       (v) =>
-        v.variable === name &&
+        v.variable === nameTrimmed &&
         v.scope !== scope &&
         (!editingVariable || v.id !== editingVariable.id),
     );
 
     if (existingInOtherScope) {
-      setOverrideWarning(
-        `Ця змінна вже визначена в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'} і буде перевизначена`,
-      );
-    } else {
-      setOverrideWarning('');
+      if (existingInOtherScope.value === null) {
+        setOverrideWarning(
+          `Ця змінна вже існує та не є константою в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'}. Ви дійсно впевнені, що хочете перевизначити її?`,
+        );
+      } else {
+        setOverrideWarning(
+          `Ця змінна вже визначена в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'} і буде перевизначена`,
+        );
+      }
+
+      return;
     }
+
+    setOverrideWarning('');
   };
 
   const parseValue = (): JSONValue => {
@@ -132,7 +151,8 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!variableName.trim()) {
+    const nameTrimmed = variableName.trim();
+    if (!nameTrimmed) {
       notify({ message: 'Назва змінної не може бути порожньою', severity: 'error' });
       return;
     }
@@ -142,7 +162,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
       setLoading(true);
 
       const payload = {
-        variable: variableName.trim(),
+        variable: nameTrimmed,
         scope: editingVariable ? editingVariable.scope : scope,
         value: value,
         validation_schema: null,
@@ -154,7 +174,15 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
         await variablesApi.updateVariable(editingVariable.id.toString(), payload);
         notify({ message: 'Константу успішно оновлено', severity: 'success' });
       } else {
-        await variablesApi.createVariable(payload);
+        const existingValidationInCurrentScope = existingVariables.find(
+          (v) => v.variable === nameTrimmed && v.scope === scope && v.value === null,
+        );
+
+        if (existingValidationInCurrentScope) {
+          await variablesApi.updateVariable(existingValidationInCurrentScope.id, payload);
+        } else {
+          await variablesApi.createVariable(payload);
+        }
         notify({ message: 'Константу успішно створено', severity: 'success' });
       }
 
