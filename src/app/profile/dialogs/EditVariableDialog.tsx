@@ -183,7 +183,6 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
             fullWidth
             multiline
             rows={6}
-            label="Значення"
             value={textValue}
             onChange={handleTextChange}
             placeholder="Введіть значення (JSON або текст)"

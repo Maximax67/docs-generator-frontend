@@ -18,7 +18,8 @@ export interface VariableInfo {
 }
 
 export interface SavedVariable {
-  variable: string;
+  user: string;
+  variable: VariableInfo;
   value: JSONValue;
   created_at: string;
   updated_at: string;

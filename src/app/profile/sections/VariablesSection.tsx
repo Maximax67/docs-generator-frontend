@@ -64,7 +64,7 @@ export default function VariablesSection({
 
   const handleSaveEdit = (newValue: JSONValue) => {
     if (editingVariable) {
-      onUpdate(editingVariable.variable, newValue);
+      onUpdate(editingVariable.variable.variable, newValue);
     }
   };
 
@@ -123,28 +123,28 @@ export default function VariablesSection({
                   </TableHead>
 
                   <TableBody>
-                    {savedVars.data.map((variable) => (
-                      <TableRow key={variable.variable}>
+                    {savedVars.data.map((savedVar) => (
+                      <TableRow key={savedVar.variable.id}>
                         <TableCell>
-                          <Typography variant="body2" fontFamily="monospace">
-                            {variable.variable}
+                          <Typography variant="body2">
+                            {savedVar.variable.variable}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          <VariableTypeBadge value={variable.value} />
+                          <VariableTypeBadge value={savedVar.value} />
                         </TableCell>
                         <TableCell>
-                          <ValueDisplay value={variable.value} onClick={showFullValue} />
+                          <ValueDisplay value={savedVar.value} onClick={showFullValue} />
                         </TableCell>
                         <TableCell>
                           <Typography variant="caption" color="text.secondary">
-                            {formatDateTime(new Date(variable.updated_at))}
+                            {formatDateTime(new Date(savedVar.updated_at))}
                           </Typography>
                         </TableCell>
                         <TableCell align="right">
                           <IconButton
                             size="small"
-                            onClick={() => handleEdit(variable)}
+                            onClick={() => handleEdit(savedVar)}
                             disabled={loading}
                             title="Редагувати"
                           >
@@ -153,7 +153,7 @@ export default function VariablesSection({
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => onDelete(variable.variable)}
+                            onClick={() => onDelete(savedVar.variable.id)}
                             disabled={loading}
                             title="Видалити"
                           >
@@ -168,9 +168,9 @@ export default function VariablesSection({
 
               <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
                 <Stack spacing={1}>
-                  {savedVars.data.map((variable) => (
+                  {savedVars.data.map((savedVar) => (
                     <Box
-                      key={variable.variable}
+                      key={savedVar.variable.id}
                       sx={{
                         p: 2,
                         border: 1,
@@ -179,22 +179,22 @@ export default function VariablesSection({
                       }}
                     >
                       <Stack spacing={1}>
-                        <Typography variant="subtitle2" fontFamily="monospace">
-                          {variable.variable}
+                        <Typography variant="subtitle2">
+                          {savedVar.variable.variable}
                         </Typography>
                         <Box>
-                          <VariableTypeBadge value={variable.value} />
+                          <VariableTypeBadge value={savedVar.value} />
                         </Box>
                         <Box>
-                          <ValueDisplay value={variable.value} onClick={showFullValue} />
+                          <ValueDisplay value={savedVar.value} onClick={showFullValue} />
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                          {formatDateTime(new Date(variable.updated_at))}
+                          {formatDateTime(new Date(savedVar.updated_at))}
                         </Typography>
                         <Stack direction="row" spacing={1} justifyContent="flex-end">
                           <IconButton
                             size="small"
-                            onClick={() => handleEdit(variable)}
+                            onClick={() => handleEdit(savedVar)}
                             disabled={loading}
                           >
                             <EditIcon fontSize="small" />
@@ -202,7 +202,7 @@ export default function VariablesSection({
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => onDelete(variable.variable)}
+                            onClick={() => onDelete(savedVar.variable.id)}
                             disabled={loading}
                           >
                             <DeleteIcon fontSize="small" />
@@ -227,8 +227,8 @@ export default function VariablesSection({
       {editingVariable && (
         <EditVariableDialog
           open={editDialogOpen}
-          variableId={editingVariable.variable}
-          variableName={editingVariable.variable}
+          variableId={editingVariable.variable.id}
+          variableName={editingVariable.variable.variable}
           currentValue={editingVariable.value}
           onClose={handleCloseEdit}
           onSave={handleSaveEdit}
