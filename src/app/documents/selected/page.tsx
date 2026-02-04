@@ -89,7 +89,9 @@ export default function SelectedDocumentPage() {
       const result: Record<string, JSONValue> = { ...node };
 
       if (!result.title && typeof result.description === 'string') {
-        result.title = result.description;
+        if (result.description) {
+          result.title = result.description;
+        }
         delete result.description;
       }
 

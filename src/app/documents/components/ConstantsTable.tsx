@@ -1,4 +1,4 @@
-import { FC, JSX, useState } from 'react';
+import { FC, JSX, useRef, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -12,11 +12,6 @@ import {
   Typography,
   Box,
   Alert,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -32,8 +27,11 @@ import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { JSONValue } from '@/types/json';
 import { FolderTree } from '@/types/documents';
+import { VariableTypeBadge } from '@/components/VariableTypeBadge';
+import { ValueDisplay } from '@/components/ValueDisplay';
+import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialog';
+import { JSONValue } from '@/types/json';
 
 interface ConstantsTableProps {
   scope: string | null;
@@ -56,10 +54,13 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
   const { confirm } = useConfirm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<VariableInfo | null>(null);
-  const [valueDialogOpen, setValueDialogOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<JSONValue>(null);
+  const fullValueDialogRef = useRef<FullValueDialogRef>(null);
 
   const allConstants = variables.filter((v) => v.value !== null);
+
+  const showFullValue = (value: JSONValue) => {
+    fullValueDialogRef.current?.open(value);
+  };
 
   const handleAddClick = async () => {
     setEditingVariable(null);
@@ -127,37 +128,6 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
     onConstantEdit(updatedVariable);
   };
 
-  const handleValueClick = (value: JSONValue) => {
-    const type = getValueType(value);
-    if (type === 'json' || (type === 'text' && String(value).length > 50)) {
-      setSelectedValue(value);
-      setValueDialogOpen(true);
-    }
-  };
-
-  const getValueType = (value: JSONValue): string => {
-    if (value === null || value === undefined) return 'null';
-    if (typeof value === 'boolean') return 'boolean';
-    if (typeof value === 'number') return 'number';
-    if (typeof value === 'string') return 'text';
-    return 'json';
-  };
-
-  const formatValue = (value: JSONValue): string => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'boolean') return value ? 'Так' : 'Ні';
-    if (typeof value === 'object') return JSON.stringify(value, null, 2);
-    return String(value);
-  };
-
-  const formatShortValue = (value: JSONValue): string => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'boolean') return value ? 'Так' : 'Ні';
-    if (typeof value === 'object') return '{...}';
-    const str = String(value);
-    return str.length > 50 ? str.substring(0, 50) + '...' : str;
-  };
-
   const getScopeName = (scopeId: string | null): { name: string; icon: JSX.Element } => {
     if (!scopeId) {
       return { name: 'Глобальний', icon: <FolderIcon fontSize="small" /> };
@@ -195,11 +165,6 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
     return result || { name: scopeId, icon: <FolderIcon fontSize="small" /> };
   };
 
-  const isClickable = (value: JSONValue): boolean => {
-    const type = getValueType(value);
-    return type === 'json' || (type === 'text' && String(value).length > 50);
-  };
-
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -230,25 +195,10 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
                   <TableRow key={variable.id}>
                     <TableCell>{variable.variable}</TableCell>
                     <TableCell>
-                      <Chip label={getValueType(variable.value)} size="small" />
+                      <VariableTypeBadge value={variable.value} />
                     </TableCell>
                     <TableCell>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          maxWidth: 300,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          cursor: isClickable(variable.value) ? 'pointer' : 'default',
-                          '&:hover': isClickable(variable.value)
-                            ? { textDecoration: 'underline' }
-                            : {},
-                        }}
-                        onClick={() => handleValueClick(variable.value)}
-                      >
-                        {formatShortValue(variable.value)}
-                      </Typography>
+                      <ValueDisplay value={variable.value} onClick={showFullValue} />
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -284,32 +234,7 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
         onSave={handleModalSave}
       />
 
-      <Dialog
-        open={valueDialogOpen}
-        onClose={() => setValueDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Значення константи</DialogTitle>
-        <DialogContent>
-          <Box
-            component="pre"
-            sx={{
-              p: 2,
-              bgcolor: 'background.default',
-              borderRadius: 1,
-              overflow: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '0.875rem',
-            }}
-          >
-            {formatValue(selectedValue)}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setValueDialogOpen(false)}>Закрити</Button>
-        </DialogActions>
-      </Dialog>
+      <FullValueDialog ref={fullValueDialogRef} />
     </Box>
   );
 };

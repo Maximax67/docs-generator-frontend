@@ -9,9 +9,8 @@ import {
   TableCell,
   TableBody,
   IconButton,
-  Chip,
-  Pagination,
   Alert,
+  Divider,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -21,9 +20,14 @@ import {
 import { JSONValue } from '@/types/json';
 import { SavedVariable } from '@/types/variables';
 import { Paginated } from '@/types/pagination';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EditVariableDialog } from '../dialogs/EditVariableDialog';
 import { formatDateTime } from '@/utils/dates';
+import { PaginationControls } from '@/components/PaginationControls';
+import { LoadingContent } from '@/components/LoadingContent';
+import { VariableTypeBadge } from '@/components/VariableTypeBadge';
+import { ValueDisplay } from '@/components/ValueDisplay';
+import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialog';
 
 type VariablesSectionProps = {
   savedVars: Paginated<SavedVariable> | null;
@@ -46,6 +50,7 @@ export default function VariablesSection({
 }: VariablesSectionProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<SavedVariable | null>(null);
+  const fullValueDialogRef = useRef<FullValueDialogRef>(null);
 
   const handleEdit = (variable: SavedVariable) => {
     setEditingVariable(variable);
@@ -63,25 +68,11 @@ export default function VariablesSection({
     }
   };
 
-  const renderValue = (value: JSONValue): React.ReactNode => {
-    if (value === null) return <Chip label="null" size="small" />;
-    if (typeof value === 'boolean') return <Chip label={value.toString()} size="small" />;
-    if (typeof value === 'number') return value;
-    if (typeof value === 'string') {
-      return value.length > 50 ? `${value.substring(0, 50)}...` : value;
-    }
-    if (Array.isArray(value)) {
-      return <Chip label={`Масив (${value.length})`} size="small" color="primary" />;
-    }
-    if (typeof value === 'object') {
-      return <Chip label="Об'єкт" size="small" color="secondary" />;
-    }
-    return '-';
+  const showFullValue = (value: JSONValue) => {
+    fullValueDialogRef.current?.open(value);
   };
 
   const totalItems = savedVars?.meta.total_items ?? 0;
-  const currentPage = savedVars?.meta.current_page ?? 1;
-  const totalPages = savedVars?.meta.total_pages ?? 1;
 
   return (
     <Stack spacing={2}>
@@ -103,126 +94,135 @@ export default function VariablesSection({
         </Button>
       </Stack>
 
-      <Box
-        sx={{
-          bgcolor: 'background.default',
-          p: 2,
-          borderRadius: 2,
-          border: 1,
-          borderColor: 'divider',
-        }}
-      >
-        {totalItems === 0 ? (
-          <Alert severity="info">Немає збережених данних</Alert>
-        ) : (
-          <>
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Змінна</TableCell>
-                    <TableCell>Значення</TableCell>
-                    <TableCell>Оновлено</TableCell>
-                    <TableCell align="right">Дії</TableCell>
-                  </TableRow>
-                </TableHead>
+      <Divider />
 
-                <TableBody>
-                  {savedVars?.data.map((variable) => (
-                    <TableRow key={variable.variable}>
-                      <TableCell>
-                        <Typography variant="body2" fontFamily="monospace">
+      {!savedVars || savedVars.data.length === 0 ? (
+        <Alert severity="info">Немає збережених данних</Alert>
+      ) : (
+        <>
+          <LoadingContent loading={loading} sx={{ mb: 2 }}>
+            <Box
+              sx={{
+                bgcolor: 'background.default',
+                p: 2,
+                borderRadius: 2,
+                border: 1,
+                borderColor: 'divider',
+              }}
+            >
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Змінна</TableCell>
+                      <TableCell>Тип</TableCell>
+                      <TableCell>Значення</TableCell>
+                      <TableCell>Оновлено</TableCell>
+                      <TableCell align="right">Дії</TableCell>
+                    </TableRow>
+                  </TableHead>
+
+                  <TableBody>
+                    {savedVars.data.map((variable) => (
+                      <TableRow key={variable.variable}>
+                        <TableCell>
+                          <Typography variant="body2" fontFamily="monospace">
+                            {variable.variable}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <VariableTypeBadge value={variable.value} />
+                        </TableCell>
+                        <TableCell>
+                          <ValueDisplay value={variable.value} onClick={showFullValue} />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatDateTime(new Date(variable.updated_at))}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(variable)}
+                            disabled={loading}
+                            title="Редагувати"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(variable.variable)}
+                            disabled={loading}
+                            title="Видалити"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+
+              <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                <Stack spacing={1}>
+                  {savedVars.data.map((variable) => (
+                    <Box
+                      key={variable.variable}
+                      sx={{
+                        p: 2,
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Stack spacing={1}>
+                        <Typography variant="subtitle2" fontFamily="monospace">
                           {variable.variable}
                         </Typography>
-                      </TableCell>
-                      <TableCell>{renderValue(variable.value)}</TableCell>
-                      <TableCell>
+                        <Box>
+                          <VariableTypeBadge value={variable.value} />
+                        </Box>
+                        <Box>
+                          <ValueDisplay value={variable.value} onClick={showFullValue} />
+                        </Box>
                         <Typography variant="caption" color="text.secondary">
                           {formatDateTime(new Date(variable.updated_at))}
                         </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(variable)}
-                          disabled={loading}
-                          title="Редагувати"
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => onDelete(variable.variable)}
-                          disabled={loading}
-                          title="Видалити"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Box>
-
-            <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-              <Stack spacing={1}>
-                {savedVars?.data.map((variable) => (
-                  <Box
-                    key={variable.variable}
-                    sx={{
-                      p: 2,
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" fontFamily="monospace">
-                        {variable.variable}
-                      </Typography>
-                      <Box>{renderValue(variable.value)}</Box>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDateTime(new Date(variable.updated_at))}
-                      </Typography>
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleEdit(variable)}
-                          disabled={loading}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => onDelete(variable.variable)}
-                          disabled={loading}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEdit(variable)}
+                            disabled={loading}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => onDelete(variable.variable)}
+                            disabled={loading}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
                       </Stack>
-                    </Stack>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-
-            {totalPages > 1 && (
-              <Box display="flex" justifyContent="center" mt={2}>
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={(_, page) => onPageChange(page)}
-                  disabled={loading}
-                  color="primary"
-                />
+                    </Box>
+                  ))}
+                </Stack>
               </Box>
-            )}
-          </>
-        )}
-      </Box>
+            </Box>
+          </LoadingContent>
+
+          <PaginationControls
+            meta={savedVars.meta}
+            onPageChange={onPageChange}
+            disabled={loading}
+          />
+        </>
+      )}
 
       {editingVariable && (
         <EditVariableDialog
@@ -234,6 +234,8 @@ export default function VariablesSection({
           onSave={handleSaveEdit}
         />
       )}
+
+      <FullValueDialog ref={fullValueDialogRef} />
     </Stack>
   );
 }
