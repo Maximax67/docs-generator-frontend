@@ -6,13 +6,14 @@ import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import { toErrorMessage } from '@/utils/errors-messages';
 import { variablesApi } from '@/lib/api';
-import { VariableCompactResponse } from '@/types/variables';
+import { VariableInfo } from '@/types/variables';
 
 import 'jsonjoy-builder/styles.css';
 import './VariableSchemaEditor.module.css';
 import { useNotify } from '@/providers/NotificationProvider';
 import { ConstantsTable } from './ConstantsTable';
 import { FolderTree } from '@/types/documents';
+import { SavingTable } from './SavingTable';
 
 interface VariableSchemaEditorProps {
   scope: string | null;
@@ -34,10 +35,10 @@ const emptySchema: JSONSchema = {
 export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, VariableSchemaEditorProps>(
   ({ scope, scopeName, folderTree, onClose }, ref) => {
     const notify = useNotify();
-    const [activeTab, setActiveTab] = useState<'validation' | 'constants'>('validation');
+    const [activeTab, setActiveTab] = useState<'validation' | 'constants' | 'saving'>('validation');
     const [schema, setSchema] = useState<JSONSchema>({ ...emptySchema });
     const [initialSchema, setInitialSchema] = useState<JSONSchema>({ ...emptySchema });
-    const [variables, setVariables] = useState<VariableCompactResponse[]>([]);
+    const [variables, setVariables] = useState<VariableInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingSchema, setFetchingSchema] = useState(false);
     const hasChanges = useMemo(() => !deepEqual(schema, initialSchema), [schema, initialSchema]);
@@ -50,7 +51,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       [hasChanges],
     );
 
-    const loadExistingSchema = useCallback(async () => {
+    const loadSchema = useCallback(async () => {
       setFetchingSchema(true);
       try {
         const response = await variablesApi.getValidationSchema(scope);
@@ -75,8 +76,8 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
     }, [notify, scope]);
 
     useEffect(() => {
-      loadExistingSchema();
-    }, [loadExistingSchema]);
+      loadSchema();
+    }, [loadSchema]);
 
     const handleSchemaChange = (newSchema: JSONSchema) => {
       setSchema(newSchema);
@@ -92,8 +93,8 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
 
       try {
         await variablesApi.updateValidationSchema(scope, schema);
+        await loadSchema();
 
-        setInitialSchema(schema);
         notify({ message: 'Схему успішно збережено', severity: 'success' });
       } catch (err) {
         notify({ message: toErrorMessage(err, 'Не вдалося зберегти схему'), severity: 'error' });
@@ -108,6 +109,9 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
     ) => {
       setActiveTab(newValue);
     };
+
+    const requiredVariables =
+      typeof schema !== 'boolean' && Array.isArray(schema.required) ? schema.required : [];
 
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -187,10 +191,18 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
               {activeTab === 'constants' && (
                 <ConstantsTable
                   scope={scope}
-                  scopeName={scopeName}
                   folderTree={folderTree}
                   variables={variables}
-                  onVariableChange={loadExistingSchema}
+                  onVariableChange={loadSchema}
+                />
+              )}
+              {activeTab === 'saving' && (
+                <SavingTable
+                  scope={scope}
+                  folderTree={folderTree}
+                  variables={variables}
+                  requiredVariables={requiredVariables}
+                  onVariableChange={loadSchema}
                 />
               )}
             </>

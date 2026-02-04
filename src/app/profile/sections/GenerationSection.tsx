@@ -97,9 +97,9 @@ export default function GenerationSection({
             {isMobile ? (
               <Stack spacing={2}>
                 {generations.data.map((generation) => {
-                  const isExpanded = expanded === generation._id;
+                  const isExpanded = expanded === generation.id;
                   return (
-                    <Card key={generation._id} variant="outlined">
+                    <Card key={generation.id} variant="outlined">
                       <CardContent>
                         <Stack spacing={1}>
                           <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -119,7 +119,7 @@ export default function GenerationSection({
                               )}
                               <IconButton
                                 size="small"
-                                onClick={() => onRegenerate(generation._id, generation.variables)}
+                                onClick={() => onRegenerate(generation.id, generation.variables)}
                                 title="Перегенерувати"
                                 disabled={loading}
                               >
@@ -127,7 +127,7 @@ export default function GenerationSection({
                               </IconButton>
                               <IconButton
                                 size="small"
-                                onClick={() => onRegenerate(generation._id)}
+                                onClick={() => onRegenerate(generation.id)}
                                 title="Перегенерувати зі старими значеннями"
                                 disabled={loading}
                               >
@@ -137,7 +137,7 @@ export default function GenerationSection({
                                 <IconButton
                                   size="small"
                                   color="error"
-                                  onClick={() => onDelete(generation._id)}
+                                  onClick={() => onDelete(generation.id)}
                                   title="Видалити"
                                   disabled={loading}
                                 >
@@ -158,7 +158,7 @@ export default function GenerationSection({
                                 variant="text"
                                 size="small"
                                 startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
-                                onClick={() => setExpanded(isExpanded ? null : generation._id)}
+                                onClick={() => setExpanded(isExpanded ? null : generation.id)}
                                 sx={{ alignSelf: 'flex-start' }}
                               >
                                 {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
@@ -205,16 +205,16 @@ export default function GenerationSection({
                 </TableHead>
                 <TableBody>
                   {generations.data.map((generation) => {
-                    const isExpanded = expanded === generation._id;
+                    const isExpanded = expanded === generation.id;
                     return (
-                      <Fragment key={generation._id}>
+                      <Fragment key={generation.id}>
                         <TableRow>
                           <TableCell>{generation.template_name}</TableCell>
                           <TableCell>{formatDateTime(new Date(generation.created_at))}</TableCell>
                           <TableCell>
                             {Object.entries(generation.variables).length > 0 ? (
                               <IconButton
-                                onClick={() => setExpanded(isExpanded ? null : generation._id)}
+                                onClick={() => setExpanded(isExpanded ? null : generation.id)}
                               >
                                 {isExpanded ? <ExpandLess /> : <ExpandMore />}
                               </IconButton>
@@ -238,14 +238,14 @@ export default function GenerationSection({
                                 </IconButton>
                               )}
                               <IconButton
-                                onClick={() => onRegenerate(generation._id, generation.variables)}
+                                onClick={() => onRegenerate(generation.id, generation.variables)}
                                 disabled={loading}
                                 title="Перегенерувати"
                               >
                                 <ReplayIcon />
                               </IconButton>
                               <IconButton
-                                onClick={() => onRegenerate(generation._id)}
+                                onClick={() => onRegenerate(generation.id)}
                                 disabled={loading}
                                 title="Перегенерувати зі старими значеннями"
                               >
@@ -254,7 +254,7 @@ export default function GenerationSection({
                               {deleteAllowed && (
                                 <IconButton
                                   color="error"
-                                  onClick={() => onDelete(generation._id)}
+                                  onClick={() => onDelete(generation.id)}
                                   disabled={loading}
                                   title="Видалити"
                                 >

@@ -16,7 +16,8 @@ import {
 import { ArrowBack as ArrowBackIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { RJSFSchema } from '@rjsf/utils';
 
-import { DocumentDetails, DocumentVariableInfo } from '@/types/variables';
+import { VariableInfo } from '@/types/variables';
+import { DocumentDetails } from '@/types/documents';
 import { documentsApi } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
@@ -63,7 +64,7 @@ export default function SelectedDocumentPage() {
       setDocumentDetails(details);
 
       const initialValues: Record<string, JSONValue> = {};
-      details.variables.variables.forEach((v: DocumentVariableInfo) => {
+      details.variables.variables.forEach((v: VariableInfo) => {
         if (v.value != null) initialValues[v.variable] = v.value;
         else if (v.saved_value != null) initialValues[v.variable] = v.saved_value;
       });

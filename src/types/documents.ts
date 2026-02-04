@@ -1,3 +1,5 @@
+import { VariableInfo } from "./variables";
+
 export interface DriveItem {
   id: string;
   name: string;
@@ -15,12 +17,6 @@ export interface DriveFolder extends DriveItem {
   is_pinned: boolean;
 }
 
-export interface FolderContents {
-  folders: DriveFolder[];
-  documents: DriveFile[];
-  current_folder: DriveFolder;
-}
-
 export interface FolderTree {
   folders: FolderTree[];
   documents: DriveFile[];
@@ -35,11 +31,14 @@ export interface DriveFileListResponse {
   files: DriveFile[];
 }
 
+export interface DocumentVariablesResponse {
+  template_variables: string[];
+  variables: VariableInfo[];
+}
+
 export interface DocumentDetails {
   file: DriveFile;
-  variables: unknown[];
-  unknown_variables: string[];
-  is_valid: boolean;
+  variables: DocumentVariablesResponse;
 }
 
 export interface DocumentPreview {

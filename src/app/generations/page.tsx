@@ -200,9 +200,9 @@ export default function GenerationsPage() {
             {isMobile ? (
               <Stack spacing={2}>
                 {generations.data.map((generation) => {
-                  const isExpanded = expanded === generation._id;
+                  const isExpanded = expanded === generation.id;
                   return (
-                    <Card key={generation._id} variant="outlined">
+                    <Card key={generation.id} variant="outlined">
                       <CardContent>
                         <Stack spacing={1}>
                           <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -222,7 +222,7 @@ export default function GenerationsPage() {
                                 size="small"
                                 disabled={disabledUI}
                                 onClick={() =>
-                                  handleRegenerateGeneration(generation._id, generation.variables)
+                                  handleRegenerateGeneration(generation.id, generation.variables)
                                 }
                                 title="Перегенерувати"
                               >
@@ -231,7 +231,7 @@ export default function GenerationsPage() {
                               <IconButton
                                 size="small"
                                 disabled={disabledUI}
-                                onClick={() => handleRegenerateGeneration(generation._id)}
+                                onClick={() => handleRegenerateGeneration(generation.id)}
                                 title="Перегенерувати зі старими значеннями"
                               >
                                 <RestoreIcon fontSize="small" />
@@ -240,7 +240,7 @@ export default function GenerationsPage() {
                                 size="small"
                                 color="error"
                                 disabled={disabledUI}
-                                onClick={() => handleDeleteGeneration(generation._id)}
+                                onClick={() => handleDeleteGeneration(generation.id)}
                                 title="Видалити"
                               >
                                 <DeleteIcon fontSize="small" />
@@ -279,7 +279,7 @@ export default function GenerationsPage() {
                                 variant="text"
                                 size="small"
                                 startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
-                                onClick={() => setExpanded(isExpanded ? null : generation._id)}
+                                onClick={() => setExpanded(isExpanded ? null : generation.id)}
                                 sx={{ alignSelf: 'flex-start' }}
                               >
                                 {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
@@ -329,10 +329,10 @@ export default function GenerationsPage() {
 
                 <TableBody>
                   {generations.data.map((generation, index) => {
-                    const isExpanded = expanded === generation._id;
+                    const isExpanded = expanded === generation.id;
                     return (
                       <Fragment key={index}>
-                        <TableRow key={generation._id}>
+                        <TableRow key={generation.id}>
                           <TableCell>
                             <Typography fontWeight="bold">{generation.template_name}</Typography>
                           </TableCell>
@@ -371,7 +371,7 @@ export default function GenerationsPage() {
                           <TableCell>
                             {Object.entries(generation.variables).length > 0 ? (
                               <IconButton
-                                onClick={() => setExpanded(isExpanded ? null : generation._id)}
+                                onClick={() => setExpanded(isExpanded ? null : generation.id)}
                               >
                                 {isExpanded ? <ExpandLess /> : <ExpandMore />}
                               </IconButton>
@@ -395,7 +395,7 @@ export default function GenerationsPage() {
                               </IconButton>
                               <IconButton
                                 onClick={() =>
-                                  handleRegenerateGeneration(generation._id, generation.variables)
+                                  handleRegenerateGeneration(generation.id, generation.variables)
                                 }
                                 disabled={disabledUI}
                                 title="Перегенерувати"
@@ -403,7 +403,7 @@ export default function GenerationsPage() {
                                 <ReplayIcon />
                               </IconButton>
                               <IconButton
-                                onClick={() => handleRegenerateGeneration(generation._id)}
+                                onClick={() => handleRegenerateGeneration(generation.id)}
                                 disabled={disabledUI}
                                 title="Перегенерувати зі старими значеннями"
                               >
@@ -411,7 +411,7 @@ export default function GenerationsPage() {
                               </IconButton>
                               <IconButton
                                 color="error"
-                                onClick={() => handleDeleteGeneration(generation._id)}
+                                onClick={() => handleDeleteGeneration(generation.id)}
                                 disabled={disabledUI}
                                 title="Видалити"
                               >

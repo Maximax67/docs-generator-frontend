@@ -3,7 +3,7 @@ import { api } from './core';
 import {
   VariableSchemaResponse,
   VariableCreate,
-  DocumentVariableInfo,
+  VariableInfo,
   SaveVariableEntry,
   SavedVariable,
   ValidateVariableResponse,
@@ -26,12 +26,12 @@ export const variablesApi = {
     });
   },
 
-  async createVariable(data: VariableCreate): Promise<DocumentVariableInfo> {
+  async createVariable(data: VariableCreate): Promise<VariableInfo> {
     const response = await api.post('/variables', data);
     return response.data;
   },
 
-  async updateVariable(id: string, data: VariableCreate): Promise<DocumentVariableInfo> {
+  async updateVariable(id: string, data: VariableCreate): Promise<VariableInfo> {
     const response = await api.put(`/variables/${id}`, data);
     return response.data;
   },
@@ -55,8 +55,8 @@ export const variablesApi = {
     await api.delete('/variables/saved');
   },
 
-  async getVariableInfo(variableId: string): Promise<DocumentVariableInfo> {
-    const response = await api.get<DocumentVariableInfo>(
+  async getVariableInfo(variableId: string): Promise<VariableInfo> {
+    const response = await api.get<VariableInfo>(
       `/variables/${encodeURIComponent(variableId)}`,
     );
     return response.data;

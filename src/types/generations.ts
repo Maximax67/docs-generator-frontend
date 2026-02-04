@@ -1,8 +1,8 @@
-import { UserInfo } from './user';
+import { User } from './user';
 
 export type Generation = {
-  _id: string;
-  user?: UserInfo & { id: string };
+  id: string;
+  user: User | null;
   template_id: string;
   template_name: string;
   variables: Record<string, string>;

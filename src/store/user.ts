@@ -107,7 +107,7 @@ export const useUserStore = create<UserState>()(
 
       changePassword: async (oldPassword, newPassword) => {
         const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
+        if (!u?.id) throw new Error('Користувач не знайдений');
 
         const payload: ChangePasswordPayload = {
           email: u.email,
@@ -120,17 +120,17 @@ export const useUserStore = create<UserState>()(
 
       updateNames: async (firstName, lastName) => {
         const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
+        if (!u?.id) throw new Error('Користувач не знайдений');
 
-        const user = await userApi.updateNames(u._id, firstName, lastName);
+        const user = await userApi.updateNames(u.id, firstName, lastName);
         set({ user });
       },
 
       deleteAccount: async () => {
         const u = get().user;
-        if (!u?._id) throw new Error('Користувач не знайдений');
+        if (!u?.id) throw new Error('Користувач не знайдений');
 
-        await userApi.deleteAccount(u._id);
+        await userApi.deleteAccount(u.id);
         set({ user: null });
       },
     }),

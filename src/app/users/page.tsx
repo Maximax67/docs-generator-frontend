@@ -216,7 +216,7 @@ export default function UsersPage() {
         {isMobile ? (
           <Stack spacing={2}>
             {searchResult?.data.map((user) => (
-              <Card key={user._id} variant="outlined">
+              <Card key={user.id} variant="outlined">
                 <CardContent>
                   <Stack spacing={1}>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -236,7 +236,7 @@ export default function UsersPage() {
 
                       <IconButton
                         component={Link}
-                        href={`/profile?id=${user._id}`}
+                        href={`/profile?id=${user.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Переглянути профіль"
@@ -303,7 +303,7 @@ export default function UsersPage() {
 
             <TableBody>
               {searchResult?.data.map((user) => (
-                <TableRow key={user._id}>
+                <TableRow key={user.id}>
                   <TableCell>{`${user.first_name} ${user.last_name ?? ''}`.trim()}</TableCell>
 
                   <TableCell>
@@ -340,7 +340,7 @@ export default function UsersPage() {
                   <TableCell align="right">
                     <IconButton
                       component={Link}
-                      href={`/profile?id=${user._id}`}
+                      href={`/profile?id=${user.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Переглянути профіль"

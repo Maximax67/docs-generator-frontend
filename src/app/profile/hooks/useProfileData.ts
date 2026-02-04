@@ -24,7 +24,7 @@ export function useProfileData() {
     }
 
     // If no userId or it's the current user's ID, use current user
-    if (!userId || userId === currentUser._id) {
+    if (!userId || userId === currentUser.id) {
       setTargetUser(currentUser);
       setLoading(false);
       return;
@@ -53,7 +53,7 @@ export function useProfileData() {
     fetchUser();
   }, [fetchUser]);
 
-  const isOwnProfile = !userId || userId === currentUser?._id;
+  const isOwnProfile = !userId || userId === currentUser?.id;
 
   return {
     targetUser,

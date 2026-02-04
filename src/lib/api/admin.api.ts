@@ -38,11 +38,11 @@ export const adminApi = {
   async updateUserNames(
     userId: string,
     firstName: string,
-    lastName?: string | null,
+    lastName: string | null,
   ): Promise<void> {
     await api.patch<User>(`/users/${userId}`, {
       first_name: firstName,
-      last_name: lastName ?? null,
+      last_name: lastName,
     });
   },
 

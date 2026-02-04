@@ -1,7 +1,6 @@
 import { api } from './core';
-import { FolderTreeResponse } from '@/types/documents';
+import { DocumentDetails, FolderTreeResponse } from '@/types/documents';
 import { JSONValue } from '@/types/json';
-import { DocumentDetails } from '@/types/variables';
 
 export const documentsApi = {
   async getFolderTree(): Promise<FolderTreeResponse> {

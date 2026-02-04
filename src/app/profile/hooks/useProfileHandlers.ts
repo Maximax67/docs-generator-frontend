@@ -75,7 +75,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         await userStore.changeEmail(emailForm.newEmail);
         router.push('/login');
       } else {
-        await adminApi.changeUserEmail(targetUser._id, emailForm.newEmail);
+        await adminApi.changeUserEmail(targetUser.id, emailForm.newEmail);
         if (targetUser) targetUser.email = emailForm.newEmail;
       }
       setEmailDialogOpen(false);
@@ -113,7 +113,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         await userStore.updateNames(namesForm.firstName, namesForm.lastName || null);
       } else {
         await adminApi.updateUserNames(
-          targetUser._id,
+          targetUser.id,
           namesForm.firstName,
           namesForm.lastName || null,
         );
@@ -138,7 +138,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     () =>
       withAsyncHandler(async () => {
         if (!targetUser) return;
-        await adminApi.confirmUserEmail(targetUser._id);
+        await adminApi.confirmUserEmail(targetUser.id);
         targetUser.email_verified = true;
       }, 'Не вдалося підтвердити пошту'),
     [targetUser, withAsyncHandler],
@@ -148,7 +148,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     () =>
       withAsyncHandler(async () => {
         if (!targetUser) return;
-        await adminApi.revokeUserEmailConfirmation(targetUser._id);
+        await adminApi.revokeUserEmailConfirmation(targetUser.id);
         targetUser.email_verified = false;
       }, 'Не вдалося зняти підтвердження пошту'),
     [targetUser, withAsyncHandler],
@@ -158,7 +158,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     () =>
       withAsyncHandler(async () => {
         if (!targetUser) return;
-        await adminApi.banUser(targetUser._id);
+        await adminApi.banUser(targetUser.id);
         targetUser.is_banned = true;
       }, 'Не вдалося заблокувати користувача'),
     [targetUser, withAsyncHandler],
@@ -168,7 +168,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     () =>
       withAsyncHandler(async () => {
         if (!targetUser) return;
-        await adminApi.unbanUser(targetUser._id);
+        await adminApi.unbanUser(targetUser.id);
         targetUser.is_banned = false;
       }, 'Не вдалося розблокувати користувача'),
     [targetUser, withAsyncHandler],
@@ -178,7 +178,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     () =>
       withAsyncHandler(async () => {
         if (!targetUser) return;
-        await adminApi.promoteUserToAdmin(targetUser._id);
+        await adminApi.promoteUserToAdmin(targetUser.id);
         targetUser.role = 'admin';
       }, 'Не вдалося підвищити користувача'),
     [targetUser, withAsyncHandler],
@@ -188,7 +188,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     () =>
       withAsyncHandler(async () => {
         if (!targetUser) return;
-        await adminApi.demoteAdminToUser(targetUser._id);
+        await adminApi.demoteAdminToUser(targetUser.id);
         targetUser.role = 'user';
       }, 'Не вдалося понизити користувача'),
     [targetUser, withAsyncHandler],
@@ -206,7 +206,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (isOwnProfile) {
         await userStore.deleteAccount();
       } else {
-        await adminApi.deleteUser(targetUser._id);
+        await adminApi.deleteUser(targetUser.id);
       }
       setDeleteDialogOpen(false);
       router.push(isOwnProfile ? '/' : '/users');
@@ -317,7 +317,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     await withAsyncHandler(async () => {
       const results = await generationsApi.getGenerations({
         page: generationPage,
-        userId: targetUser._id,
+        userId: targetUser.id,
       });
       setGenerations(results);
     }, 'Не вдалось отримати список генерацій');
@@ -328,7 +328,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (!targetUser) return;
 
       await withAsyncHandler(async () => {
-        const results = await generationsApi.getGenerations({ page, userId: targetUser._id });
+        const results = await generationsApi.getGenerations({ page, userId: targetUser.id });
         setGenerationPage(page);
         setGenerations(results);
       }, 'Не вдалось отримати список генерацій');
@@ -378,7 +378,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!targetUser) return;
 
     await withAsyncHandler(
-      () => generationsApi.deleteAllUserGenerations(targetUser._id),
+      () => generationsApi.deleteAllUserGenerations(targetUser.id),
       'Не вдалось видалити всі генерації',
     );
 
@@ -409,7 +409,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       try {
         const generations = await generationsApi.getGenerations({
           page: 1,
-          userId: targetUser._id,
+          userId: targetUser.id,
         });
         setGenerations(generations);
       } catch (e) {

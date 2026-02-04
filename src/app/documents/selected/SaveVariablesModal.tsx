@@ -12,7 +12,7 @@ import {
   Divider,
 } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import { DocumentVariableInfo } from '@/types/variables';
+import { VariableInfo } from '@/types/variables';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
@@ -39,7 +39,7 @@ interface SaveCandidate {
 
 interface SaveVariablesModalProps {
   open: boolean;
-  variables: DocumentVariableInfo[];
+  variables: VariableInfo[];
   formValues: Record<string, JSONValue>;
   onClose: () => void;
   onSaved: () => void;
@@ -58,7 +58,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
 
   const candidates: SaveCandidate[] = useMemo(() => {
     return variables
-      .filter((v): v is DocumentVariableInfo & { id: string } =>
+      .filter((v): v is VariableInfo & { id: string } =>
         Boolean(v.allow_save && v.id && v.variable in formValues),
       )
       .map((v) => {
@@ -130,11 +130,11 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Зберегти зміни в змінних?</DialogTitle>
+      <DialogTitle>Зберегти значення?</DialogTitle>
 
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Оберіть змінні, значення яких ви хочете зберегти для наступних разів.
+          Оберіть змінні, значення яких ви хочете зберегти для наступних генерацій.
         </Typography>
 
         <Box

@@ -25,7 +25,7 @@ import {
   Folder as FolderIcon,
   Description as DocumentIcon,
 } from '@mui/icons-material';
-import { VariableCompactResponse } from '@/types/variables';
+import { VariableInfo } from '@/types/variables';
 import { ConstantVariableModal } from './ConstantVariableModal';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
@@ -35,22 +35,20 @@ import { FolderTree } from '@/types/documents';
 
 interface ConstantsTableProps {
   scope: string | null;
-  scopeName: string;
   folderTree: FolderTree[] | null;
-  variables: VariableCompactResponse[];
+  variables: VariableInfo[];
   onVariableChange: () => void;
 }
 
 export const ConstantsTable: FC<ConstantsTableProps> = ({
   scope,
-  scopeName,
   folderTree,
   variables,
   onVariableChange,
 }) => {
   const notify = useNotify();
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingVariable, setEditingVariable] = useState<VariableCompactResponse | null>(null);
+  const [editingVariable, setEditingVariable] = useState<VariableInfo | null>(null);
   const [valueDialogOpen, setValueDialogOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<JSONValue>(null);
 
@@ -61,7 +59,7 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
     setModalOpen(true);
   };
 
-  const handleEditClick = (variable: VariableCompactResponse) => {
+  const handleEditClick = (variable: VariableInfo) => {
     setEditingVariable(variable);
     setModalOpen(true);
   };
@@ -245,7 +243,6 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
       <ConstantVariableModal
         open={modalOpen}
         scope={scope}
-        scopeName={scopeName}
         editingVariable={editingVariable}
         existingVariables={variables}
         onClose={handleModalClose}

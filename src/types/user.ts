@@ -1,6 +1,7 @@
 export type UserRole = 'admin' | 'user' | 'god';
 
-export type UserInfo = {
+export type User = {
+  id: string;
   email: string;
   first_name: string;
   last_name: string | null;
@@ -11,8 +12,6 @@ export type UserInfo = {
   created_at: string;
   updated_at: string;
 };
-
-export type User = UserInfo & { _id: string };
 
 export type SessionInfo = {
   id: string;

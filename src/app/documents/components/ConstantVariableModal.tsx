@@ -14,7 +14,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { VariableCompactResponse } from '@/types/variables';
+import { VariableInfo } from '@/types/variables';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
@@ -25,9 +25,8 @@ type VariableType = 'text' | 'number' | 'boolean' | 'json';
 interface ConstantVariableModalProps {
   open: boolean;
   scope: string | null;
-  scopeName: string;
-  editingVariable: VariableCompactResponse | null;
-  existingVariables: VariableCompactResponse[];
+  editingVariable: VariableInfo | null;
+  existingVariables: VariableInfo[];
   onClose: () => void;
   onSave: () => void;
 }
@@ -35,7 +34,6 @@ interface ConstantVariableModalProps {
 export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   open,
   scope,
-  scopeName,
   editingVariable,
   existingVariables,
   onClose,
@@ -253,7 +251,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {isEditingParentScope && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              Ви редагуєте константу з вищого scope: {scopeName}.
+              Ви редагуєте константу з вищого scope.
             </Alert>
           )}
 
