@@ -47,6 +47,15 @@ export interface VariableCreate {
   allow_save: boolean;
 }
 
+export interface VariableUpdate {
+  variable?: string;
+  scope?: string | null;
+  value?: JSONValue;
+  validation_schema?: Record<string, JSONValue> | null;
+  required?: boolean;
+  allow_save?: boolean;
+}
+
 export interface SaveVariableEntry {
   id: string;
   value: JSONValue;

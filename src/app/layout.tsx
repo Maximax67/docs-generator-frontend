@@ -5,11 +5,12 @@ import AppThemeProvider from '../providers/AppThemeProvider';
 import EmotionCacheProvider from '../providers/EmotionCacheProvider';
 import Header from '@/components/Header';
 import RateLimitOverlay from '../components/RateLimitOverlay';
-
-import './globals.css';
 import PWAInstallPrompt from '@/components/PwaInstallPrompt';
 import UserProvider from '@/providers/UserProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
+import { ConfirmProvider } from '@/providers/ConfirmProvider';
+
+import './globals.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -47,12 +48,14 @@ export default function RootLayout({
           <AppThemeProvider>
             <UserProvider>
               <NotificationProvider>
-                <RegisterServiceWorker />
-                <PWAInstallPrompt />
-                <Header />
-                {children}
-                <RateLimitOverlay />
+                <ConfirmProvider>
+                  <RegisterServiceWorker />
+                  <PWAInstallPrompt />
+                  <Header />
+                  {children}
+                </ConfirmProvider>
               </NotificationProvider>
+              <RateLimitOverlay />
             </UserProvider>
           </AppThemeProvider>
         </EmotionCacheProvider>

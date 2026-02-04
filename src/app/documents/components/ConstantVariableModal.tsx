@@ -28,7 +28,7 @@ interface ConstantVariableModalProps {
   editingVariable: VariableInfo | null;
   existingVariables: VariableInfo[];
   onClose: () => void;
-  onSave: () => void;
+  onSave: (updatedVariable: VariableInfo) => void;
 }
 
 export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
@@ -92,7 +92,11 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
 
     const nameTrimmed = name.trim();
     const existingValidationInCurrentScope = existingVariables.find(
-      (v) => v.variable === nameTrimmed && v.scope === scope && v.value === null,
+      (v) =>
+        v.variable === nameTrimmed &&
+        v.scope === scope &&
+        v.value === null &&
+        v.validation_schema !== null,
     );
 
     if (existingValidationInCurrentScope) {
@@ -151,7 +155,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   const handleSave = async () => {
     const nameTrimmed = variableName.trim();
     if (!nameTrimmed) {
-      notify({ message: 'Назва змінної не може бути порожньою', severity: 'error' });
+      notify('Назва змінної не може бути порожньою', 'error');
       return;
     }
 
@@ -159,34 +163,35 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
       const value = parseValue();
       setLoading(true);
 
-      const payload = {
-        variable: nameTrimmed,
-        scope: editingVariable ? editingVariable.scope : scope,
-        value: value,
-        validation_schema: null,
-        required: false,
-        allow_save: false,
-      };
+      let updatedVariable: VariableInfo;
 
       if (editingVariable) {
-        await variablesApi.updateVariable(editingVariable.id.toString(), payload);
-        notify({ message: 'Константу успішно оновлено', severity: 'success' });
+        updatedVariable = await variablesApi.updateVariable(editingVariable.id, { value });
+        notify('Константу успішно оновлено', 'success');
       } else {
         const existingValidationInCurrentScope = existingVariables.find(
           (v) => v.variable === nameTrimmed && v.scope === scope && v.value === null,
         );
 
         if (existingValidationInCurrentScope) {
-          await variablesApi.updateVariable(existingValidationInCurrentScope.id, payload);
+          updatedVariable = await variablesApi.updateVariable(existingValidationInCurrentScope.id, { value });
         } else {
-          await variablesApi.createVariable(payload);
+          const payload = {
+            variable: nameTrimmed,
+            scope,
+            value,
+            validation_schema: null,
+            required: false,
+            allow_save: false,
+          };
+          updatedVariable = await variablesApi.createVariable(payload);
         }
-        notify({ message: 'Константу успішно створено', severity: 'success' });
+        notify('Константу успішно створено');
       }
 
-      onSave();
+      onSave(updatedVariable);
     } catch (error) {
-      notify({ message: toErrorMessage(error), severity: 'error' });
+      notify(toErrorMessage(error), 'error');
     } finally {
       setLoading(false);
     }
@@ -197,7 +202,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
       case 'boolean':
         return (
           <RadioGroup
-            value={booleanValue.toString()}
+            value={booleanValue}
             onChange={(e) => setBooleanValue(e.target.value === 'true')}
           >
             <FormControlLabel value="true" control={<Radio />} label="Так" />

@@ -111,18 +111,12 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
     const result = findInTree(folderTree, scope);
     if (!result) {
-      notify({
-        message: 'Документ або папку не знайдено',
-        severity: 'error',
-      });
+      notify('Документ або папку не знайдено', 'error');
       return;
     }
 
     if (mode === 'settings' && !isAdmin) {
-      notify({
-        message: user ? 'Доступ заборонено' : 'Увійдіть для доступу до налаштувань',
-        severity: 'warning',
-      });
+      notify(user ? 'Доступ заборонено' : 'Увійдіть для доступу до налаштувань', 'warning');
       return;
     }
 

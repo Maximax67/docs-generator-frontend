@@ -8,12 +8,13 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { variablesApi } from '@/lib/api';
 import { VariableInfo } from '@/types/variables';
 
-import 'jsonjoy-builder/styles.css';
-import './VariableSchemaEditor.module.css';
 import { useNotify } from '@/providers/NotificationProvider';
 import { ConstantsTable } from './ConstantsTable';
 import { FolderTree } from '@/types/documents';
 import { SavingTable } from './SavingTable';
+
+import 'jsonjoy-builder/styles.css';
+import './VariableSchemaEditor.module.css';
 
 interface VariableSchemaEditorProps {
   scope: string | null;
@@ -66,10 +67,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
         setVariables(response.variables);
       } catch (err) {
         console.error('Failed to load existing schema:', err);
-        notify({
-          message: toErrorMessage(err, 'Не вдалося завантажити схему'),
-          severity: 'error',
-        });
+        notify(toErrorMessage(err, 'Не вдалося завантажити схему'), 'error');
       } finally {
         setFetchingSchema(false);
       }
@@ -85,7 +83,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
 
     const handleSave = async () => {
       if (!hasChanges) {
-        notify({ message: 'Немає змін для збереження', severity: 'info' });
+        notify('Немає змін для збереження', 'info');
         return;
       }
 
@@ -95,9 +93,9 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
         await variablesApi.updateValidationSchema(scope, schema);
         await loadSchema();
 
-        notify({ message: 'Схему успішно збережено', severity: 'success' });
+        notify('Схему успішно збережено');
       } catch (err) {
-        notify({ message: toErrorMessage(err, 'Не вдалося зберегти схему'), severity: 'error' });
+        notify(toErrorMessage(err, 'Не вдалося зберегти схему'), 'error');
       } finally {
         setLoading(false);
       }
@@ -105,13 +103,48 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
 
     const handleTabChange = (
       _event: React.SyntheticEvent,
-      newValue: 'validation' | 'constants',
+      newValue: 'validation' | 'constants' | 'saving',
     ) => {
       setActiveTab(newValue);
     };
 
-    const requiredVariables =
-      typeof schema !== 'boolean' && Array.isArray(schema.required) ? schema.required : [];
+    const handleChangeSave = (id: string, value: boolean) => {
+      setVariables((prev) =>
+        prev.map((variable) =>
+          variable.id === id ? { ...variable, allow_save: value } : variable,
+        ),
+      );
+    };
+
+    const handleAddVariable = (variable: VariableInfo) => {
+      setVariables((prev) => [...prev, variable]);
+    };
+
+    const handleDeleteVariable = (id: string) => {
+      setVariables((prev) => prev.filter((variable) => variable.id !== id));
+    };
+
+    const handleClearConstant = (id: string) => {
+      setVariables((prev) =>
+        prev.map((variable) => (variable.id === id ? { ...variable, value: null } : variable)),
+      );
+    };
+
+    const handleConstantEdit = (updatedVariable: VariableInfo) => {
+      setVariables((prev) => {
+        let found = false;
+
+        const next = prev.map((v) => {
+          if (v.id === updatedVariable.id) {
+            found = true;
+            return updatedVariable;
+          }
+          return v;
+        });
+
+        return found ? next : [...next, updatedVariable];
+      });
+    };
 
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -193,7 +226,9 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
                   scope={scope}
                   folderTree={folderTree}
                   variables={variables}
-                  onVariableChange={loadSchema}
+                  onConstantClear={handleClearConstant}
+                  onConstantDelete={handleDeleteVariable}
+                  onConstantEdit={handleConstantEdit}
                 />
               )}
               {activeTab === 'saving' && (
@@ -201,8 +236,9 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
                   scope={scope}
                   folderTree={folderTree}
                   variables={variables}
-                  requiredVariables={requiredVariables}
-                  onVariableChange={loadSchema}
+                  onChangeSave={handleChangeSave}
+                  onAddVariable={handleAddVariable}
+                  onDeleteVariable={handleDeleteVariable}
                 />
               )}
             </>

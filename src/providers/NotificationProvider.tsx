@@ -10,7 +10,7 @@ type Notification = {
 };
 
 type NotificationContextType = {
-  notify: (notification: Notification) => void;
+  notify: (message: string, severity?: AlertColor, duration?: number) => void;
 };
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -28,10 +28,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notification, setNotification] = useState<Notification | null>(null);
   const [open, setOpen] = useState(false);
 
-  const notify = useCallback((n: Notification) => {
-    setNotification(n);
-    setOpen(true);
-  }, []);
+  const notify = useCallback(
+    (message: string, severity: AlertColor = 'success', duration?: number) => {
+      setNotification({ message, severity, duration });
+      setOpen(true);
+    },
+    [],
+  );
 
   const handleClose = () => {
     setOpen(false);

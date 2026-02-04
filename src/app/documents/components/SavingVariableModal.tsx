@@ -20,7 +20,7 @@ interface SavingVariableModalProps {
   scope: string | null;
   existingVariables: VariableInfo[];
   onClose: () => void;
-  onSave: () => void;
+  onAddVariable: (variable: VariableInfo) => void;
 }
 
 export const SavingVariableModal: FC<SavingVariableModalProps> = ({
@@ -28,7 +28,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
   scope,
   existingVariables,
   onClose,
-  onSave,
+  onAddVariable,
 }) => {
   const notify = useNotify();
   const [variableName, setVariableName] = useState('');
@@ -94,7 +94,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
   const handleSave = async () => {
     const trimmed = variableName.trim();
     if (!trimmed) {
-      notify({ message: 'Назва змінної не може бути порожньою', severity: 'error' });
+      notify('Назва змінної не може бути порожньою', 'error');
       return;
     }
 
@@ -113,11 +113,11 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
         allow_save: true,
       };
 
-      await variablesApi.createVariable(payload);
-      notify({ message: 'Змінну для збереження успішно створено', severity: 'success' });
-      onSave();
+      const newVariable = await variablesApi.createVariable(payload);
+      notify('Змінну для збереження успішно створено');
+      onAddVariable(newVariable);
     } catch (error) {
-      notify({ message: toErrorMessage(error), severity: 'error' });
+      notify(toErrorMessage(error), 'error');
     } finally {
       setLoading(false);
     }

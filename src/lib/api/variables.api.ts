@@ -7,6 +7,7 @@ import {
   SaveVariableEntry,
   SavedVariable,
   ValidateVariableResponse,
+  VariableUpdate,
 } from '@/types/variables';
 import { JSONSchema } from 'jsonjoy-builder';
 import { JSONValue } from '@/types/json';
@@ -31,8 +32,8 @@ export const variablesApi = {
     return response.data;
   },
 
-  async updateVariable(id: string, data: VariableCreate): Promise<VariableInfo> {
-    const response = await api.put(`/variables/${id}`, data);
+  async updateVariable(id: string, data: VariableUpdate): Promise<VariableInfo> {
+    const response = await api.patch(`/variables/${id}`, data);
     return response.data;
   },
 

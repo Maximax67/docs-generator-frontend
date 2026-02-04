@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import {
   Edit as EditIcon,
+  Clear as ClearIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
   Folder as FolderIcon,
@@ -29,6 +30,7 @@ import { VariableInfo } from '@/types/variables';
 import { ConstantVariableModal } from './ConstantVariableModal';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
+import { useConfirm } from '@/providers/ConfirmProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { JSONValue } from '@/types/json';
 import { FolderTree } from '@/types/documents';
@@ -37,16 +39,21 @@ interface ConstantsTableProps {
   scope: string | null;
   folderTree: FolderTree[] | null;
   variables: VariableInfo[];
-  onVariableChange: () => void;
+  onConstantClear: (id: string) => void;
+  onConstantDelete: (id: string) => void;
+  onConstantEdit: (updatedVariable: VariableInfo) => void;
 }
 
 export const ConstantsTable: FC<ConstantsTableProps> = ({
   scope,
   folderTree,
   variables,
-  onVariableChange,
+  onConstantClear,
+  onConstantDelete,
+  onConstantEdit,
 }) => {
   const notify = useNotify();
+  const { confirm } = useConfirm();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<VariableInfo | null>(null);
   const [valueDialogOpen, setValueDialogOpen] = useState(false);
@@ -54,30 +61,58 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
 
   const allConstants = variables.filter((v) => v.value !== null);
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
     setEditingVariable(null);
     setModalOpen(true);
   };
 
-  const handleEditClick = (variable: VariableInfo) => {
+  const handleEditClick = async (variable: VariableInfo) => {
     setEditingVariable(variable);
     setModalOpen(true);
   };
 
+  const handleClearClick = async (variableId: string) => {
+    const confirmed = await confirm({
+      title: 'Видалити значення',
+      message:
+        'Ви впевнені, що хочете видалити значення константи? Змінна залишиться в розділі "Збереження значень".',
+      confirmText: 'Видалити',
+      cancelText: 'Скасувати',
+      severity: 'error',
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await variablesApi.updateVariable(variableId, { value: null });
+      notify('Значення константи успішно видалено');
+      onConstantClear(variableId);
+    } catch (error) {
+      notify(toErrorMessage(error, 'Не вдалося видалити значення константи'), 'error');
+    }
+  };
+
   const handleDeleteClick = async (variableId: string) => {
-    if (!window.confirm('Ви впевнені, що хочете видалити цю константу?')) {
+    const confirmed = await confirm({
+      title: 'Видалити змінну',
+      message: 'Ви впевнені, що хочете видалити цю змінну?',
+      confirmText: 'Видалити',
+      cancelText: 'Скасувати',
+      severity: 'error',
+    });
+
+    if (!confirmed) {
       return;
     }
 
     try {
       await variablesApi.deleteVariable(variableId);
-      notify({ message: 'Константу успішно видалено', severity: 'success' });
-      onVariableChange();
+      notify('Змінну успішно видалено');
+      onConstantDelete(variableId);
     } catch (error) {
-      notify({
-        message: toErrorMessage(error, 'Не вдалося видалити константу'),
-        severity: 'error',
-      });
+      notify(toErrorMessage(error, 'Не вдалося видалити змінну'), 'error');
     }
   };
 
@@ -86,10 +121,10 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
     setEditingVariable(null);
   };
 
-  const handleModalSave = () => {
+  const handleModalSave = (updatedVariable: VariableInfo) => {
     setModalOpen(false);
     setEditingVariable(null);
-    onVariableChange();
+    onConstantEdit(updatedVariable);
   };
 
   const handleValueClick = (value: JSONValue) => {
@@ -192,7 +227,7 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
               {allConstants.map((variable) => {
                 const scopeInfo = getScopeName(variable.scope);
                 return (
-                  <TableRow key={variable.id.toString()}>
+                  <TableRow key={variable.id}>
                     <TableCell>{variable.variable}</TableCell>
                     <TableCell>
                       <Chip label={getValueType(variable.value)} size="small" />
@@ -225,10 +260,10 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
                       <IconButton size="small" onClick={() => handleEditClick(variable)}>
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(variable.id.toString())}
-                      >
+                      <IconButton size="small" onClick={() => handleClearClick(variable.id)}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDeleteClick(variable.id)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </TableCell>

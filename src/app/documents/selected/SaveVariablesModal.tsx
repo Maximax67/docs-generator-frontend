@@ -116,10 +116,10 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
     setSaving(true);
     try {
       await variablesApi.saveVariables(payload);
-      notify({ message: 'Зміни успішно збережені', severity: 'success' });
+      notify('Зміни успішно збережені');
       onSaved();
     } catch (err) {
-      notify({ message: toErrorMessage(err, 'Не вдалося зберегти зміни'), severity: 'error' });
+      notify(toErrorMessage(err, 'Не вдалося зберегти зміни'), 'error');
     } finally {
       setSaving(false);
     }
