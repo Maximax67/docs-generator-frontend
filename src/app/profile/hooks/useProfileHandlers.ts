@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
-import { adminApi, authApi, generationsApi, variablesApi } from '@/lib/api';
+import { adminApi, authApi, generationsApi, variablesApi, documentsApi } from '@/lib/api';
 import { User, SessionInfo } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
@@ -9,6 +9,7 @@ import { JSONValue } from '@/types/json';
 import { Paginated } from '@/types/pagination';
 import { Generation } from '@/types/generations';
 import { SavedVariable } from '@/types/variables';
+import { FolderTree } from '@/types/documents';
 
 export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolean) {
   const router = useRouter();
@@ -44,6 +45,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   const [savedVarsPage, setSavedVarsPage] = useState(1);
   const [generationPage, setGenerationPage] = useState(1);
   const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
+  const [folderTree, setFolderTree] = useState<FolderTree[] | null>(null);
 
   // Generic async handler wrapper
   const withAsyncHandler = useCallback(
@@ -283,12 +285,11 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   }, [targetUser, withAsyncHandler]);
 
   const handleDeleteVariable = useCallback(
-    async (variable: string) => {
+    async (variableId: string) => {
       if (!targetUser) return;
 
       await withAsyncHandler(async () => {
-        await variablesApi.deleteSavedVariable(variable);
-        // Refresh current page
+        await variablesApi.deleteSavedVariable(variableId);
         const vars = await variablesApi.getSavedVariables(savedVarsPage, 25);
         setSavedVars(vars);
       }, 'Не вдалося видалити змінну');
@@ -297,12 +298,11 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   );
 
   const handleUpdateVariable = useCallback(
-    async (variable: string, value: JSONValue) => {
+    async (variableId: string, value: JSONValue) => {
       if (!targetUser) return;
 
       await withAsyncHandler(async () => {
-        await variablesApi.updateSavedVariable(variable, value);
-        // Refresh current page
+        await variablesApi.updateSavedVariable(variableId, value);
         const vars = await variablesApi.getSavedVariables(savedVarsPage, 25);
         setSavedVars(vars);
       }, 'Не вдалося оновити змінну');
@@ -310,7 +310,6 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     [targetUser, savedVarsPage, withAsyncHandler],
   );
 
-  // Generation Handlers
   const handleRefreshGenerations = useCallback(async () => {
     if (!targetUser) return;
 
@@ -404,6 +403,13 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         } catch (e) {
           setError(toErrorMessage(e, 'Помилка завантаження змінних'));
         }
+
+        try {
+          const data = await documentsApi.getFolderTree();
+          setFolderTree(data.tree);
+        } catch (e) {
+          setError(toErrorMessage(e, 'Помилка завантаження структури документів'));
+        }
       }
 
       try {
@@ -430,6 +436,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     savedVarsPage,
     generationPage,
     generations: generations,
+    folderTree,
 
     // Setters
     setActiveTab,

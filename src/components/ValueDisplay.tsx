@@ -17,6 +17,10 @@ const formatShortValue = (value: JSONValue, maxLength: number) => {
   }
 
   if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return '[...]';
+    }
+
     return '{...}';
   }
 

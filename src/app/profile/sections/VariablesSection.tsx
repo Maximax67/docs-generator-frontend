@@ -16,31 +16,35 @@ import {
   Refresh as RefreshIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Folder as FolderIcon,
+  Description as DocumentIcon,
 } from '@mui/icons-material';
 import { JSONValue } from '@/types/json';
 import { SavedVariable } from '@/types/variables';
 import { Paginated } from '@/types/pagination';
-import { useRef, useState } from 'react';
+import { useRef, useState, JSX } from 'react';
 import { EditVariableDialog } from '../dialogs/EditVariableDialog';
-import { formatDateTime } from '@/utils/dates';
 import { PaginationControls } from '@/components/PaginationControls';
 import { LoadingContent } from '@/components/LoadingContent';
 import { VariableTypeBadge } from '@/components/VariableTypeBadge';
 import { ValueDisplay } from '@/components/ValueDisplay';
 import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialog';
+import { FolderTree } from '@/types/documents';
 
 type VariablesSectionProps = {
   savedVars: Paginated<SavedVariable> | null;
+  folderTree: FolderTree[] | null;
   loading: boolean;
   onRefresh: () => void;
   onClear: () => void;
-  onDelete: (key: string) => void;
-  onUpdate: (key: string, value: JSONValue) => void;
+  onDelete: (variableId: string) => void;
+  onUpdate: (variableId: string, value: JSONValue) => void;
   onPageChange: (page: number) => void;
 };
 
 export default function VariablesSection({
   savedVars,
+  folderTree,
   loading,
   onRefresh,
   onClear,
@@ -51,6 +55,43 @@ export default function VariablesSection({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<SavedVariable | null>(null);
   const fullValueDialogRef = useRef<FullValueDialogRef>(null);
+
+  const getScopeName = (scopeId: string | null): { name: string; icon: JSX.Element } => {
+    if (!scopeId) {
+      return { name: 'Глобальний', icon: <FolderIcon fontSize="small" /> };
+    }
+
+    if (!folderTree) {
+      return { name: scopeId, icon: <FolderIcon fontSize="small" /> };
+    }
+
+    const findInTree = (
+      items: FolderTree[],
+      id: string,
+    ): { name: string; icon: JSX.Element } | null => {
+      for (const item of items) {
+        if (item.current_folder?.id === id) {
+          return { name: item.current_folder.name, icon: <FolderIcon fontSize="small" /> };
+        }
+
+        if (item.documents) {
+          const doc = item.documents.find((d) => d.id === id);
+          if (doc) {
+            return { name: doc.name, icon: <DocumentIcon fontSize="small" /> };
+          }
+        }
+
+        if (item.folders) {
+          const result = findInTree(item.folders, id);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+
+    const result = findInTree(folderTree, scopeId);
+    return result || { name: scopeId, icon: <FolderIcon fontSize="small" /> };
+  };
 
   const handleEdit = (variable: SavedVariable) => {
     setEditingVariable(variable);
@@ -64,7 +105,7 @@ export default function VariablesSection({
 
   const handleSaveEdit = (newValue: JSONValue) => {
     if (editingVariable) {
-      onUpdate(editingVariable.variable.variable, newValue);
+      onUpdate(editingVariable.variable.id, newValue);
     }
   };
 
@@ -117,100 +158,106 @@ export default function VariablesSection({
                       <TableCell>Змінна</TableCell>
                       <TableCell>Тип</TableCell>
                       <TableCell>Значення</TableCell>
-                      <TableCell>Оновлено</TableCell>
+                      <TableCell>Scope</TableCell>
                       <TableCell align="right">Дії</TableCell>
                     </TableRow>
                   </TableHead>
 
                   <TableBody>
-                    {savedVars.data.map((savedVar) => (
-                      <TableRow key={savedVar.variable.id}>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {savedVar.variable.variable}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <VariableTypeBadge value={savedVar.value} />
-                        </TableCell>
-                        <TableCell>
-                          <ValueDisplay value={savedVar.value} onClick={showFullValue} />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption" color="text.secondary">
-                            {formatDateTime(new Date(savedVar.updated_at))}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEdit(savedVar)}
-                            disabled={loading}
-                            title="Редагувати"
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => onDelete(savedVar.variable.id)}
-                            disabled={loading}
-                            title="Видалити"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {savedVars.data.map((savedVar) => {
+                      const scopeInfo = getScopeName(savedVar.variable.scope);
+                      return (
+                        <TableRow key={savedVar.variable.id}>
+                          <TableCell>
+                            <Typography variant="body2">{savedVar.variable.variable}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <VariableTypeBadge value={savedVar.value} />
+                          </TableCell>
+                          <TableCell>
+                            <ValueDisplay value={savedVar.value} onClick={showFullValue} />
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              {scopeInfo.icon}
+                              <Typography variant="body2">{scopeInfo.name}</Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEdit(savedVar)}
+                              disabled={loading}
+                              title="Редагувати"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => onDelete(savedVar.variable.id)}
+                              disabled={loading}
+                              title="Видалити"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </Box>
 
               <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
                 <Stack spacing={1}>
-                  {savedVars.data.map((savedVar) => (
-                    <Box
-                      key={savedVar.variable.id}
-                      sx={{
-                        p: 2,
-                        border: 1,
-                        borderColor: 'divider',
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Stack spacing={1}>
-                        <Typography variant="subtitle2">
-                          {savedVar.variable.variable}
-                        </Typography>
-                        <Box>
-                          <VariableTypeBadge value={savedVar.value} />
-                        </Box>
-                        <Box>
-                          <ValueDisplay value={savedVar.value} onClick={showFullValue} />
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDateTime(new Date(savedVar.updated_at))}
-                        </Typography>
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEdit(savedVar)}
-                            disabled={loading}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => onDelete(savedVar.variable.id)}
-                            disabled={loading}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+                  {savedVars.data.map((savedVar) => {
+                    const scopeInfo = getScopeName(savedVar.variable.scope);
+                    return (
+                      <Box
+                        key={savedVar.variable.id}
+                        sx={{
+                          p: 2,
+                          border: 1,
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Stack spacing={1}>
+                          <Typography variant="subtitle2">{savedVar.variable.variable}</Typography>
+                          <Box>
+                            <VariableTypeBadge value={savedVar.value} />
+                          </Box>
+                          <Box>
+                            <ValueDisplay value={savedVar.value} onClick={showFullValue} />
+                          </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {scopeInfo.icon}
+                            <Typography variant="caption" color="text.secondary">
+                              {scopeInfo.name}
+                            </Typography>
+                          </Box>
+                          <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEdit(savedVar)}
+                              disabled={loading}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => onDelete(savedVar.variable.id)}
+                              disabled={loading}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    </Box>
-                  ))}
+                      </Box>
+                    );
+                  })}
                 </Stack>
               </Box>
             </Box>
@@ -227,9 +274,8 @@ export default function VariablesSection({
       {editingVariable && (
         <EditVariableDialog
           open={editDialogOpen}
-          variableId={editingVariable.variable.id}
-          variableName={editingVariable.variable.variable}
-          currentValue={editingVariable.value}
+          variable={editingVariable.variable}
+          value={editingVariable.value}
           onClose={handleCloseEdit}
           onSave={handleSaveEdit}
         />

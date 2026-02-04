@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -12,8 +12,13 @@ import {
   CircularProgress,
   Stack,
   Chip,
+  Divider,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Refresh as RefreshIcon,
+  Download as DownloadIcon,
+} from '@mui/icons-material';
 import { RJSFSchema } from '@rjsf/utils';
 
 import { VariableInfo } from '@/types/variables';
@@ -25,12 +30,14 @@ import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { IChangeEvent } from '@rjsf/core';
 import { JSONValue } from '@/types/json';
 import { SaveVariablesModal } from './SaveVariablesModal';
-import { DocumentInputForm } from './DocumentInputForm';
+import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentInputForm';
+import { applyTitleFallbacks } from '@/utils/json-schema';
 
 export default function SelectedDocumentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const documentId = searchParams.get('id');
+  const formRef = useRef<DocumentInputFormRef>(null);
 
   const [documentDetails, setDocumentDetails] = useState<DocumentDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,34 +89,6 @@ export default function SelectedDocumentPage() {
   }, [loadData]);
 
   const schema: RJSFSchema = useMemo(() => {
-    const applyTitleFallbacks = (
-      node: Record<string, JSONValue>,
-      propertyName: string,
-    ): Record<string, JSONValue> => {
-      const result: Record<string, JSONValue> = { ...node };
-
-      if (!result.title && typeof result.description === 'string') {
-        if (result.description) {
-          result.title = result.description;
-        }
-        delete result.description;
-      }
-
-      if (node.properties && typeof node.properties === 'object') {
-        const nestedProps: Record<string, JSONValue> = {};
-        for (const [key, value] of Object.entries(node.properties as Record<string, JSONValue>)) {
-          nestedProps[key] = applyTitleFallbacks(value as Record<string, JSONValue>, key);
-        }
-        result.properties = nestedProps;
-      }
-
-      if (node.items && typeof node.items === 'object' && !Array.isArray(node.items)) {
-        result.items = applyTitleFallbacks(node.items as Record<string, JSONValue>, propertyName);
-      }
-
-      return result;
-    };
-
     const properties: Record<string, JSONValue> = {};
     const required: string[] = [];
 
@@ -119,7 +98,7 @@ export default function SelectedDocumentPage() {
       const info = variableMap.get(name);
 
       if (info?.id && info.validation_schema) {
-        properties[name] = applyTitleFallbacks(info.validation_schema, name);
+        properties[name] = applyTitleFallbacks(info.validation_schema);
         if (info.required) {
           required.push(name);
         }
@@ -171,6 +150,11 @@ export default function SelectedDocumentPage() {
     setShowSaveModal(false);
     setGeneratedFormValues(null);
     router.push('/documents/result/');
+  };
+
+  const handleSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    formRef.current?.submit();
   };
 
   if (loading) {
@@ -245,12 +229,35 @@ export default function SelectedDocumentPage() {
 
         <Paper sx={{ p: 3, pb: 1 }}>
           <DocumentInputForm
+            ref={formRef}
             schema={schema}
             initialFormData={initialFormData}
+            showErrorList={'bottom'}
             onSubmit={handleGenerate}
-            error={generateError}
-            isGenerating={isGenerating}
-          />
+          >
+            <Divider sx={{ my: 3 }} />
+
+            {generateError && (
+              <Alert severity="error" sx={{ my: 3 }}>
+                {generateError}
+              </Alert>
+            )}
+
+            <Button
+              variant="contained"
+              size="large"
+              type="submit"
+              startIcon={isGenerating ? <CircularProgress size={20} /> : <DownloadIcon />}
+              disabled={isGenerating}
+              onClick={handleSubmitClick}
+              sx={{
+                minWidth: { xs: '100%', sm: 200 },
+                mb: 2,
+              }}
+            >
+              {isGenerating ? 'Генерація...' : 'Згенерувати PDF'}
+            </Button>
+          </DocumentInputForm>
         </Paper>
       </Stack>
 

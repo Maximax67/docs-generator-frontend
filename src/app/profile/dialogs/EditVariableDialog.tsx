@@ -9,105 +9,60 @@ import {
   Alert,
   TextField,
 } from '@mui/material';
-import Form from '@rjsf/mui';
-import validator from '@rjsf/validator-ajv8';
 import { RJSFSchema } from '@rjsf/utils';
 import { JSONValue } from '@/types/json';
-import { variablesApi } from '@/lib/api';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { IChangeEvent } from '@rjsf/core';
-import { isAxiosError } from '@/utils/is-axios-error';
+import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentInputForm';
+import { applyTitleFallbacks } from '@/utils/json-schema';
+import { VariableInfo } from '@/types/variables';
 
 interface EditVariableDialogProps {
   open: boolean;
-  variableId: string;
-  variableName: string;
-  currentValue: JSONValue;
+  variable: VariableInfo;
+  value: JSONValue;
   onClose: () => void;
   onSave: (newValue: JSONValue) => void;
 }
 
 export const EditVariableDialog: FC<EditVariableDialogProps> = ({
   open,
-  variableId,
-  variableName,
-  currentValue,
+  variable,
+  value,
   onClose,
   onSave,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [fetchingSchema, setFetchingSchema] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [schema, setSchema] = useState<RJSFSchema | null>(null);
-  const [formValue, setFormValue] = useState<JSONValue>(currentValue);
   const [textValue, setTextValue] = useState<string>(
-    typeof currentValue === 'string' ? currentValue : JSON.stringify(currentValue, null, 2),
+    typeof value === 'string' ? value : JSON.stringify(value, null, 2),
   );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formRef = useRef<any>(null);
+  const formRef = useRef<DocumentInputFormRef>(null);
 
   useEffect(() => {
     if (!open) return;
 
-    const fetchSchema = async () => {
-      setFetchingSchema(true);
-      setError(null);
+    if (variable.validation_schema) {
+      const schemaWithTitles = applyTitleFallbacks(variable.validation_schema);
+      const formSchema = {
+        type: 'object',
+        properties: {
+          [variable.variable]: schemaWithTitles,
+        },
+        required: [variable.variable],
+      };
+      setSchema(formSchema as RJSFSchema);
+    } else {
+      setSchema(null);
+    }
+  }, [open, variable]);
 
-      try {
-        const varInfo = await variablesApi.getVariableInfo(variableId);
-
-        if (varInfo.validation_schema) {
-          setSchema(varInfo.validation_schema as RJSFSchema);
-        } else {
-          setSchema(null);
-        }
-      } catch (err) {
-        setError(toErrorMessage(err, 'Не вдалося завантажити схему змінної'));
-      } finally {
-        setFetchingSchema(false);
-      }
-    };
-
-    fetchSchema();
-  }, [open, variableId]);
-
-  const saveVariable = async () => {
+  const saveVariable = async (valueToSave: JSONValue) => {
     setLoading(true);
     setError(null);
-    setValidationError(null);
 
     try {
-      let valueToSave: JSONValue = formValue;
-
-      // If no schema, parse text value
-      if (!schema) {
-        try {
-          valueToSave = JSON.parse(textValue);
-        } catch {
-          // If parsing fails, use as string
-          valueToSave = textValue;
-        }
-      }
-
-      try {
-        await variablesApi.validateVariable(variableId, valueToSave);
-      } catch (error) {
-        if (isAxiosError(error)) {
-          const data = error.response?.data;
-          if (data && typeof data === 'object' && 'errors' in data && Array.isArray(data.errors)) {
-            setValidationError(data.errors.join(', '));
-          } else {
-            setValidationError('Сталася помилка при перевірці значення');
-          }
-        } else {
-          setValidationError('Сталася помилка при перевірці значення');
-        }
-
-        return;
-      }
-
-      await variablesApi.updateSavedVariable(variableId, valueToSave);
       onSave(valueToSave);
       onClose();
     } catch (err) {
@@ -117,16 +72,12 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
     }
   };
 
-  const handleFormChange = (e: IChangeEvent) => {
-    if (!e.formData) return;
-
-    setFormValue(e.formData as JSONValue);
-    setValidationError(null);
+  const handleFormSubmit = (e: IChangeEvent) => {
+    saveVariable(e.formData[variable.variable]);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTextValue(e.target.value);
-    setValidationError(null);
   };
 
   const handleSave = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -134,42 +85,32 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
     if (schema) {
       formRef.current?.submit();
     } else {
-      saveVariable();
+      let valueToSave: JSONValue = textValue;
+      try {
+        valueToSave = JSON.parse(textValue);
+      } catch {
+        valueToSave = textValue;
+      }
+      saveVariable(valueToSave);
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Редагувати: {variableName}</DialogTitle>
+      <DialogTitle>Редагувати: {variable.variable}</DialogTitle>
       <DialogContent>
-        {fetchingSchema && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-            <CircularProgress />
-          </div>
-        )}
-
-        {!fetchingSchema && error && (
+        {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
 
-        {!fetchingSchema && validationError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {validationError}
-          </Alert>
-        )}
-
-        {!fetchingSchema && !error && schema && (
-          <Form
+        {!error && schema && (
+          <DocumentInputForm
             ref={formRef}
             schema={schema}
-            formData={formValue}
-            validator={validator}
-            onChange={handleFormChange}
-            onSubmit={saveVariable}
-            liveValidate
-            showErrorList={false}
+            initialFormData={{ [variable.variable]: value }}
+            onSubmit={handleFormSubmit}
             uiSchema={{
               'ui:submitButtonOptions': {
                 norender: true,
@@ -178,15 +119,15 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
           />
         )}
 
-        {!fetchingSchema && !error && !schema && (
+        {!error && !schema && (
           <TextField
             fullWidth
             multiline
             rows={6}
             value={textValue}
             onChange={handleTextChange}
-            placeholder="Введіть значення (JSON або текст)"
-            helperText="Можна ввести текст або JSON"
+            placeholder="Введіть значення"
+            helperText="Можна ввести текст, число, true/false або JSON"
           />
         )}
       </DialogContent>
@@ -194,7 +135,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
         <Button onClick={onClose} disabled={loading}>
           Скасувати
         </Button>
-        <Button variant="contained" onClick={handleSave} disabled={loading || fetchingSchema}>
+        <Button variant="contained" onClick={handleSave} disabled={loading}>
           {loading ? <CircularProgress size={20} /> : 'Зберегти'}
         </Button>
       </DialogActions>
