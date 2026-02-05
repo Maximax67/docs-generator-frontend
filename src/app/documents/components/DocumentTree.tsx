@@ -4,12 +4,13 @@ import { FC, memo } from 'react';
 import { Box, Typography, CircularProgress, Alert, List, Container, Button } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { useUserStore } from '@/store/user';
-import { FolderTreeItem } from './FolderTreeItem';
-import { DriveFile, FolderTree } from '@/types/documents';
+import { TreeFolder } from './TreeFolder';
+import { DriveFile, FolderTreeGlobal } from '@/types/documents';
 import { isAdminUser } from '@/utils/is-admin';
+import { TreeDocument } from './TreeDocument';
 
 interface DocumentTreeProps {
-  folderTree: FolderTree[] | null;
+  folderTree: FolderTreeGlobal | null;
   treeLoading: boolean;
   treeError: string | null;
   highlight?: string | null;
@@ -66,7 +67,7 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
     );
   }
 
-  if (!folderTree || folderTree.length === 0) {
+  if (!folderTree || (folderTree.documents.length === 0 && folderTree.folders.length === 0)) {
     return (
       <Box sx={{ p: 2 }}>
         <Typography variant="body2" color="text.secondary">
@@ -79,16 +80,26 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
   return (
     <Box sx={{ height: '100%', overflow: 'auto' }}>
       <List>
-        {folderTree.map((folder) => (
-          <FolderTreeItem
+        {folderTree.folders.map((folder) => (
+          <TreeFolder
             key={folder.current_folder.id}
-            item={folder}
+            folderTree={folder}
             highlight={highlight}
             expandedFolders={expandedFolders}
             showSettings={isAdmin}
             onDocumentSelect={onDocumentSelect}
             onSettingsOpen={onSettingsOpen}
             onFolderToggle={onFolderToggle}
+          />
+        ))}
+        {folderTree.documents.map((document) => (
+          <TreeDocument
+            key={document.id}
+            document={document}
+            highlight={document.id === highlight}
+            showSettings={isAdmin}
+            onDocumentSelect={onDocumentSelect}
+            onSettingsOpen={onSettingsOpen}
           />
         ))}
       </List>

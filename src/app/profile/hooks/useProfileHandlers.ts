@@ -9,7 +9,7 @@ import { JSONValue } from '@/types/json';
 import { Paginated } from '@/types/pagination';
 import { Generation } from '@/types/generations';
 import { SavedVariable } from '@/types/variables';
-import { FolderTree } from '@/types/documents';
+import { FolderTreeGlobal } from '@/types/documents';
 import { useConfirm } from '@/providers/ConfirmProvider';
 
 export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolean) {
@@ -47,7 +47,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   const [savedVarsPage, setSavedVarsPage] = useState(1);
   const [generationPage, setGenerationPage] = useState(1);
   const [generations, setGenerations] = useState<Paginated<Generation> | null>(null);
-  const [folderTree, setFolderTree] = useState<FolderTree[] | null>(null);
+  const [folderTree, setFolderTree] = useState<FolderTreeGlobal | null>(null);
 
   // Generic async handler wrapper
   const withAsyncHandler = useCallback(
@@ -463,8 +463,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         }
 
         try {
-          const data = await documentsApi.getFolderTree();
-          setFolderTree(data.tree);
+          const data = await documentsApi.getGlobalFolderTree();
+          setFolderTree(data);
         } catch (e) {
           setError(toErrorMessage(e, 'Помилка завантаження структури документів'));
         }

@@ -8,23 +8,24 @@ export interface DriveItem {
   web_view_link?: string;
 }
 
+type FolderMimeType = "application/vnd.google-apps.folder";
+
 export interface DriveFile extends DriveItem {
-  mime_type: string;
+  mime_type: Exclude<string, FolderMimeType>;
   size?: number;
 }
 
 export interface DriveFolder extends DriveItem {
-  is_pinned: boolean;
+  mime_type: FolderMimeType;
 }
 
-export interface FolderTree {
+export interface FolderTreeGlobal {
   folders: FolderTree[];
   documents: DriveFile[];
-  current_folder: DriveFolder;
 }
 
-export interface FolderTreeResponse {
-  tree: FolderTree[];
+export interface FolderTree extends FolderTreeGlobal {
+  current_folder: DriveFolder;
 }
 
 export interface DriveFileListResponse {

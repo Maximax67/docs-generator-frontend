@@ -6,7 +6,7 @@ import { Box, Paper, useTheme, useMediaQuery, Divider } from '@mui/material';
 import { DocumentTree } from './DocumentTree';
 import { PdfPreview } from './PdfPreview';
 import { VariableSchemaEditor, VariableSchemaEditorRef } from './VariableSchemaEditor';
-import { DriveFile, FolderTree, DocumentPreview } from '@/types/documents';
+import { DriveFile, FolderTreeGlobal, DocumentPreview } from '@/types/documents';
 import { documentsApi } from '@/lib/api';
 import { PreviewCache } from '@/lib/cache/preview-cache';
 import { toErrorMessage } from '@/utils/errors-messages';
@@ -35,7 +35,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const isAdmin = isAdminUser(user);
 
   // Local state instead of global store
-  const [folderTree, setFolderTree] = useState<FolderTree[] | null>(null);
+  const [folderTree, setFolderTree] = useState<FolderTreeGlobal | null>(null);
   const [treeLoading, setTreeLoading] = useState(false);
   const [treeError, setTreeError] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<DriveFile | null>(null);
@@ -60,8 +60,8 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     setTreeError(null);
 
     try {
-      const data = await documentsApi.getFolderTree();
-      setFolderTree(data.tree);
+      const data = await documentsApi.getGlobalFolderTree();
+      setFolderTree(data);
     } catch (error) {
       setTreeError(toErrorMessage(error, 'Не вдалося завантажити структуру папок'));
     } finally {

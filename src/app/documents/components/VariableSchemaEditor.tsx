@@ -10,7 +10,7 @@ import { VariableInfo } from '@/types/variables';
 
 import { useNotify } from '@/providers/NotificationProvider';
 import { ConstantsTable } from './ConstantsTable';
-import { FolderTree } from '@/types/documents';
+import { FolderTree, FolderTreeGlobal } from '@/types/documents';
 import { SavingTable } from './SavingTable';
 
 import 'jsonjoy-builder/styles.css';
@@ -19,7 +19,7 @@ import './VariableSchemaEditor.module.css';
 interface VariableSchemaEditorProps {
   scope: string | null;
   scopeName: string;
-  folderTree: FolderTree[] | null;
+  folderTree: FolderTreeGlobal | FolderTree | null;
   onClose: () => void;
 }
 

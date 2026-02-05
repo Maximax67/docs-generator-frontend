@@ -1,4 +1,4 @@
-import { FC, JSX, useState } from 'react';
+import { FC, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -14,23 +14,19 @@ import {
   Alert,
   Switch,
 } from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Add as AddIcon,
-  Folder as FolderIcon,
-  Description as DocumentIcon,
-} from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { VariableInfo } from '@/types/variables';
 import { SavingVariableModal } from './SavingVariableModal';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { FolderTree } from '@/types/documents';
+import { FolderTreeGlobal } from '@/types/documents';
+import { ScopeBadge } from '@/components/ScopeBadge';
 
 interface SavingTableProps {
   scope: string | null;
-  folderTree: FolderTree[] | null;
+  folderTree: FolderTreeGlobal | null;
   variables: VariableInfo[];
   onChangeSave: (id: string, value: boolean) => void;
   onAddVariable: (variable: VariableInfo) => void;
@@ -52,40 +48,6 @@ export const SavingTable: FC<SavingTableProps> = ({
   const [savingToggle, setSavingToggle] = useState(false);
 
   const savingVariables = variables.filter((v) => v.value === null);
-
-  const getScopeName = (scopeId: string | null): { name: string; icon: JSX.Element } => {
-    if (!scopeId) {
-      return { name: 'Глобальний', icon: <FolderIcon fontSize="small" /> };
-    }
-    if (!folderTree) {
-      return { name: scopeId, icon: <FolderIcon fontSize="small" /> };
-    }
-
-    const findInTree = (
-      items: FolderTree[],
-      id: string,
-    ): { name: string; icon: JSX.Element } | null => {
-      for (const item of items) {
-        if (item.current_folder?.id === id) {
-          return { name: item.current_folder.name, icon: <FolderIcon fontSize="small" /> };
-        }
-        if (item.documents) {
-          const doc = item.documents.find((d) => d.id === id);
-          if (doc) {
-            return { name: doc.name, icon: <DocumentIcon fontSize="small" /> };
-          }
-        }
-        if (item.folders) {
-          const result = findInTree(item.folders, id);
-          if (result) return result;
-        }
-      }
-      return null;
-    };
-
-    const result = findInTree(folderTree, scopeId);
-    return result || { name: scopeId, icon: <FolderIcon fontSize="small" /> };
-  };
 
   const handleAddClick = async () => {
     setModalOpen(true);
@@ -165,46 +127,36 @@ export const SavingTable: FC<SavingTableProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {savingVariables.map((variable) => {
-                const scopeInfo = getScopeName(variable.scope);
-
-                return (
-                  <TableRow key={variable.id}>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {variable.variable}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        {scopeInfo.icon}
-                        <Typography variant="body2">{scopeInfo.name}</Typography>
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>
-                      <Switch
-                        size="small"
-                        checked={variable.allow_save}
-                        onChange={() => handleAllowSaveToggle(variable)}
-                        disabled={savingToggle}
-                        color="primary"
-                      />
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(variable)}
-                        disabled={savingToggle}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {savingVariables.map((variable) => (
+                <TableRow key={variable.id}>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {variable.variable}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <ScopeBadge folderTree={folderTree} scope={variable.scope} />
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      size="small"
+                      checked={variable.allow_save}
+                      onChange={() => handleAllowSaveToggle(variable)}
+                      disabled={savingToggle}
+                      color="primary"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(variable)}
+                      disabled={savingToggle}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

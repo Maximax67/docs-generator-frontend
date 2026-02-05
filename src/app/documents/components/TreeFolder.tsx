@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   List,
-  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -13,16 +12,15 @@ import {
 import {
   Folder as FolderIcon,
   FolderOpen as FolderOpenIcon,
-  Description as FileIcon,
   Settings as SettingsIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material';
 import { DriveFile, FolderTree } from '@/types/documents';
-import { formatFilename } from '@/utils/format-filename';
+import { TreeDocument } from './TreeDocument';
 
-interface FolderTreeItemProps {
-  item: FolderTree;
+interface TreeFolderProps {
+  folderTree: FolderTree;
   highlight?: string | null;
   expandedFolders: Set<string>;
   level?: number;
@@ -32,8 +30,8 @@ interface FolderTreeItemProps {
   onFolderToggle: (folderId: string, isExpanded: boolean) => void;
 }
 
-export const FolderTreeItem: FC<FolderTreeItemProps> = ({
-  item,
+export const TreeFolder: FC<TreeFolderProps> = ({
+  folderTree,
   highlight,
   expandedFolders,
   level = 0,
@@ -42,14 +40,10 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
   onSettingsOpen,
   onFolderToggle,
 }) => {
-  const isExpanded = expandedFolders.has(item.current_folder.id);
-
-  const handleDocumentClick = (document: DriveFile) => {
-    onDocumentSelect(document);
-  };
+  const isExpanded = expandedFolders.has(folderTree.current_folder.id);
 
   const handleFolderToggle = () => {
-    onFolderToggle(item.current_folder.id, !isExpanded);
+    onFolderToggle(folderTree.current_folder.id, !isExpanded);
   };
 
   const handleOpenSchemaEditor = (e: React.MouseEvent, id: string, name: string) => {
@@ -57,13 +51,13 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
     onSettingsOpen?.(id, name);
   };
 
-  const hasChildren = item.folders.length > 0 || item.documents.length > 0;
+  const hasChildren = folderTree.folders.length > 0 || folderTree.documents.length > 0;
 
   return (
     <>
       <ListItemButton
         onClick={handleFolderToggle}
-        selected={highlight === item.current_folder.id}
+        selected={highlight === folderTree.current_folder.id}
         sx={{
           pl: level * 2 + 2,
           py: 0.5,
@@ -79,13 +73,17 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                {item.current_folder.name}
+                {folderTree.current_folder.name}
               </Typography>
               {showSettings && (
                 <IconButton
                   size="small"
                   onClick={(e) =>
-                    handleOpenSchemaEditor(e, item.current_folder.id, item.current_folder.name)
+                    handleOpenSchemaEditor(
+                      e,
+                      folderTree.current_folder.id,
+                      folderTree.current_folder.name,
+                    )
                   }
                   sx={{
                     ml: 'auto',
@@ -105,10 +103,10 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
 
       <Collapse in={isExpanded} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          {item.folders.map((subfolder) => (
-            <FolderTreeItem
+          {folderTree.folders.map((subfolder) => (
+            <TreeFolder
               key={subfolder.current_folder.id}
-              item={subfolder}
+              folderTree={subfolder}
               highlight={highlight}
               expandedFolders={expandedFolders}
               level={level + 1}
@@ -119,47 +117,16 @@ export const FolderTreeItem: FC<FolderTreeItemProps> = ({
             />
           ))}
 
-          {item.documents.map((document) => {
-            const fileName = formatFilename(document.name, document.mime_type);
-            return (
-              <ListItem key={document.id} disablePadding sx={{ pl: (level + 1) * 2 }}>
-                <ListItemButton
-                  onClick={() => handleDocumentClick(document)}
-                  selected={highlight === document.id}
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 32 }}>
-                    <FileIcon sx={{ color: 'primary.main', fontSize: 16 }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body2">{fileName}</Typography>
-                        {showSettings && (
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleOpenSchemaEditor(e, document.id, fileName)}
-                            sx={{
-                              ml: 'auto',
-                              '&.MuiIconButton-root': {
-                                padding: '4px',
-                              },
-                            }}
-                          >
-                            <SettingsIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                      </Box>
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
+          {folderTree.documents.map((document) => (
+            <TreeDocument
+              key={document.id}
+              document={document}
+              highlight={document.id === highlight}
+              showSettings={showSettings}
+              onDocumentSelect={onDocumentSelect}
+              onSettingsOpen={onSettingsOpen}
+            />
+          ))}
         </List>
       </Collapse>
     </>

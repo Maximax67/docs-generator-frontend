@@ -1,4 +1,4 @@
-import { FC, JSX, useRef, useState } from 'react';
+import { FC, useRef, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -18,8 +18,6 @@ import {
   Clear as ClearIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  Folder as FolderIcon,
-  Description as DocumentIcon,
 } from '@mui/icons-material';
 import { VariableInfo } from '@/types/variables';
 import { ConstantVariableModal } from './ConstantVariableModal';
@@ -27,15 +25,16 @@ import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { useConfirm } from '@/providers/ConfirmProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
-import { FolderTree } from '@/types/documents';
+import { FolderTreeGlobal } from '@/types/documents';
 import { VariableTypeBadge } from '@/components/VariableTypeBadge';
 import { ValueDisplay } from '@/components/ValueDisplay';
 import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialog';
 import { JSONValue } from '@/types/json';
+import { ScopeBadge } from '@/components/ScopeBadge';
 
 interface ConstantsTableProps {
   scope: string | null;
-  folderTree: FolderTree[] | null;
+  folderTree: FolderTreeGlobal | null;
   variables: VariableInfo[];
   onConstantClear: (id: string) => void;
   onConstantDelete: (id: string) => void;
@@ -128,43 +127,6 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
     onConstantEdit(updatedVariable);
   };
 
-  const getScopeName = (scopeId: string | null): { name: string; icon: JSX.Element } => {
-    if (!scopeId) {
-      return { name: 'Глобальний', icon: <FolderIcon fontSize="small" /> };
-    }
-
-    if (!folderTree) {
-      return { name: scopeId, icon: <FolderIcon fontSize="small" /> };
-    }
-
-    const findInTree = (
-      items: FolderTree[],
-      id: string,
-    ): { name: string; icon: JSX.Element } | null => {
-      for (const item of items) {
-        if (item.current_folder?.id === id) {
-          return { name: item.current_folder.name, icon: <FolderIcon fontSize="small" /> };
-        }
-
-        if (item.documents) {
-          const doc = item.documents.find((d) => d.id === id);
-          if (doc) {
-            return { name: doc.name, icon: <DocumentIcon fontSize="small" /> };
-          }
-        }
-
-        if (item.folders) {
-          const result = findInTree(item.folders, id);
-          if (result) return result;
-        }
-      }
-      return null;
-    };
-
-    const result = findInTree(folderTree, scopeId);
-    return result || { name: scopeId, icon: <FolderIcon fontSize="small" /> };
-  };
-
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -189,37 +151,31 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {allConstants.map((variable) => {
-                const scopeInfo = getScopeName(variable.scope);
-                return (
-                  <TableRow key={variable.id}>
-                    <TableCell>{variable.variable}</TableCell>
-                    <TableCell>
-                      <VariableTypeBadge value={variable.value} />
-                    </TableCell>
-                    <TableCell>
-                      <ValueDisplay value={variable.value} onClick={showFullValue} />
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        {scopeInfo.icon}
-                        <Typography variant="body2">{scopeInfo.name}</Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={() => handleEditClick(variable)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleClearClick(variable.id)}>
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDeleteClick(variable.id)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {allConstants.map((variable) => (
+                <TableRow key={variable.id}>
+                  <TableCell>{variable.variable}</TableCell>
+                  <TableCell>
+                    <VariableTypeBadge value={variable.value} />
+                  </TableCell>
+                  <TableCell>
+                    <ValueDisplay value={variable.value} onClick={showFullValue} />
+                  </TableCell>
+                  <TableCell>
+                    <ScopeBadge folderTree={folderTree} scope={variable.scope} />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton size="small" onClick={() => handleEditClick(variable)}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleClearClick(variable.id)}>
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDeleteClick(variable.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

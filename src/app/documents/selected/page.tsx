@@ -47,10 +47,6 @@ export default function SelectedDocumentPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
-  // ── save-modal state ───────────────────────────────────────────────────────
-  /** Snapshot of formValues at the moment generation succeeded.
-   *  We keep a separate copy so the modal always reflects what was actually
-   *  used for the PDF, even if the user tweaks the form afterwards. */
   const [generatedFormValues, setGeneratedFormValues] = useState<Record<string, JSONValue> | null>(
     null,
   );
@@ -122,19 +118,19 @@ export default function SelectedDocumentPage() {
     return documentDetails.variables.variables.some((v) => v.allow_save && v.id);
   }, [documentDetails]);
 
-  const handleGenerate = async (e: IChangeEvent) => {
+  const handleGenerate = async (data: Record<string, JSONValue>) => {
     if (!documentId || !documentDetails) return;
 
     try {
       setIsGenerating(true);
       setGenerateError(null);
 
-      const blob = await documentsApi.generateDocument(documentId, e.formData);
+      const blob = await documentsApi.generateDocument(documentId, data);
 
       await savePdfToIndexedDb('generatedPdf', blob);
 
       if (hasSaveableVariables) {
-        setGeneratedFormValues({ ...e.formData });
+        setGeneratedFormValues({ ...data });
         setShowSaveModal(true);
       } else {
         router.push('/documents/result/');
@@ -146,15 +142,23 @@ export default function SelectedDocumentPage() {
     }
   };
 
-  const handleAfterSaveModal = () => {
-    setShowSaveModal(false);
-    setGeneratedFormValues(null);
-    router.push('/documents/result/');
+  const onSubmit = async (e: IChangeEvent) => {
+    handleGenerate(e.formData);
+  };
+
+  const onGenerateEmpty = async () => {
+    handleGenerate({});
   };
 
   const handleSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     formRef.current?.submit();
+  };
+
+  const handleAfterSaveModal = () => {
+    setShowSaveModal(false);
+    setGeneratedFormValues(null);
+    router.push('/documents/result/');
   };
 
   if (loading) {
@@ -199,6 +203,8 @@ export default function SelectedDocumentPage() {
   const unknownVariables = documentDetails?.variables.template_variables.filter(
     (v) => !documentDetails?.variables.variables.find((x) => x.variable === v),
   );
+  const isNoVariables = documentDetails?.variables.template_variables.length === 0;
+  const onClick = isNoVariables ? onGenerateEmpty : handleSubmitClick;
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -228,36 +234,47 @@ export default function SelectedDocumentPage() {
         </Box>
 
         <Paper sx={{ p: 3, pb: 1 }}>
-          <DocumentInputForm
-            ref={formRef}
-            schema={schema}
-            initialFormData={initialFormData}
-            showErrorList={'bottom'}
-            onSubmit={handleGenerate}
-          >
-            <Divider sx={{ my: 3 }} />
+          {isNoVariables && (
+            <Alert severity="warning">Документ не містить полів для заповнення!</Alert>
+          )}
 
-            {generateError && (
-              <Alert severity="error" sx={{ my: 3 }}>
-                {generateError}
-              </Alert>
-            )}
-
-            <Button
-              variant="contained"
-              size="large"
-              type="submit"
-              startIcon={isGenerating ? <CircularProgress size={20} /> : <DownloadIcon />}
-              disabled={isGenerating}
-              onClick={handleSubmitClick}
-              sx={{
-                minWidth: { xs: '100%', sm: 200 },
-                mb: 2,
+          {!isNoVariables && (
+            <DocumentInputForm
+              ref={formRef}
+              schema={schema}
+              initialFormData={initialFormData}
+              showErrorList={'bottom'}
+              onSubmit={onSubmit}
+              uiSchema={{
+                'ui:submitButtonOptions': {
+                  norender: true,
+                },
               }}
-            >
-              {isGenerating ? 'Генерація...' : 'Згенерувати PDF'}
-            </Button>
-          </DocumentInputForm>
+            />
+          )}
+
+          <Divider sx={{ my: 3 }} />
+
+          {generateError && (
+            <Alert severity="error" sx={{ my: 3 }}>
+              {generateError}
+            </Alert>
+          )}
+
+          <Button
+            variant="contained"
+            size="large"
+            type="submit"
+            startIcon={isGenerating ? <CircularProgress size={20} /> : <DownloadIcon />}
+            disabled={isGenerating}
+            onClick={onClick}
+            sx={{
+              minWidth: { xs: '100%', sm: 200 },
+              mb: 2,
+            }}
+          >
+            {isGenerating ? 'Генерація...' : 'Згенерувати PDF'}
+          </Button>
         </Paper>
       </Stack>
 
