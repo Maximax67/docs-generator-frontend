@@ -18,16 +18,7 @@ import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { JSONValue } from '@/types/json';
 import deepEqual from 'fast-deep-equal';
-
-const formatValue = (value: JSONValue): string => {
-  if (value === null || value === undefined) return '—';
-  if (typeof value === 'boolean') return value ? 'Так' : 'Ні';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
-};
-
-const truncate = (str: string, max = 80): string =>
-  str.length > max ? str.slice(0, max) + '…' : str;
+import { ValueDisplay } from '@/components/ValueDisplay';
 
 interface SaveCandidate {
   id: string;
@@ -195,24 +186,24 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
                 </Typography>
 
                 {c.isChanged && c.savedValue !== null && c.savedValue !== undefined && (
-                  <Typography variant="caption" color="text.secondary">
-                    Було: {truncate(formatValue(c.savedValue))}
-                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Було:
+                    </Typography>
+                    <ValueDisplay value={c.savedValue} />
+                  </Box>
                 )}
 
                 {c.isChanged && (c.savedValue === null || c.savedValue === undefined) && (
                   <Typography variant="caption" color="warning.main">
-                    Ще не зберегано
+                    Ще не збережено
                   </Typography>
                 )}
               </Box>
 
-              <Typography
-                variant="body2"
-                sx={{ width: 120, textAlign: 'right', fontFamily: 'monospace', fontSize: '0.8rem' }}
-              >
-                {truncate(formatValue(c.currentValue), 18)}
-              </Typography>
+              <Box sx={{ width: 120, textAlign: 'right' }}>
+                <ValueDisplay value={c.currentValue} maxLength={18} />
+              </Box>
             </Box>
 
             {idx < candidates.length - 1 && <Divider />}

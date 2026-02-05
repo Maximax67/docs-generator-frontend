@@ -21,7 +21,6 @@ import {
   Login as LoginIcon,
   Description as DescriptionIcon,
   HelpOutline as HelpOutlineIcon,
-  Home as HomeIcon,
   Person as PersonIcon,
   PictureAsPdf as PictureAsPdfIcon,
 } from '@mui/icons-material';
@@ -42,7 +41,6 @@ export default function Header() {
 
   const navLinks = useMemo(() => {
     const links = [
-      { href: '/', label: 'Головна', icon: <HomeIcon /> },
       { href: '/documents', label: 'Документи', icon: <DescriptionIcon /> },
       { href: '/faq', label: 'FAQ', icon: <HelpOutlineIcon /> },
     ];
