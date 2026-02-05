@@ -8,16 +8,17 @@ import { TreeFolder } from './TreeFolder';
 import { DriveFile, FolderTreeGlobal } from '@/types/documents';
 import { isAdminUser } from '@/utils/is-admin';
 import { TreeDocument } from './TreeDocument';
+import { TreeNodePath } from '@/utils/document-tree';
 
 interface DocumentTreeProps {
   folderTree: FolderTreeGlobal | null;
   treeLoading: boolean;
   treeError: string | null;
-  highlight?: string | null;
-  expandedFolders: Set<string>;
-  onDocumentSelect: (document: DriveFile) => void;
-  onSettingsOpen?: (id: string, name: string) => void;
-  onFolderToggle: (folderId: string, isExpanded: boolean) => void;
+  highlightPath?: TreeNodePath | null;
+  expandedPaths: Set<TreeNodePath>;
+  onDocumentSelect: (document: DriveFile, path: TreeNodePath) => void;
+  onSettingsOpen?: (id: string, name: string, path: TreeNodePath) => void;
+  onPathToggle: (path: TreeNodePath, isExpanded: boolean) => void;
   onRetry: () => void;
 }
 
@@ -25,11 +26,11 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
   folderTree,
   treeLoading,
   treeError,
-  highlight,
-  expandedFolders,
+  highlightPath,
+  expandedPaths,
   onDocumentSelect,
   onSettingsOpen,
-  onFolderToggle,
+  onPathToggle,
   onRetry,
 }) => {
   const { user } = useUserStore();
@@ -84,24 +85,30 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
           <TreeFolder
             key={folder.current_folder.id}
             folderTree={folder}
-            highlight={highlight}
-            expandedFolders={expandedFolders}
+            parentPath=""
+            highlightPath={highlightPath}
+            expandedPaths={expandedPaths}
             showSettings={isAdmin}
             onDocumentSelect={onDocumentSelect}
             onSettingsOpen={onSettingsOpen}
-            onFolderToggle={onFolderToggle}
+            onPathToggle={onPathToggle}
           />
         ))}
-        {folderTree.documents.map((document) => (
-          <TreeDocument
-            key={document.id}
-            document={document}
-            highlight={document.id === highlight}
-            showSettings={isAdmin}
-            onDocumentSelect={onDocumentSelect}
-            onSettingsOpen={onSettingsOpen}
-          />
-        ))}
+        {folderTree.documents.map((document) => {
+          const docPath = document.id; // Root level documents
+          return (
+            <TreeDocument
+              key={`${docPath}`}
+              document={document}
+              path={docPath}
+              highlight={docPath === highlightPath}
+              showSettings={isAdmin}
+              level={0}
+              onDocumentSelect={onDocumentSelect}
+              onSettingsOpen={onSettingsOpen}
+            />
+          );
+        })}
       </List>
     </Box>
   );

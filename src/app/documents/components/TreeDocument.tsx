@@ -11,39 +11,43 @@ import {
 import { Description as FileIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { DriveFile } from '@/types/documents';
 import { formatFilename } from '@/utils/format-filename';
+import { TreeNodePath } from '@/utils/document-tree';
 
 interface TreeDocumentProps {
   document: DriveFile;
+  path: TreeNodePath;
   highlight?: boolean;
   showSettings?: boolean;
-  level?: number;
-  onDocumentSelect: (document: DriveFile) => void;
-  onSettingsOpen?: (id: string, name: string) => void;
+  level: number;
+  onDocumentSelect: (document: DriveFile, path: TreeNodePath) => void;
+  onSettingsOpen?: (id: string, name: string, path: TreeNodePath) => void;
 }
 
 export const TreeDocument: FC<TreeDocumentProps> = ({
   document,
+  path,
   highlight,
-  level = 0,
+  level,
   showSettings = false,
   onDocumentSelect,
   onSettingsOpen,
 }) => {
-  const handleDocumentClick = (document: DriveFile) => {
-    onDocumentSelect(document);
+  const handleDocumentClick = () => {
+    onDocumentSelect(document, path);
   };
 
-  const handleOpenSchemaEditor = (e: React.MouseEvent, id: string, name: string) => {
+  const handleOpenSchemaEditor = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSettingsOpen?.(id, name);
+    const fileName = formatFilename(document.name, document.mime_type);
+    onSettingsOpen?.(document.id, fileName, path);
   };
 
   const fileName = formatFilename(document.name, document.mime_type);
 
   return (
-    <ListItem key={document.id} disablePadding sx={{ pl: (level + 1) * 2 }}>
+    <ListItem disablePadding sx={{ pl: level * 2 }}>
       <ListItemButton
-        onClick={() => handleDocumentClick(document)}
+        onClick={handleDocumentClick}
         selected={highlight}
         sx={{
           '&:hover': {
@@ -52,7 +56,7 @@ export const TreeDocument: FC<TreeDocumentProps> = ({
         }}
       >
         <ListItemIcon sx={{ minWidth: 32 }}>
-          <FileIcon sx={{ color: 'primary.main', fontSize: 16 }} />
+          <FileIcon color="primary" />
         </ListItemIcon>
         <ListItemText
           primary={
@@ -61,7 +65,7 @@ export const TreeDocument: FC<TreeDocumentProps> = ({
               {showSettings && (
                 <IconButton
                   size="small"
-                  onClick={(e) => handleOpenSchemaEditor(e, document.id, fileName)}
+                  onClick={handleOpenSchemaEditor}
                   sx={{
                     ml: 'auto',
                     '&.MuiIconButton-root': {

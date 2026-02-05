@@ -18,37 +18,43 @@ import {
 } from '@mui/icons-material';
 import { DriveFile, FolderTree } from '@/types/documents';
 import { TreeDocument } from './TreeDocument';
+import { TreeNodePath, createPath } from '@/utils/document-tree';
 
 interface TreeFolderProps {
   folderTree: FolderTree;
-  highlight?: string | null;
-  expandedFolders: Set<string>;
+  parentPath: TreeNodePath;
+  highlightPath?: TreeNodePath | null;
+  expandedPaths: Set<TreeNodePath>;
   level?: number;
   showSettings?: boolean;
-  onDocumentSelect: (document: DriveFile) => void;
-  onSettingsOpen?: (id: string, name: string) => void;
-  onFolderToggle: (folderId: string, isExpanded: boolean) => void;
+  onDocumentSelect: (document: DriveFile, path: TreeNodePath) => void;
+  onSettingsOpen?: (id: string, name: string, path: TreeNodePath) => void;
+  onPathToggle: (path: TreeNodePath, isExpanded: boolean) => void;
 }
 
 export const TreeFolder: FC<TreeFolderProps> = ({
   folderTree,
-  highlight,
-  expandedFolders,
+  parentPath,
+  highlightPath,
+  expandedPaths,
   level = 0,
   showSettings = false,
   onDocumentSelect,
   onSettingsOpen,
-  onFolderToggle,
+  onPathToggle,
 }) => {
-  const isExpanded = expandedFolders.has(folderTree.current_folder.id);
+  // Create unique path for this folder instance
+  const currentPath = createPath(parentPath, folderTree.current_folder.id);
+  const isExpanded = expandedPaths.has(currentPath);
+  const isHighlighted = currentPath === highlightPath;
 
   const handleFolderToggle = () => {
-    onFolderToggle(folderTree.current_folder.id, !isExpanded);
+    onPathToggle(currentPath, !isExpanded);
   };
 
-  const handleOpenSchemaEditor = (e: React.MouseEvent, id: string, name: string) => {
+  const handleOpenSchemaEditor = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSettingsOpen?.(id, name);
+    onSettingsOpen?.(folderTree.current_folder.id, folderTree.current_folder.name, currentPath);
   };
 
   const hasChildren = folderTree.folders.length > 0 || folderTree.documents.length > 0;
@@ -57,7 +63,7 @@ export const TreeFolder: FC<TreeFolderProps> = ({
     <>
       <ListItemButton
         onClick={handleFolderToggle}
-        selected={highlight === folderTree.current_folder.id}
+        selected={isHighlighted}
         sx={{
           pl: level * 2 + 2,
           py: 0.5,
@@ -78,13 +84,7 @@ export const TreeFolder: FC<TreeFolderProps> = ({
               {showSettings && (
                 <IconButton
                   size="small"
-                  onClick={(e) =>
-                    handleOpenSchemaEditor(
-                      e,
-                      folderTree.current_folder.id,
-                      folderTree.current_folder.name,
-                    )
-                  }
+                  onClick={handleOpenSchemaEditor}
                   sx={{
                     ml: 'auto',
                     '&.MuiIconButton-root': {
@@ -105,28 +105,34 @@ export const TreeFolder: FC<TreeFolderProps> = ({
         <List component="div" disablePadding>
           {folderTree.folders.map((subfolder) => (
             <TreeFolder
-              key={subfolder.current_folder.id}
+              key={`${currentPath}/${subfolder.current_folder.id}`}
               folderTree={subfolder}
-              highlight={highlight}
-              expandedFolders={expandedFolders}
+              parentPath={currentPath}
+              highlightPath={highlightPath}
+              expandedPaths={expandedPaths}
               level={level + 1}
               showSettings={showSettings}
               onDocumentSelect={onDocumentSelect}
               onSettingsOpen={onSettingsOpen}
-              onFolderToggle={onFolderToggle}
+              onPathToggle={onPathToggle}
             />
           ))}
 
-          {folderTree.documents.map((document) => (
-            <TreeDocument
-              key={document.id}
-              document={document}
-              highlight={document.id === highlight}
-              showSettings={showSettings}
-              onDocumentSelect={onDocumentSelect}
-              onSettingsOpen={onSettingsOpen}
-            />
-          ))}
+          {folderTree.documents.map((document) => {
+            const docPath = createPath(currentPath, document.id);
+            return (
+              <TreeDocument
+                key={docPath}
+                document={document}
+                path={docPath}
+                highlight={docPath === highlightPath}
+                showSettings={showSettings}
+                level={level + 1}
+                onDocumentSelect={onDocumentSelect}
+                onSettingsOpen={onSettingsOpen}
+              />
+            );
+          })}
         </List>
       </Collapse>
     </>

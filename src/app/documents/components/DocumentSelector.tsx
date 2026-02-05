@@ -13,7 +13,7 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useUserStore } from '@/store/user';
 import { convertBlobToUrl } from '@/utils/convert-blob-to-url';
-import { findInTree, getExpandPath } from '@/utils/document-tree';
+import { findInTree, getExpandPath, TreeNodePath } from '@/utils/document-tree';
 import { isAdminUser } from '@/utils/is-admin';
 import { useNotify } from '@/providers/NotificationProvider';
 
@@ -40,7 +40,8 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const [treeError, setTreeError] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<DriveFile | null>(null);
   const [previews, setPreviews] = useState<Record<string, DocumentPreview>>({});
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [expandedPaths, setExpandedPaths] = useState<Set<TreeNodePath>>(new Set());
+  const [highlightPath, setHighlightPath] = useState<TreeNodePath | null>(null);
   const isInitFromUrlParamsDoneRef = useRef(false);
 
   // Settings editor state
@@ -53,6 +54,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const editorRef = useRef<VariableSchemaEditorRef>(null);
 
   const scope = searchParams.get('scope');
+  const pathParam = searchParams.get('path'); // New parameter to identify specific instance
   const mode = searchParams.get('mode') as ViewMode | null;
 
   const loadFolderTree = useCallback(async () => {
@@ -120,11 +122,23 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
       return;
     }
 
-    if (expandedFolders.size === 0) {
-      const pathToExpand = getExpandPath(folderTree, scope);
-      if (pathToExpand) {
-        setExpandedFolders(new Set(pathToExpand));
+    // Use path parameter if provided, otherwise get first path
+    const pathsToExpand = getExpandPath(folderTree, scope);
+    if (pathsToExpand && pathsToExpand.length > 0) {
+      const targetPath = pathParam || pathsToExpand[0];
+
+      // Expand all parent folders in the path
+      const pathParts = targetPath.split('/').filter(Boolean);
+      const pathsSet = new Set<TreeNodePath>();
+      let currentPath = '';
+
+      for (const part of pathParts) {
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
+        pathsSet.add(currentPath);
       }
+
+      setExpandedPaths(pathsSet);
+      setHighlightPath(targetPath);
     }
 
     if (mode === 'settings') {
@@ -146,12 +160,13 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         fetchPreview(result.item.id);
       }
     }
-  }, [folderTree, scope, mode, isAdmin, user, fetchPreview, expandedFolders, notify]);
+  }, [folderTree, scope, pathParam, mode, isAdmin, user, fetchPreview, notify]);
 
   const updateUrl = useCallback(
-    (newScope: string | null, newMode: ViewMode | null) => {
+    (newScope: string | null, newPath: TreeNodePath | null, newMode: ViewMode | null) => {
       const params = new URLSearchParams();
       if (newScope) params.set('scope', newScope);
+      if (newPath) params.set('path', newPath);
       if (newMode) params.set('mode', newMode);
 
       const newUrl = params.toString() ? `?${params.toString()}` : '/documents';
@@ -179,12 +194,13 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   }, []);
 
   const handleDocumentSelect = useCallback(
-    (document: DriveFile) => {
+    (document: DriveFile, path: TreeNodePath) => {
       const selectDocument = () => {
         setSelectedDocument(document);
         setVariableSettings(undefined);
         setVariableSettingsName(null);
-        updateUrl(document.id, 'preview');
+        setHighlightPath(path);
+        updateUrl(document.id, path, 'preview');
 
         if (!previewCache.has(document.id)) {
           fetchPreview(document.id);
@@ -207,12 +223,13 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   }, [selectedDocument, fetchPreview]);
 
   const handleSettingsOpen = useCallback(
-    (id: string, name: string) => {
+    (id: string, name: string, path: TreeNodePath) => {
       const openSettings = () => {
         setVariableSettings(id);
         setVariableSettingsName(name);
         setSelectedDocument(null);
-        updateUrl(id, 'settings');
+        setHighlightPath(path);
+        updateUrl(id, path, 'settings');
       };
 
       if (editorRef.current?.hasUnsavedChanges && variableSettings !== undefined) {
@@ -228,7 +245,8 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     const closeSettings = () => {
       setVariableSettings(undefined);
       setVariableSettingsName(null);
-      updateUrl(null, null);
+      setHighlightPath(null);
+      updateUrl(null, null, null);
     };
 
     if (editorRef.current?.hasUnsavedChanges) {
@@ -238,13 +256,13 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     }
   }, [confirmWithUnsavedChanges, updateUrl]);
 
-  const handleFolderToggle = useCallback((folderId: string, isExpanded: boolean) => {
-    setExpandedFolders((prev) => {
+  const handlePathToggle = useCallback((path: TreeNodePath, isExpanded: boolean) => {
+    setExpandedPaths((prev) => {
       const next = new Set(prev);
       if (isExpanded) {
-        next.add(folderId);
+        next.add(path);
       } else {
-        next.delete(folderId);
+        next.delete(path);
       }
       return next;
     });
@@ -284,22 +302,37 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     handleSettingsClose,
   ]);
 
+  const treeComponent = useMemo(
+    () => (
+      <DocumentTree
+        folderTree={folderTree}
+        treeLoading={treeLoading}
+        treeError={treeError}
+        highlightPath={highlightPath}
+        expandedPaths={expandedPaths}
+        onDocumentSelect={handleDocumentSelect}
+        onSettingsOpen={handleSettingsOpen}
+        onPathToggle={handlePathToggle}
+        onRetry={loadFolderTree}
+      />
+    ),
+    [
+      folderTree,
+      treeLoading,
+      treeError,
+      highlightPath,
+      expandedPaths,
+      handleDocumentSelect,
+      handleSettingsOpen,
+      handlePathToggle,
+      loadFolderTree,
+    ],
+  );
+
   if (isMobile) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Paper elevation={1}>
-          <DocumentTree
-            folderTree={folderTree}
-            treeLoading={treeLoading}
-            treeError={treeError}
-            highlight={scope}
-            expandedFolders={expandedFolders}
-            onDocumentSelect={handleDocumentSelect}
-            onSettingsOpen={handleSettingsOpen}
-            onFolderToggle={handleFolderToggle}
-            onRetry={loadFolderTree}
-          />
-        </Paper>
+        <Paper elevation={1}>{treeComponent}</Paper>
         <Paper elevation={1} sx={{ height: '80dvh' }}>
           {mainContent}
         </Paper>
@@ -321,17 +354,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   return (
     <Box sx={{ height: '100%', display: 'flex', gap: 2 }}>
       <Paper elevation={1} sx={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-        <DocumentTree
-          folderTree={folderTree}
-          treeLoading={treeLoading}
-          treeError={treeError}
-          highlight={scope}
-          expandedFolders={expandedFolders}
-          onDocumentSelect={handleDocumentSelect}
-          onSettingsOpen={handleSettingsOpen}
-          onFolderToggle={handleFolderToggle}
-          onRetry={loadFolderTree}
-        />
+        {treeComponent}
       </Paper>
       <Divider orientation="vertical" flexItem />
       <Paper elevation={1} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -341,7 +364,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
       <ConfirmDialog
         open={showConfirmDialog}
         title="Незбережені зміни"
-        message="У вас є незбережені зміни. Ви впевнені, що хочете війти без збереження?"
+        message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
         confirmText="Вийти без збереження"
         cancelText="Скасувати"
         onConfirm={handleConfirmProceed}
