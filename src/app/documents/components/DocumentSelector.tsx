@@ -124,6 +124,10 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
     isInitFromUrlParamsDoneRef.current = true;
 
+    if ('current_folder' in folderTree && scope === folderTree.current_folder.id) {
+      return;
+    }
+
     const result = findInTree(folderTree, scope);
     if (!result) {
       notify('Документ або папку не знайдено', 'error');
