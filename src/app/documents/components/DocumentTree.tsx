@@ -80,7 +80,7 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
       return (
         <Box sx={{ p: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Папки не знайдено
+            Папки та документи відсутні
           </Typography>
         </Box>
       );
@@ -125,6 +125,8 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
       <TreeScopeHeader
         scopeFolderId={scopeFolderId}
         scopeFolderName={scopeFolderName}
+        treeLoading={treeLoading}
+        treeError={treeError}
         isAdmin={isAdmin}
         onScopeChange={onScopeChange}
         onSettingsOpen={onSettingsOpen}

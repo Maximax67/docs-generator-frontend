@@ -4,6 +4,7 @@ import {
   FolderOpen as FolderOpenIcon,
   Settings as SettingsIcon,
   ArrowBack as ArrowBackIcon,
+  Error as ErrorIcon,
 } from '@mui/icons-material';
 import { FolderInputDialog } from './FolderInputDialog';
 import { TreeNodePath } from '@/utils/document-tree';
@@ -11,6 +12,8 @@ import { TreeNodePath } from '@/utils/document-tree';
 interface TreeScopeHeaderProps {
   scopeFolderId: string | null;
   scopeFolderName: string | null;
+  treeLoading: boolean;
+  treeError: string | null;
   isAdmin: boolean;
   onScopeChange: (folderId: string | null) => void;
   onSettingsOpen?: (id: string, name: string, path: TreeNodePath, isFolder: boolean) => void;
@@ -19,6 +22,8 @@ interface TreeScopeHeaderProps {
 export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
   scopeFolderId,
   scopeFolderName,
+  treeLoading,
+  treeError,
   isAdmin,
   onScopeChange,
   onSettingsOpen,
@@ -50,6 +55,41 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
 
   const isGlobalScope = !scopeFolderId;
 
+  // Determine display state
+  const getDisplayContent = () => {
+    if (treeLoading && scopeFolderId) {
+      return {
+        text: 'Завантаження...',
+        icon: null,
+        color: 'text.secondary',
+      };
+    }
+
+    if (treeError && scopeFolderId) {
+      return {
+        text: 'Помилка завантаження',
+        icon: <ErrorIcon fontSize="small" color="error" />,
+        color: 'error.main',
+      };
+    }
+
+    if (isGlobalScope) {
+      return {
+        text: 'Глобальна область',
+        icon: null,
+        color: 'text.secondary',
+      };
+    }
+
+    return {
+      text: scopeFolderName || 'Папка',
+      icon: null,
+      color: 'text.primary',
+    };
+  };
+
+  const displayContent = getDisplayContent();
+
   return (
     <>
       <Box
@@ -64,48 +104,49 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
           minHeight: 56,
         }}
       >
-        {isGlobalScope ? (
-          <>
-            <Typography
-              variant="body2"
-              sx={{
-                flex: 1,
-                textAlign: 'center',
-                fontWeight: 500,
-                color: 'text.secondary',
-              }}
-            >
-              Глобальна область
-            </Typography>
-            <IconButton size="small" onClick={handleOpenDialog}>
-              <FolderOpenIcon fontSize="small" />
-            </IconButton>
-          </>
-        ) : (
-          <>
-            <IconButton size="small" onClick={handleReturnToGlobal}>
-              <ArrowBackIcon fontSize="small" />
-            </IconButton>
-            <Typography
-              variant="body2"
-              sx={{
-                flex: 1,
-                fontWeight: 500,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {scopeFolderName || 'Папка'}
-            </Typography>
-            <IconButton size="small" onClick={handleOpenDialog}>
-              <FolderOpenIcon fontSize="small" />
-            </IconButton>
-          </>
+        {/* Show back button if we have a scope folder ID (even if loading/error) */}
+        {scopeFolderId && (
+          <IconButton size="small" onClick={handleReturnToGlobal}>
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
         )}
 
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            minWidth: 0,
+          }}
+        >
+          {displayContent.icon}
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: isGlobalScope ? 400 : 500,
+              color: displayContent.color,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              textAlign: 'left',
+              flex: 1,
+            }}
+          >
+            {displayContent.text}
+          </Typography>
+        </Box>
+
+        <IconButton size="small" onClick={handleOpenDialog}>
+          <FolderOpenIcon fontSize="small" />
+        </IconButton>
+
         {isAdmin && (
-          <IconButton size="small" onClick={handleSettingsClick}>
+          <IconButton
+            size="small"
+            onClick={handleSettingsClick}
+            disabled={treeLoading && !!scopeFolderId}
+          >
             <SettingsIcon fontSize="small" />
           </IconButton>
         )}
@@ -113,6 +154,7 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
 
       <FolderInputDialog
         open={dialogOpen}
+        isAdmin={isAdmin}
         onClose={handleCloseDialog}
         onSubmit={handleFolderSubmit}
       />

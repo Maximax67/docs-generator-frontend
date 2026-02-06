@@ -67,15 +67,15 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
     try {
       if (folderId) {
+        setScopeFolderId(folderId);
         const data = await documentsApi.getFolderTree(folderId);
         setFolderTree(data);
-        setScopeFolderId(folderId);
         setScopeFolderName(data.current_folder.name);
       } else {
-        const data = await documentsApi.getGlobalFolderTree();
-        setFolderTree(data);
         setScopeFolderId(null);
         setScopeFolderName(null);
+        const data = await documentsApi.getGlobalFolderTree();
+        setFolderTree(data);
       }
     } catch (error) {
       setTreeError(toErrorMessage(error, 'Не вдалося завантажити структуру папок'));
