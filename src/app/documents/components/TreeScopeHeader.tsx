@@ -104,7 +104,6 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
           minHeight: 56,
         }}
       >
-        {/* Show back button if we have a scope folder ID (even if loading/error) */}
         {scopeFolderId && (
           <IconButton size="small" onClick={handleReturnToGlobal}>
             <ArrowBackIcon fontSize="small" />
@@ -124,7 +123,7 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
           <Typography
             variant="body2"
             sx={{
-              fontWeight: isGlobalScope ? 400 : 500,
+              fontWeight: 500,
               color: displayContent.color,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -137,10 +136,6 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
           </Typography>
         </Box>
 
-        <IconButton size="small" onClick={handleOpenDialog}>
-          <FolderOpenIcon fontSize="small" />
-        </IconButton>
-
         {isAdmin && (
           <IconButton
             size="small"
@@ -150,6 +145,10 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
             <SettingsIcon fontSize="small" />
           </IconButton>
         )}
+
+        <IconButton size="small" onClick={handleOpenDialog}>
+          <FolderOpenIcon fontSize="small" />
+        </IconButton>
       </Box>
 
       <FolderInputDialog

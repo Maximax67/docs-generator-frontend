@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, memo } from 'react';
+import { FC } from 'react';
 import { Box, Typography, CircularProgress, Alert, List, Container, Button } from '@mui/material';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { useUserStore } from '@/store/user';
@@ -26,7 +26,7 @@ interface DocumentTreeProps {
   onRetry: () => void;
 }
 
-const DocumentTreeComponent: FC<DocumentTreeProps> = ({
+export const DocumentTree: FC<DocumentTreeProps> = ({
   folderTree,
   treeLoading,
   treeError,
@@ -135,7 +135,3 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
     </Box>
   );
 };
-
-export const DocumentTree = memo(DocumentTreeComponent);
-
-DocumentTree.displayName = 'DocumentTree';

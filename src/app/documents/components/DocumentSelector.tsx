@@ -1,8 +1,8 @@
 'use client';
 
-import { FC, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { FC, useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Box, Paper, useTheme, useMediaQuery, Divider } from '@mui/material';
+import { Box, Paper, Divider } from '@mui/material';
 import { DocumentTree } from './DocumentTree';
 import { PdfPreview } from './PdfPreview';
 import { Settings, SettingsRef } from './Settings';
@@ -26,8 +26,6 @@ type ViewMode = 'preview' | 'settings';
 const previewCache = new PreviewCache();
 
 export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const notify = useNotify();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -124,7 +122,11 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
     isInitFromUrlParamsDoneRef.current = true;
 
-    if ('current_folder' in folderTree && scope === folderTree.current_folder.id) {
+    if (
+      'current_folder' in folderTree &&
+      folderTree.current_folder &&
+      scope === folderTree.current_folder.id
+    ) {
       return;
     }
 
@@ -337,103 +339,71 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
   const preview = selectedDocument ? previews[selectedDocument.id] : null;
 
-  const mainContent = useMemo(() => {
-    if (typeof variableSettings === 'undefined') {
-      return (
-        <PdfPreview
-          showWebLink={showWebLink}
-          document={selectedDocument}
-          preview={preview}
-          onRefresh={handleRefreshPreview}
-        />
-      );
-    }
-
-    return (
-      <Settings
-        ref={editorRef}
-        scope={variableSettings}
-        scopeName={variableSettingsName!}
-        isFolder={variableSettingsIsFolder}
-        folderTree={folderTree}
-        onClose={handleSettingsClose}
-      />
-    );
-  }, [
-    variableSettings,
-    showWebLink,
-    selectedDocument,
-    preview,
-    handleRefreshPreview,
-    variableSettingsName,
-    variableSettingsIsFolder,
-    folderTree,
-    handleSettingsClose,
-  ]);
-
-  const treeComponent = useMemo(
-    () => (
-      <DocumentTree
-        folderTree={folderTree}
-        treeLoading={treeLoading}
-        treeError={treeError}
-        scopeFolderId={scopeFolderId}
-        scopeFolderName={scopeFolderName}
-        highlightPath={highlightPath}
-        expandedPaths={expandedPaths}
-        onDocumentSelect={handleDocumentSelect}
-        onSettingsOpen={handleSettingsOpen}
-        onPathToggle={handlePathToggle}
-        onScopeChange={handleScopeChange}
-        onRetry={handleRetryTree}
-      />
-    ),
-    [
-      folderTree,
-      treeLoading,
-      treeError,
-      scopeFolderId,
-      scopeFolderName,
-      highlightPath,
-      expandedPaths,
-      handleDocumentSelect,
-      handleSettingsOpen,
-      handlePathToggle,
-      handleScopeChange,
-      handleRetryTree,
-    ],
-  );
-
-  if (isMobile) {
-    return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Paper elevation={1}>{treeComponent}</Paper>
-        <Paper elevation={1} sx={{ height: '80dvh' }}>
-          {mainContent}
-        </Paper>
-
-        <ConfirmDialog
-          open={showConfirmDialog}
-          title="Незбережені зміни"
-          message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
-          confirmText="Вийти без збереження"
-          cancelText="Скасувати"
-          onConfirm={handleConfirmProceed}
-          onCancel={handleConfirmCancel}
-          severity="warning"
-        />
-      </Box>
-    );
-  }
-
   return (
-    <Box sx={{ height: '100%', display: 'flex', gap: 2 }}>
-      <Paper elevation={1} sx={{ flex: '0 0 400px', display: 'flex', flexDirection: 'column' }}>
-        {treeComponent}
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: { xs: 1, md: 2 },
+        height: '100%',
+        mb: { xs: 2, md: 0 },
+      }}
+    >
+      <Paper
+        elevation={1}
+        sx={{
+          flex: { xs: '0 0 auto', md: '0 0 400px' },
+          display: 'flex',
+          flexDirection: 'column',
+          height: { xs: 'auto', md: '100%' },
+        }}
+      >
+        <DocumentTree
+          folderTree={folderTree}
+          treeLoading={treeLoading}
+          treeError={treeError}
+          scopeFolderId={scopeFolderId}
+          scopeFolderName={scopeFolderName}
+          highlightPath={highlightPath}
+          expandedPaths={expandedPaths}
+          onDocumentSelect={handleDocumentSelect}
+          onSettingsOpen={handleSettingsOpen}
+          onPathToggle={handlePathToggle}
+          onScopeChange={handleScopeChange}
+          onRetry={handleRetryTree}
+        />
       </Paper>
-      <Divider orientation="vertical" flexItem />
-      <Paper elevation={1} sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ flex: 1, overflow: 'hidden' }}>{mainContent}</Box>
+
+      <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
+
+      <Paper
+        elevation={1}
+        sx={{
+          flex: { xs: '0 0 auto', md: '1 1 auto' },
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: { xs: '80dvh', md: 'auto' },
+        }}
+      >
+        <Box sx={{ flex: 1, overflow: 'hidden' }}>
+          {typeof variableSettings === 'undefined' ? (
+            <PdfPreview
+              showWebLink={showWebLink}
+              document={selectedDocument}
+              preview={preview}
+              onRefresh={handleRefreshPreview}
+            />
+          ) : (
+            <Settings
+              ref={editorRef}
+              scope={variableSettings}
+              scopeName={variableSettingsName!}
+              isFolder={variableSettingsIsFolder}
+              folderTree={folderTree}
+              onClose={handleSettingsClose}
+            />
+          )}
+        </Box>
       </Paper>
 
       <ConfirmDialog

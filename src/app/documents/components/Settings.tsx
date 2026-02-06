@@ -290,7 +290,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
             borderBottomRightRadius: 0,
           }}
         >
-          <Typography variant="h6">Налаштування для {scopeName}</Typography>
+          <Typography variant="h6" noWrap>
+            {scopeName}
+          </Typography>
           <Box>
             {handleSave && (
               <IconButton
