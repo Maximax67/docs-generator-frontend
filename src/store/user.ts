@@ -11,6 +11,7 @@ import {
 } from '@/lib/api';
 import { UserState } from '@/types/user';
 import { markBootstrapComplete } from '@/lib/api/setup/bootstrap';
+import { tokenManager } from '@/lib/api/setup/token-manager';
 import { isAxiosError } from '@/utils/is-axios-error';
 
 export const useUserStore = create<UserState>()(
@@ -19,24 +20,44 @@ export const useUserStore = create<UserState>()(
       user: null,
 
       setUser: (u) => set({ user: u }),
-      logoutLocal: () => set({ user: null }),
+
+      logoutLocal: () => {
+        tokenManager.clear();
+        set({ user: null });
+      },
 
       bootstrap: async () => {
         const storedUser = get().user;
+
+        // If no stored user, complete bootstrap immediately
         if (!storedUser) {
           markBootstrapComplete();
           return;
         }
 
+        // Check if we should refresh the token
+        // Only refresh if enough time has passed
+        if (!tokenManager.shouldRefreshOnBootstrap()) {
+          // Token is still valid, no need to refresh
+          markBootstrapComplete();
+          return;
+        }
+
+        // Token might be expired, attempt refresh
         try {
           const user = await authApi.bootstrap();
           set({ user });
-        } catch (error: unknown) {
+          tokenManager.markRefreshed();
+        } catch (error) {
           if (isAxiosError(error)) {
             const status = error.response?.status;
+            // Only logout on 401 (unauthorized)
             if (status === 401) {
+              tokenManager.clear();
               set({ user: null });
             }
+            // For other errors (500, 429, network issues), keep user logged in
+            // They might be able to retry later
           }
         } finally {
           markBootstrapComplete();
@@ -46,6 +67,7 @@ export const useUserStore = create<UserState>()(
       loginWithCredentials: async (email, password) => {
         const credentials: LoginCredentials = { email, password };
         const user = await authApi.login(credentials);
+        tokenManager.markRefreshed();
         set({ user });
       },
 
@@ -57,6 +79,7 @@ export const useUserStore = create<UserState>()(
           password: payload.password,
         };
         const user = await authApi.register(registerPayload);
+        tokenManager.markRefreshed();
         set({ user });
       },
 
@@ -64,20 +87,20 @@ export const useUserStore = create<UserState>()(
         try {
           await authApi.logout();
         } finally {
+          tokenManager.clear();
           set({ user: null });
         }
       },
 
       logoutEverywhere: async () => {
-        try {
-          await authApi.logoutEverywhere();
-        } finally {
-          set({ user: null });
-        }
+        await authApi.logoutEverywhere();
+        tokenManager.clear();
+        set({ user: null });
       },
 
       refeshSession: async () => {
         const user = await authApi.refreshSession();
+        tokenManager.markRefreshed();
         set({ user });
       },
 
@@ -94,6 +117,7 @@ export const useUserStore = create<UserState>()(
 
       changeEmail: async (newEmail) => {
         await authApi.changeEmail(newEmail);
+        tokenManager.clear();
         set({ user: null });
       },
 
@@ -115,6 +139,7 @@ export const useUserStore = create<UserState>()(
           new_password: newPassword,
         };
         await authApi.changePassword(payload);
+        tokenManager.clear();
         set({ user: null });
       },
 
@@ -131,6 +156,7 @@ export const useUserStore = create<UserState>()(
         if (!u?.id) throw new Error('Користувач не знайдений');
 
         await userApi.deleteAccount(u.id);
+        tokenManager.clear();
         set({ user: null });
       },
     }),

@@ -21,13 +21,9 @@ export interface ChangePasswordPayload {
 
 export const authApi = {
   async bootstrap(): Promise<User | null> {
-    try {
-      await bootstrapApi.post('/auth/refresh');
-      const response = await bootstrapApi.get<User>('/auth/me');
-      return response.data;
-    } catch {
-      return null;
-    }
+    await bootstrapApi.post('/auth/refresh');
+    const response = await bootstrapApi.get<User>('/auth/me');
+    return response.data;
   },
 
   async login(credentials: LoginCredentials): Promise<User> {
