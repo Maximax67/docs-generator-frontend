@@ -1,5 +1,5 @@
 import { useUserStore } from '@/store/user';
-import { api } from '../core';
+import { bootstrapApi } from '../core';
 import { tokenManager } from './token-manager';
 import { isAxiosError } from '@/utils/is-axios-error';
 
@@ -11,8 +11,8 @@ export async function refreshToken() {
     isRefreshing = true;
     refreshPromise = (async () => {
       try {
-        await api.post('/auth/refresh');
-        const me = await api.get('/auth/me');
+        await bootstrapApi.post('/auth/refresh');
+        const me = await bootstrapApi.get('/auth/me');
         useUserStore.getState().setUser(me.data);
         tokenManager.markRefreshed();
       } catch (err) {
