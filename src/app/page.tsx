@@ -7,7 +7,6 @@ import {
   Description as DescriptionIcon,
   HelpOutline as HelpOutlineIcon,
   Api as ApiIcon,
-  Telegram as TelegramIcon,
 } from '@mui/icons-material';
 import StepsTimeline from '@/components/Timeline';
 import Features from '@/components/Features';
@@ -122,44 +121,6 @@ export default function Home() {
                 Postman
               </Button>
             </Stack>
-          </Paper>
-
-          <Paper
-            elevation={3}
-            sx={{
-              p: 4,
-              width: '100%',
-              maxWidth: 800,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <TelegramIcon color="primary" fontSize="large" />
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                sx={{ fontSize: { xs: '1.75rem', sm: '2rem' } }}
-              >
-                Telegram‑бот
-              </Typography>
-            </Stack>
-            <Typography variant="body1" textAlign="center" maxWidth={600}>
-              Швидко створюй PDF-документи прямо в Telegram. Однак, історія та збережені дані
-              веб‑сервісу не синхронізуються з ботом.
-            </Typography>
-            <Button
-              component={Link}
-              href="https://t.me/kpi_docs_bot"
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="outlined"
-              size="large"
-            >
-              @kpi_docs_bot
-            </Button>
           </Paper>
 
           <Typography variant="body2" sx={{ textAlign: 'center' }}>
