@@ -43,7 +43,6 @@ export const TreeFolder: FC<TreeFolderProps> = ({
   onSettingsOpen,
   onPathToggle,
 }) => {
-  // Create unique path for this folder instance
   const currentPath = createPath(parentPath, folderTree.current_folder.id);
   const isExpanded = expandedPaths.has(currentPath);
   const isHighlighted = currentPath === highlightPath;
@@ -71,7 +70,6 @@ export const TreeFolder: FC<TreeFolderProps> = ({
         selected={isHighlighted}
         sx={{
           pl: level * 2 + 2,
-          py: 0.5,
           '&:hover': {
             backgroundColor: 'action.hover',
           },
