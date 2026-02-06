@@ -9,9 +9,15 @@ import {
   Tabs,
   Tab,
   Alert,
+  Collapse,
+  Chip,
 } from '@mui/material';
 import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
-import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
+import {
+  Save as SaveIcon,
+  Close as CloseIcon,
+  ExpandMore as ExpandMoreIcon,
+} from '@mui/icons-material';
 
 import { toErrorMessage } from '@/utils/errors-messages';
 import { variablesApi, scopesApi } from '@/lib/api';
@@ -47,6 +53,13 @@ const emptySchema: JSONSchema = {
 
 type TabValue = 'validation' | 'constants' | 'saving' | 'access';
 
+interface ParentScopeSchema {
+  scope: string | null;
+  scopeName: string;
+  schema: JSONSchema;
+  variables: VariableInfo[];
+}
+
 export const Settings = forwardRef<SettingsRef, SettingsProps>(
   ({ scope, scopeName, isFolder, folderTree, onClose }, ref) => {
     const notify = useNotify();
@@ -58,6 +71,10 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
     const [variables, setVariables] = useState<VariableInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingSchema, setFetchingSchema] = useState(false);
+
+    // Parent scope schemas state
+    const [parentSchemas, setParentSchemas] = useState<ParentScopeSchema[]>([]);
+    const [parentSchemasExpanded, setParentSchemasExpanded] = useState(false);
 
     // Scope settings state
     const [scopeSettings, setScopeSettings] = useState<ScopeSettings | null>(null);
@@ -85,6 +102,34 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
       [hasChanges],
     );
 
+    // Helper to get scope name from folder tree
+    const getScopeName = useCallback(
+      (targetScope: string | null): string => {
+        if (!targetScope) return 'Глобальна область';
+        if (!folderTree) return 'Папка';
+
+        // Try to find the folder in the tree
+        const findFolder = (tree: FolderTreeGlobal | FolderTree, id: string): string | null => {
+          if ('current_folder' in tree && tree.current_folder && tree.current_folder.id === id) {
+            return tree.current_folder.name;
+          }
+
+          for (const folder of tree.folders) {
+            if (folder.current_folder.id === id) {
+              return folder.current_folder.name;
+            }
+            const found = findFolder(folder, id);
+            if (found) return found;
+          }
+
+          return null;
+        };
+
+        return findFolder(folderTree, targetScope) || 'Папка';
+      },
+      [folderTree],
+    );
+
     const loadSchema = useCallback(async () => {
       setFetchingSchema(true);
       try {
@@ -98,13 +143,56 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
           setInitialSchema(schema);
         }
         setVariables(response.variables);
+
+        // Load parent scope schemas
+        const parentScopes: ParentScopeSchema[] = [];
+        const variablesWithValidation = response.variables.filter(
+          (v) => v.validation_schema && Object.keys(v.validation_schema).length > 0,
+        );
+
+        // Group by scope
+        const scopeMap = new Map<string | null, VariableInfo[]>();
+        for (const variable of variablesWithValidation) {
+          if (variable.scope !== scope) {
+            const existing = scopeMap.get(variable.scope) || [];
+            existing.push(variable);
+            scopeMap.set(variable.scope, existing);
+          }
+        }
+
+        // Build parent schemas
+        for (const [parentScope, vars] of scopeMap.entries()) {
+          const parentSchemaObj: JSONSchema = {
+            type: 'object',
+            properties: {},
+            required: [],
+          };
+
+          for (const variable of vars) {
+            if (variable.validation_schema) {
+              parentSchemaObj.properties![variable.variable] = variable.validation_schema;
+              if (variable.required) {
+                parentSchemaObj.required!.push(variable.variable);
+              }
+            }
+          }
+
+          parentScopes.push({
+            scope: parentScope,
+            scopeName: getScopeName(parentScope),
+            schema: parentSchemaObj,
+            variables: vars,
+          });
+        }
+
+        setParentSchemas(parentScopes);
       } catch (err) {
         console.error('Failed to load existing schema:', err);
         notify(toErrorMessage(err, 'Не вдалося завантажити схему'), 'error');
       } finally {
         setFetchingSchema(false);
       }
-    }, [notify, scope]);
+    }, [notify, scope, getScopeName]);
 
     const loadScopeSettings = useCallback(async () => {
       if (!scope) return;
@@ -252,6 +340,10 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
       });
     };
 
+    const toggleParentSchemas = () => {
+      setParentSchemasExpanded((prev) => !prev);
+    };
+
     const canSave =
       activeTab === 'validation'
         ? hasSchemaChanges
@@ -366,11 +458,86 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
           ) : (
             <>
               {activeTab === 'validation' && (
-                <SchemaVisualEditor
-                  schema={schema}
-                  onChange={handleSchemaChange}
-                  readOnly={false}
-                />
+                <>
+                  {parentSchemas.length > 0 && (
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                      <Box
+                        onClick={toggleParentSchemas}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          p: 2,
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s',
+                          '&:hover': {
+                            bgcolor: 'action.hover',
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                            Валідація з вищих scope
+                          </Typography>
+                          <Chip
+                            label={parentSchemas.length}
+                            size="small"
+                            color="primary"
+                            sx={{ height: 20, fontSize: '0.75rem' }}
+                          />
+                        </Box>
+                        <IconButton
+                          size="small"
+                          sx={{
+                            transform: parentSchemasExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.3s',
+                          }}
+                        >
+                          <ExpandMoreIcon />
+                        </IconButton>
+                      </Box>
+
+                      <Collapse in={parentSchemasExpanded} timeout="auto">
+                        <Box sx={{ bgcolor: 'background.default' }}>
+                          {parentSchemas.map((parentSchema, index) => (
+                            <Box
+                              key={`${parentSchema.scope}-${index}`}
+                              sx={{
+                                borderBottom: index < parentSchemas.length - 1 ? 1 : 0,
+                                borderColor: 'divider',
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  p: 2,
+                                  bgcolor: 'background.paper',
+                                  borderBottom: 1,
+                                  borderColor: 'divider',
+                                }}
+                              >
+                                <Typography variant="subtitle2" color="text.secondary">
+                                  {parentSchema.scopeName}
+                                </Typography>
+                              </Box>
+                              <SchemaVisualEditor
+                                schema={parentSchema.schema}
+                                onChange={() => {}}
+                                readOnly={true}
+                              />
+                            </Box>
+                          ))}
+                        </Box>
+                      </Collapse>
+                    </Box>
+                  )}
+                  <Box>
+                    <SchemaVisualEditor
+                      schema={schema}
+                      onChange={handleSchemaChange}
+                      readOnly={false}
+                    />
+                  </Box>
+                </>
               )}
               {activeTab === 'constants' && (
                 <ConstantsTable

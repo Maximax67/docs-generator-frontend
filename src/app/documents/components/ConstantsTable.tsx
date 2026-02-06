@@ -153,7 +153,9 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
             <TableBody>
               {allConstants.map((variable) => (
                 <TableRow key={variable.id}>
-                  <TableCell>{variable.variable}</TableCell>
+                  <TableCell>
+                    <ValueDisplay value={variable.variable} />
+                  </TableCell>
                   <TableCell>
                     <VariableTypeBadge value={variable.value} />
                   </TableCell>

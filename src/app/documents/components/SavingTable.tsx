@@ -23,6 +23,7 @@ import { useConfirm } from '@/providers/ConfirmProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { FolderTreeGlobal } from '@/types/documents';
 import { ScopeBadge } from '@/components/ScopeBadge';
+import { ValueDisplay } from '@/components/ValueDisplay';
 
 interface SavingTableProps {
   scope: string | null;
@@ -130,9 +131,7 @@ export const SavingTable: FC<SavingTableProps> = ({
               {savingVariables.map((variable) => (
                 <TableRow key={variable.id}>
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {variable.variable}
-                    </Typography>
+                    <ValueDisplay value={variable.variable} />
                   </TableCell>
                   <TableCell>
                     <ScopeBadge folderTree={folderTree} scope={variable.scope} />

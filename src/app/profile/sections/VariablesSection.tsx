@@ -129,7 +129,7 @@ export default function VariablesSection({
                     {savedVars.data.map((savedVar) => (
                       <TableRow key={savedVar.variable.id}>
                         <TableCell>
-                          <Typography variant="body2">{savedVar.variable.variable}</Typography>
+                          <ValueDisplay value={savedVar.variable.variable} />
                         </TableCell>
                         <TableCell>
                           <VariableTypeBadge value={savedVar.value} />
