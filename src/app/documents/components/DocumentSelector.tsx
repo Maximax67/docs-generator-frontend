@@ -5,8 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Box, Paper, useTheme, useMediaQuery, Divider } from '@mui/material';
 import { DocumentTree } from './DocumentTree';
 import { PdfPreview } from './PdfPreview';
-import { VariableSchemaEditor, VariableSchemaEditorRef } from './VariableSchemaEditor';
-import { DriveFile, FolderTreeGlobal, DocumentPreview } from '@/types/documents';
+import { Settings, SettingsRef } from './Settings';
+import { DriveFile, FolderTreeGlobal, FolderTree, DocumentPreview } from '@/types/documents';
 import { documentsApi } from '@/lib/api';
 import { PreviewCache } from '@/lib/cache/preview-cache';
 import { toErrorMessage } from '@/utils/errors-messages';
@@ -35,7 +35,9 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const isAdmin = isAdminUser(user);
 
   // Local state instead of global store
-  const [folderTree, setFolderTree] = useState<FolderTreeGlobal | null>(null);
+  const [folderTree, setFolderTree] = useState<FolderTreeGlobal | FolderTree | null>(null);
+  const [scopeFolderId, setScopeFolderId] = useState<string | null>(null);
+  const [scopeFolderName, setScopeFolderName] = useState<string | null>(null);
   const [treeLoading, setTreeLoading] = useState(false);
   const [treeError, setTreeError] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<DriveFile | null>(null);
@@ -52,19 +54,29 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-  const editorRef = useRef<VariableSchemaEditorRef>(null);
+  const editorRef = useRef<SettingsRef>(null);
 
   const scope = searchParams.get('scope');
   const pathParam = searchParams.get('path');
   const mode = searchParams.get('mode') as ViewMode | null;
+  const treeScopeParam = searchParams.get('treeScope');
 
-  const loadFolderTree = useCallback(async () => {
+  const loadFolderTree = useCallback(async (folderId: string | null) => {
     setTreeLoading(true);
     setTreeError(null);
 
     try {
-      const data = await documentsApi.getGlobalFolderTree();
-      setFolderTree(data);
+      if (folderId) {
+        const data = await documentsApi.getFolderTree(folderId);
+        setFolderTree(data);
+        setScopeFolderId(folderId);
+        setScopeFolderName(data.current_folder.name);
+      } else {
+        const data = await documentsApi.getGlobalFolderTree();
+        setFolderTree(data);
+        setScopeFolderId(null);
+        setScopeFolderName(null);
+      }
     } catch (error) {
       setTreeError(toErrorMessage(error, 'Не вдалося завантажити структуру папок'));
     } finally {
@@ -73,8 +85,8 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   }, []);
 
   useEffect(() => {
-    loadFolderTree();
-  }, [loadFolderTree]);
+    loadFolderTree(treeScopeParam);
+  }, [loadFolderTree, treeScopeParam]);
 
   const fetchPreview = useCallback(async (documentId: string) => {
     const current = previewCache.get(documentId);
@@ -168,16 +180,28 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   }, [folderTree, scope, pathParam, mode, isAdmin, user, fetchPreview, notify]);
 
   const updateUrl = useCallback(
-    (newScope: string | null, newPath: TreeNodePath | null, newMode: ViewMode | null) => {
+    (
+      newScope: string | null,
+      newPath: TreeNodePath | null,
+      newMode: ViewMode | null,
+      newTreeScope?: string | null,
+    ) => {
       const params = new URLSearchParams();
       if (newScope) params.set('scope', newScope);
       if (newPath) params.set('path', newPath);
       if (newMode) params.set('mode', newMode);
+      if (newTreeScope !== undefined) {
+        if (newTreeScope) {
+          params.set('treeScope', newTreeScope);
+        }
+      } else if (treeScopeParam) {
+        params.set('treeScope', treeScopeParam);
+      }
 
       const newUrl = params.toString() ? `?${params.toString()}` : '/documents';
       router.push(newUrl, { scroll: false });
     },
-    [router],
+    [router, treeScopeParam],
   );
 
   const confirmWithUnsavedChanges = useCallback((action: () => void) => {
@@ -231,12 +255,15 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const handleSettingsOpen = useCallback(
     (id: string, name: string, path: TreeNodePath, isFolder: boolean) => {
       const openSettings = () => {
-        setVariableSettings(id);
+        // Handle global scope settings
+        const actualId = id === '__global__' ? null : id;
+
+        setVariableSettings(actualId);
         setVariableSettingsName(name);
         setVariableSettingsIsFolder(isFolder);
         setSelectedDocument(null);
         setHighlightPath(path);
-        updateUrl(id, path, 'settings');
+        updateUrl(actualId, path, 'settings');
       };
 
       if (editorRef.current?.hasUnsavedChanges && variableSettings !== undefined) {
@@ -276,6 +303,34 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     });
   }, []);
 
+  const handleScopeChange = useCallback(
+    (folderId: string | null) => {
+      const changeScopeAction = () => {
+        // Clear selection when changing scope
+        setSelectedDocument(null);
+        setVariableSettings(undefined);
+        setVariableSettingsName(null);
+        setVariableSettingsIsFolder(false);
+        setHighlightPath(null);
+        setExpandedPaths(new Set());
+
+        // Update URL with new tree scope
+        updateUrl(null, null, null, folderId);
+      };
+
+      if (editorRef.current?.hasUnsavedChanges && variableSettings !== undefined) {
+        confirmWithUnsavedChanges(changeScopeAction);
+      } else {
+        changeScopeAction();
+      }
+    },
+    [variableSettings, confirmWithUnsavedChanges, updateUrl],
+  );
+
+  const handleRetryTree = useCallback(() => {
+    loadFolderTree(treeScopeParam);
+  }, [loadFolderTree, treeScopeParam]);
+
   const preview = selectedDocument ? previews[selectedDocument.id] : null;
 
   const mainContent = useMemo(() => {
@@ -291,7 +346,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     }
 
     return (
-      <VariableSchemaEditor
+      <Settings
         ref={editorRef}
         scope={variableSettings}
         scopeName={variableSettingsName!}
@@ -318,24 +373,30 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         folderTree={folderTree}
         treeLoading={treeLoading}
         treeError={treeError}
+        scopeFolderId={scopeFolderId}
+        scopeFolderName={scopeFolderName}
         highlightPath={highlightPath}
         expandedPaths={expandedPaths}
         onDocumentSelect={handleDocumentSelect}
         onSettingsOpen={handleSettingsOpen}
         onPathToggle={handlePathToggle}
-        onRetry={loadFolderTree}
+        onScopeChange={handleScopeChange}
+        onRetry={handleRetryTree}
       />
     ),
     [
       folderTree,
       treeLoading,
       treeError,
+      scopeFolderId,
+      scopeFolderName,
       highlightPath,
       expandedPaths,
       handleDocumentSelect,
       handleSettingsOpen,
       handlePathToggle,
-      loadFolderTree,
+      handleScopeChange,
+      handleRetryTree,
     ],
   );
 

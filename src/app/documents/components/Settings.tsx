@@ -1,6 +1,15 @@
 import deepEqual from 'fast-deep-equal';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { Box, Typography, CircularProgress, Paper, IconButton, Tabs, Tab } from '@mui/material';
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Paper,
+  IconButton,
+  Tabs,
+  Tab,
+  Alert,
+} from '@mui/material';
 import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
 import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
@@ -16,9 +25,9 @@ import { ScopeSettingsTab } from './ScopeSettingsTab';
 import { AccessLevel, ScopeSettings } from '@/types/scopes';
 
 import 'jsonjoy-builder/styles.css';
-import './VariableSchemaEditor.module.css';
+import './Settings.module.css';
 
-interface VariableSchemaEditorProps {
+interface SettingsProps {
   scope: string | null;
   scopeName: string;
   isFolder: boolean;
@@ -26,7 +35,7 @@ interface VariableSchemaEditorProps {
   onClose: () => void;
 }
 
-export interface VariableSchemaEditorRef {
+export interface SettingsRef {
   hasUnsavedChanges: boolean;
 }
 
@@ -38,7 +47,7 @@ const emptySchema: JSONSchema = {
 
 type TabValue = 'validation' | 'constants' | 'saving' | 'access';
 
-export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, VariableSchemaEditorProps>(
+export const Settings = forwardRef<SettingsRef, SettingsProps>(
   ({ scope, scopeName, isFolder, folderTree, onClose }, ref) => {
     const notify = useNotify();
     const [activeTab, setActiveTab] = useState<TabValue>('validation');
@@ -381,13 +390,24 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
                   onDeleteVariable={handleDeleteVariable}
                 />
               )}
-              {activeTab === 'access' && scopeSettings && (
-                <ScopeSettingsTab
-                  driveId={scope!}
-                  isFolder={isFolder}
-                  initialSettings={scopeSettings}
-                  onChange={handleScopeSettingsChange}
-                />
+              {activeTab === 'access' && (
+                <>
+                  {!scope && (
+                    <Box sx={{ p: 2 }}>
+                      <Alert severity="warning">
+                        Доступ не можна налаштовувати на глобальну область, лише до папок та файлів!
+                      </Alert>
+                    </Box>
+                  )}
+                  {scope && (
+                    <ScopeSettingsTab
+                      driveId={scope}
+                      isFolder={isFolder}
+                      initialSettings={scopeSettings}
+                      onChange={handleScopeSettingsChange}
+                    />
+                  )}
+                </>
               )}
             </>
           )}
@@ -397,4 +417,4 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
   },
 );
 
-VariableSchemaEditor.displayName = 'VariableSchemaEditor';
+Settings.displayName = 'Settings';

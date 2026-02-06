@@ -9,7 +9,7 @@ export const documentsApi = {
   },
 
   async getFolderTree(folderId: string): Promise<FolderTree> {
-    const response = await api.get<FolderTree>('/drive/tree', { params: { folderId } });
+    const response = await api.get<FolderTree>('/drive/tree', { params: { folder_id: folderId } });
     return response.data;
   },
 
