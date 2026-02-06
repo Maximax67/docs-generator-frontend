@@ -5,13 +5,15 @@ import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
 import { Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 
 import { toErrorMessage } from '@/utils/errors-messages';
-import { variablesApi } from '@/lib/api';
+import { variablesApi, scopesApi } from '@/lib/api';
 import { VariableInfo } from '@/types/variables';
 
 import { useNotify } from '@/providers/NotificationProvider';
 import { ConstantsTable } from './ConstantsTable';
 import { FolderTree, FolderTreeGlobal } from '@/types/documents';
 import { SavingTable } from './SavingTable';
+import { ScopeSettingsTab } from './ScopeSettingsTab';
+import { AccessLevel, ScopeSettings } from '@/types/scopes';
 
 import 'jsonjoy-builder/styles.css';
 import './VariableSchemaEditor.module.css';
@@ -19,6 +21,7 @@ import './VariableSchemaEditor.module.css';
 interface VariableSchemaEditorProps {
   scope: string | null;
   scopeName: string;
+  isFolder: boolean;
   folderTree: FolderTreeGlobal | FolderTree | null;
   onClose: () => void;
 }
@@ -33,16 +36,37 @@ const emptySchema: JSONSchema = {
   required: [],
 };
 
+type TabValue = 'validation' | 'constants' | 'saving' | 'access';
+
 export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, VariableSchemaEditorProps>(
-  ({ scope, scopeName, folderTree, onClose }, ref) => {
+  ({ scope, scopeName, isFolder, folderTree, onClose }, ref) => {
     const notify = useNotify();
-    const [activeTab, setActiveTab] = useState<'validation' | 'constants' | 'saving'>('validation');
+    const [activeTab, setActiveTab] = useState<TabValue>('validation');
+
+    // Validation schema state
     const [schema, setSchema] = useState<JSONSchema>({ ...emptySchema });
     const [initialSchema, setInitialSchema] = useState<JSONSchema>({ ...emptySchema });
     const [variables, setVariables] = useState<VariableInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingSchema, setFetchingSchema] = useState(false);
-    const hasChanges = useMemo(() => !deepEqual(schema, initialSchema), [schema, initialSchema]);
+
+    // Scope settings state
+    const [scopeSettings, setScopeSettings] = useState<ScopeSettings | null>(null);
+    const [initialScopeSettings, setInitialScopeSettings] = useState<ScopeSettings | null>(null);
+    const [fetchingScopeSettings, setFetchingScopeSettings] = useState(false);
+    const [savingScopeSettings, setSavingScopeSettings] = useState(false);
+
+    const hasSchemaChanges = useMemo(
+      () => !deepEqual(schema, initialSchema),
+      [schema, initialSchema],
+    );
+
+    const hasScopeChanges = useMemo(() => {
+      if (!scopeSettings || !initialScopeSettings) return false;
+      return !deepEqual(scopeSettings, initialScopeSettings);
+    }, [scopeSettings, initialScopeSettings]);
+
+    const hasChanges = hasSchemaChanges || hasScopeChanges;
 
     useImperativeHandle(
       ref,
@@ -73,16 +97,56 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       }
     }, [notify, scope]);
 
+    const loadScopeSettings = useCallback(async () => {
+      if (!scope) return;
+
+      setFetchingScopeSettings(true);
+      try {
+        const existingScope = await scopesApi.getScope(scope);
+
+        if (existingScope) {
+          const settings: ScopeSettings = {
+            drive_id: existingScope.drive_id,
+            is_pinned: existingScope.is_pinned,
+            restrictions: existingScope.restrictions,
+          };
+          setScopeSettings(settings);
+          setInitialScopeSettings(settings);
+        } else {
+          const defaultSettings: ScopeSettings = {
+            drive_id: scope,
+            is_pinned: false,
+            restrictions: {
+              access_level: AccessLevel.ANY,
+              max_depth: null,
+            },
+          };
+          setScopeSettings(defaultSettings);
+          setInitialScopeSettings(defaultSettings);
+        }
+      } catch (err) {
+        console.error('Failed to load scope settings:', err);
+        notify(toErrorMessage(err, 'Не вдалося завантажити налаштування доступу'), 'error');
+      } finally {
+        setFetchingScopeSettings(false);
+      }
+    }, [notify, scope]);
+
     useEffect(() => {
       loadSchema();
-    }, [loadSchema]);
+      loadScopeSettings();
+    }, [loadSchema, loadScopeSettings]);
 
     const handleSchemaChange = (newSchema: JSONSchema) => {
       setSchema(newSchema);
     };
 
-    const handleSave = async () => {
-      if (!hasChanges) {
+    const handleScopeSettingsChange = useCallback((settings: ScopeSettings) => {
+      setScopeSettings(settings);
+    }, []);
+
+    const handleSaveSchema = async () => {
+      if (!hasSchemaChanges) {
         notify('Немає змін для збереження', 'info');
         return;
       }
@@ -101,10 +165,43 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       }
     };
 
-    const handleTabChange = (
-      _event: React.SyntheticEvent,
-      newValue: 'validation' | 'constants' | 'saving',
-    ) => {
+    const handleSaveScopeSettings = async () => {
+      if (!hasScopeChanges || !scopeSettings || !scope) {
+        notify('Немає змін для збереження', 'info');
+        return;
+      }
+
+      setSavingScopeSettings(true);
+
+      try {
+        const existingScope = await scopesApi.getScope(scope);
+
+        if (existingScope) {
+          if (!deepEqual(scopeSettings.restrictions, initialScopeSettings?.restrictions)) {
+            await scopesApi.updateScopeRestrictions(scope, scopeSettings.restrictions);
+          }
+
+          if (scopeSettings.is_pinned !== initialScopeSettings?.is_pinned) {
+            if (scopeSettings.is_pinned) {
+              await scopesApi.pinScope(scope);
+            } else {
+              await scopesApi.unpinScope(scope);
+            }
+          }
+        } else {
+          await scopesApi.createScope(scopeSettings);
+        }
+
+        await loadScopeSettings();
+        notify('Налаштування доступу успішно збережено');
+      } catch (err) {
+        notify(toErrorMessage(err, 'Не вдалося зберегти налаштування доступу'), 'error');
+      } finally {
+        setSavingScopeSettings(false);
+      }
+    };
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: TabValue) => {
       setActiveTab(newValue);
     };
 
@@ -146,6 +243,28 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
       });
     };
 
+    const canSave =
+      activeTab === 'validation'
+        ? hasSchemaChanges
+        : activeTab === 'access'
+          ? hasScopeChanges
+          : false;
+    const isSaving =
+      activeTab === 'validation' ? loading : activeTab === 'access' ? savingScopeSettings : false;
+    const isFetching =
+      activeTab === 'validation'
+        ? fetchingSchema
+        : activeTab === 'access'
+          ? fetchingScopeSettings
+          : false;
+
+    const handleSave =
+      activeTab === 'validation'
+        ? handleSaveSchema
+        : activeTab === 'access'
+          ? handleSaveScopeSettings
+          : undefined;
+
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Paper
@@ -164,12 +283,12 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
         >
           <Typography variant="h6">Налаштування для {scopeName}</Typography>
           <Box>
-            {activeTab === 'validation' && (
+            {handleSave && (
               <IconButton
                 color="primary"
                 onClick={handleSave}
-                disabled={loading || fetchingSchema || !hasChanges}
-                title={hasChanges ? 'Зберегти зміни' : 'Немає змін для збереження'}
+                disabled={isSaving || isFetching || !canSave}
+                title={canSave ? 'Зберегти зміни' : 'Немає змін для збереження'}
               >
                 <SaveIcon />
               </IconButton>
@@ -187,7 +306,7 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography>Валідація</Typography>
-                  {hasChanges && (
+                  {hasSchemaChanges && (
                     <Box
                       sx={{
                         width: 8,
@@ -200,15 +319,36 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
                   )}
                 </Box>
               }
-              title={hasChanges ? 'Не збережені зміни' : undefined}
+              title={hasSchemaChanges ? 'Не збережені зміни' : undefined}
             />
             <Tab label="Константи" value="constants" />
             <Tab label="Збереження значень" value="saving" />
+            <Tab
+              value="access"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography>Доступ</Typography>
+                  {hasScopeChanges && (
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: 'warning.main',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </Box>
+              }
+              title={hasScopeChanges ? 'Не збережені зміни' : undefined}
+            />
           </Tabs>
         </Box>
 
         <Box sx={{ flex: 1, overflow: 'auto' }}>
-          {fetchingSchema ? (
+          {(fetchingSchema && activeTab === 'validation') ||
+          (fetchingScopeSettings && activeTab === 'access') ? (
             <Box display="flex" justifyContent="center" alignItems="center" py={4}>
               <CircularProgress />
             </Box>
@@ -239,6 +379,14 @@ export const VariableSchemaEditor = forwardRef<VariableSchemaEditorRef, Variable
                   onChangeSave={handleChangeSave}
                   onAddVariable={handleAddVariable}
                   onDeleteVariable={handleDeleteVariable}
+                />
+              )}
+              {activeTab === 'access' && scopeSettings && (
+                <ScopeSettingsTab
+                  driveId={scope!}
+                  isFolder={isFolder}
+                  initialSettings={scopeSettings}
+                  onChange={handleScopeSettingsChange}
                 />
               )}
             </>

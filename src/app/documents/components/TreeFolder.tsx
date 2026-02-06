@@ -28,7 +28,7 @@ interface TreeFolderProps {
   level?: number;
   showSettings?: boolean;
   onDocumentSelect: (document: DriveFile, path: TreeNodePath) => void;
-  onSettingsOpen?: (id: string, name: string, path: TreeNodePath) => void;
+  onSettingsOpen?: (id: string, name: string, path: TreeNodePath, isFolder: boolean) => void;
   onPathToggle: (path: TreeNodePath, isExpanded: boolean) => void;
 }
 
@@ -54,7 +54,12 @@ export const TreeFolder: FC<TreeFolderProps> = ({
 
   const handleOpenSchemaEditor = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onSettingsOpen?.(folderTree.current_folder.id, folderTree.current_folder.name, currentPath);
+    onSettingsOpen?.(
+      folderTree.current_folder.id,
+      folderTree.current_folder.name,
+      currentPath,
+      true,
+    );
   };
 
   const hasChildren = folderTree.folders.length > 0 || folderTree.documents.length > 0;

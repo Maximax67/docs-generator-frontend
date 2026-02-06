@@ -17,7 +17,7 @@ interface DocumentTreeProps {
   highlightPath?: TreeNodePath | null;
   expandedPaths: Set<TreeNodePath>;
   onDocumentSelect: (document: DriveFile, path: TreeNodePath) => void;
-  onSettingsOpen?: (id: string, name: string, path: TreeNodePath) => void;
+  onSettingsOpen?: (id: string, name: string, path: TreeNodePath, isFolder: boolean) => void;
   onPathToggle: (path: TreeNodePath, isExpanded: boolean) => void;
   onRetry: () => void;
 }
@@ -95,7 +95,7 @@ const DocumentTreeComponent: FC<DocumentTreeProps> = ({
           />
         ))}
         {folderTree.documents.map((document) => {
-          const docPath = document.id; // Root level documents
+          const docPath = document.id;
           return (
             <TreeDocument
               key={`${docPath}`}

@@ -20,7 +20,7 @@ interface TreeDocumentProps {
   showSettings?: boolean;
   level: number;
   onDocumentSelect: (document: DriveFile, path: TreeNodePath) => void;
-  onSettingsOpen?: (id: string, name: string, path: TreeNodePath) => void;
+  onSettingsOpen?: (id: string, name: string, path: TreeNodePath, isFolder: boolean) => void;
 }
 
 export const TreeDocument: FC<TreeDocumentProps> = ({
@@ -39,7 +39,7 @@ export const TreeDocument: FC<TreeDocumentProps> = ({
   const handleOpenSchemaEditor = (e: React.MouseEvent) => {
     e.stopPropagation();
     const fileName = formatFilename(document.name, document.mime_type);
-    onSettingsOpen?.(document.id, fileName, path);
+    onSettingsOpen?.(document.id, fileName, path, false);
   };
 
   const fileName = formatFilename(document.name, document.mime_type);

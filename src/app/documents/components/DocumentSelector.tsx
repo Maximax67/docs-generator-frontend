@@ -47,6 +47,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   // Settings editor state
   const [variableSettings, setVariableSettings] = useState<string | null | undefined>(undefined);
   const [variableSettingsName, setVariableSettingsName] = useState<string | null>(null);
+  const [variableSettingsIsFolder, setVariableSettingsIsFolder] = useState<boolean>(false);
 
   // Confirmation dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -54,7 +55,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const editorRef = useRef<VariableSchemaEditorRef>(null);
 
   const scope = searchParams.get('scope');
-  const pathParam = searchParams.get('path'); // New parameter to identify specific instance
+  const pathParam = searchParams.get('path');
   const mode = searchParams.get('mode') as ViewMode | null;
 
   const loadFolderTree = useCallback(async () => {
@@ -148,13 +149,17 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
           : result.type === 'folder'
             ? result.item.current_folder.name
             : '';
+      const isFolder = result.type === 'folder';
+
       setVariableSettings(scope);
       setVariableSettingsName(name);
+      setVariableSettingsIsFolder(isFolder);
       setSelectedDocument(null);
     } else if (result.type === 'document') {
       setSelectedDocument(result.item);
       setVariableSettings(undefined);
       setVariableSettingsName(null);
+      setVariableSettingsIsFolder(false);
 
       if (!previewCache.has(result.item.id)) {
         fetchPreview(result.item.id);
@@ -199,6 +204,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         setSelectedDocument(document);
         setVariableSettings(undefined);
         setVariableSettingsName(null);
+        setVariableSettingsIsFolder(false);
         setHighlightPath(path);
         updateUrl(document.id, path, 'preview');
 
@@ -223,10 +229,11 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   }, [selectedDocument, fetchPreview]);
 
   const handleSettingsOpen = useCallback(
-    (id: string, name: string, path: TreeNodePath) => {
+    (id: string, name: string, path: TreeNodePath, isFolder: boolean) => {
       const openSettings = () => {
         setVariableSettings(id);
         setVariableSettingsName(name);
+        setVariableSettingsIsFolder(isFolder);
         setSelectedDocument(null);
         setHighlightPath(path);
         updateUrl(id, path, 'settings');
@@ -245,6 +252,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     const closeSettings = () => {
       setVariableSettings(undefined);
       setVariableSettingsName(null);
+      setVariableSettingsIsFolder(false);
       setHighlightPath(null);
       updateUrl(null, null, null);
     };
@@ -287,6 +295,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         ref={editorRef}
         scope={variableSettings}
         scopeName={variableSettingsName!}
+        isFolder={variableSettingsIsFolder}
         folderTree={folderTree}
         onClose={handleSettingsClose}
       />
@@ -298,6 +307,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
     preview,
     handleRefreshPreview,
     variableSettingsName,
+    variableSettingsIsFolder,
     folderTree,
     handleSettingsClose,
   ]);
