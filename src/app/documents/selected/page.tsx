@@ -11,7 +11,6 @@ import {
   Alert,
   CircularProgress,
   Stack,
-  Chip,
   Divider,
 } from '@mui/material';
 import {
@@ -68,8 +67,9 @@ export default function SelectedDocumentPage() {
 
       const initialValues: Record<string, JSONValue> = {};
       details.variables.variables.forEach((v: VariableInfo) => {
-        if (v.value != null) initialValues[v.variable] = v.value;
-        else if (v.saved_value != null) initialValues[v.variable] = v.saved_value;
+        if (v.value === null && v.saved_value !== null) {
+          initialValues[v.variable] = v.saved_value;
+        }
       });
 
       setInitialFormData(initialValues);
@@ -93,6 +93,10 @@ export default function SelectedDocumentPage() {
     documentDetails?.variables.template_variables.forEach((name) => {
       const info = variableMap.get(name);
 
+      if (info?.id && info.value !== null) {
+        return;
+      }
+
       if (info?.id && info.validation_schema) {
         properties[name] = applyTitleFallbacks(info.validation_schema);
         if (info.required) {
@@ -106,20 +110,32 @@ export default function SelectedDocumentPage() {
       }
     });
 
+    const sortedProperties = Object.keys(properties)
+      .sort((a, b) => a.localeCompare(b))
+      .reduce<Record<string, JSONValue>>((acc, key) => {
+        acc[key] = properties[key];
+        return acc;
+      }, {});
+
     return {
       type: 'object',
-      properties,
+      properties: sortedProperties,
       required,
     } as RJSFSchema;
   }, [documentDetails?.variables.template_variables, documentDetails?.variables.variables]);
 
   const hasSaveableVariables = useMemo(() => {
-    if (!documentDetails) return false;
+    if (!documentDetails) {
+      return false;
+    }
+
     return documentDetails.variables.variables.some((v) => v.allow_save && v.id);
   }, [documentDetails]);
 
   const handleGenerate = async (data: Record<string, JSONValue>) => {
-    if (!documentId || !documentDetails) return;
+    if (!documentId || !documentDetails) {
+      return;
+    }
 
     try {
       setIsGenerating(true);
@@ -200,9 +216,6 @@ export default function SelectedDocumentPage() {
     );
   }
 
-  const unknownVariables = documentDetails?.variables.template_variables.filter(
-    (v) => !documentDetails?.variables.variables.find((x) => x.variable === v),
-  );
   const isNoVariables = documentDetails?.variables.template_variables.length === 0;
   const onClick = isNoVariables ? onGenerateEmpty : handleSubmitClick;
 
@@ -221,16 +234,6 @@ export default function SelectedDocumentPage() {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Оновлено: {formatDateTime(new Date(documentDetails.file.modified_time))}
           </Typography>
-
-          {unknownVariables.length > 0 && (
-            <Alert severity="warning">
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {unknownVariables.map((v) => (
-                  <Chip key={v} label={v} size="small" color="warning" />
-                ))}
-              </Stack>
-            </Alert>
-          )}
         </Box>
 
         <Paper sx={{ p: 3, pb: 1 }}>
