@@ -28,10 +28,6 @@ export interface FolderTree extends FolderTreeGlobal {
   current_folder: DriveFolder;
 }
 
-export interface DriveFileListResponse {
-  files: DriveFile[];
-}
-
 export interface DocumentVariablesResponse {
   template_variables: string[];
   variables: VariableInfo[];
