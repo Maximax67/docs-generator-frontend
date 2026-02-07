@@ -2,7 +2,7 @@ import { JSONValue } from './json';
 
 export interface VariableOverride {
   id: string;
-  scope: string;
+  scope: string | null;
 }
 
 export interface VariableInfo {
