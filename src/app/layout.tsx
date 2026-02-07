@@ -5,7 +5,7 @@ import AppThemeProvider from '../providers/AppThemeProvider';
 import EmotionCacheProvider from '../providers/EmotionCacheProvider';
 import Header from '@/components/Header';
 import RateLimitOverlay from '../components/RateLimitOverlay';
-import PWAInstallPrompt from '@/components/PwaInstallPrompt';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import UserProvider from '@/providers/UserProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
 import { ConfirmProvider } from '@/providers/ConfirmProvider';
@@ -50,7 +50,7 @@ export default function RootLayout({
               <NotificationProvider>
                 <ConfirmProvider>
                   <RegisterServiceWorker />
-                  <PWAInstallPrompt />
+                  <PwaInstallPrompt />
                   <Header />
                   {children}
                 </ConfirmProvider>
