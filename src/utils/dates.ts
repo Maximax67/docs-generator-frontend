@@ -1,22 +1,25 @@
-export function formatDate(date: Date, applyUtcOffset = true) {
-  const localDate = applyUtcOffset
-    ? new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    : date;
+function normalizeDate(value: Date | string): Date {
+  if (value instanceof Date) {
+    return value;
+  }
 
-  const day = String(localDate.getDate()).padStart(2, '0');
-  const month = String(localDate.getMonth() + 1).padStart(2, '0');
-  const year = localDate.getFullYear();
+  const hasTimezone = /Z$|[+-]\d{2}:\d{2}$/.test(value);
 
-  return `${day}.${month}.${year}`;
+  return new Date(hasTimezone ? value : value + 'Z');
 }
 
-export function formatDateTime(date: Date, applyUtcOffset = true) {
-  const localDate = applyUtcOffset
-    ? new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    : date;
+export function formatDate(value: Date | string): string {
+  const date = normalizeDate(value);
 
-  const hours = String(localDate.getHours()).padStart(2, '0');
-  const minutes = String(localDate.getMinutes()).padStart(2, '0');
+  return `${String(date.getDate()).padStart(2, '0')}.` +
+    `${String(date.getMonth() + 1).padStart(2, '0')}.` +
+    `${date.getFullYear()}`;
+}
 
-  return `${formatDate(localDate, false)} ${hours}:${minutes}`;
+export function formatDateTime(value: Date | string): string {
+  const date = normalizeDate(value);
+
+  return `${formatDate(date)} ` +
+    `${String(date.getHours()).padStart(2, '0')}:` +
+    `${String(date.getMinutes()).padStart(2, '0')}`;
 }

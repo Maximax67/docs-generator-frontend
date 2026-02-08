@@ -148,7 +148,7 @@ export default function GenerationSection({
                           </Box>
 
                           <Typography variant="body2" color="text.secondary">
-                            {formatDateTime(new Date(generation.created_at))}
+                            {formatDateTime(generation.created_at)}
                           </Typography>
 
                           {Object.entries(generation.variables).length > 0 && (
@@ -210,7 +210,7 @@ export default function GenerationSection({
                       <Fragment key={generation.id}>
                         <TableRow>
                           <TableCell>{generation.template_name}</TableCell>
-                          <TableCell>{formatDateTime(new Date(generation.created_at))}</TableCell>
+                          <TableCell>{formatDateTime(generation.created_at)}</TableCell>
                           <TableCell>
                             {Object.entries(generation.variables).length > 0 ? (
                               <IconButton

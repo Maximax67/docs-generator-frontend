@@ -263,7 +263,7 @@ export default function UsersPage() {
                       )}
                     </Typography>
 
-                    <Typography variant="body2">{formatDate(new Date(user.created_at))}</Typography>
+                    <Typography variant="body2">{formatDate(user.created_at)}</Typography>
 
                     <Divider />
 
@@ -323,7 +323,7 @@ export default function UsersPage() {
                     )}
                   </TableCell>
 
-                  <TableCell>{formatDate(new Date(user.created_at))}</TableCell>
+                  <TableCell>{formatDate(user.created_at)}</TableCell>
 
                   <TableCell>
                     <RoleChip role={user.role} />

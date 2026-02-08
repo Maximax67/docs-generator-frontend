@@ -232,7 +232,7 @@ export default function SelectedDocumentPage() {
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Оновлено: {formatDateTime(new Date(documentDetails.file.modified_time))}
+            Оновлено: {formatDateTime(documentDetails.file.modified_time)}
           </Typography>
         </Box>
 

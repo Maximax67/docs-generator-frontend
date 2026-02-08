@@ -269,7 +269,7 @@ export default function GenerationsPage() {
                           )}
 
                           <Typography variant="body2" color="text.secondary">
-                            {formatDateTime(new Date(generation.created_at))}
+                            {formatDateTime(generation.created_at)}
                           </Typography>
 
                           {Object.entries(generation.variables).length > 0 && (
@@ -366,7 +366,7 @@ export default function GenerationsPage() {
                             )}
                           </TableCell>
 
-                          <TableCell>{formatDateTime(new Date(generation.created_at))}</TableCell>
+                          <TableCell>{formatDateTime(generation.created_at)}</TableCell>
 
                           <TableCell>
                             {Object.entries(generation.variables).length > 0 ? (

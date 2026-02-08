@@ -70,8 +70,8 @@ export default function SessionsSection({
                 sessions.map((s: SessionInfo) => (
                   <TableRow key={s.id} selected={s.current}>
                     <TableCell>{s.name || 'Без назви'}</TableCell>
-                    <TableCell>{formatDateTime(new Date(s.created_at))}</TableCell>
-                    <TableCell>{formatDateTime(new Date(s.updated_at))}</TableCell>
+                    <TableCell>{formatDateTime(s.created_at)}</TableCell>
+                    <TableCell>{formatDateTime(s.updated_at)}</TableCell>
                     <TableCell align="right">
                       <Button
                         size="small"
@@ -115,10 +115,10 @@ export default function SessionsSection({
                   <Stack spacing={0.5}>
                     <Typography variant="subtitle1">{s.name || 'Без назви'}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Створено: {formatDateTime(new Date(s.created_at))}
+                      Створено: {formatDateTime(s.created_at)}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Оновлено: {formatDateTime(new Date(s.updated_at))}
+                      Оновлено: {formatDateTime(s.updated_at)}
                     </Typography>
                     <Stack direction="row" justifyContent="flex-end">
                       <Button

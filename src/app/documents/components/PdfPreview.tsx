@@ -63,7 +63,7 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
           {formatFilename(document.name, document.mime_type)}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Оновлено: {formatDateTime(new Date(document.modified_time))}
+          Оновлено: {formatDateTime(document.modified_time)}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', gap: 2 }}>
