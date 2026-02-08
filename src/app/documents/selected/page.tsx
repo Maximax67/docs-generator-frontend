@@ -32,10 +32,12 @@ import { JSONValue } from '@/types/json';
 import { SaveVariablesModal, SaveCandidate } from './SaveVariablesModal';
 import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentInputForm';
 import { applyTitleFallbacks } from '@/utils/json-schema';
+import { useUserStore } from '@/store/user';
 
 export default function SelectedDocumentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useUserStore();
   const documentId = searchParams.get('id');
   const formRef = useRef<DocumentInputFormRef>(null);
 
@@ -127,7 +129,7 @@ export default function SelectedDocumentPage() {
 
   const calculateSaveCandidates = useCallback(
     (formValues: Record<string, JSONValue>): SaveCandidate[] => {
-      if (!documentDetails) {
+      if (!documentDetails || !user) {
         return [];
       }
 
@@ -148,7 +150,7 @@ export default function SelectedDocumentPage() {
         })
         .filter((c) => c.isChanged || c.savedValue === null);
     },
-    [documentDetails],
+    [documentDetails, user],
   );
 
   const handleGenerate = async (data: Record<string, JSONValue>) => {
