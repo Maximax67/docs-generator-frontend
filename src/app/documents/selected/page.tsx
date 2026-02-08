@@ -19,6 +19,7 @@ import {
   Download as DownloadIcon,
 } from '@mui/icons-material';
 import { RJSFSchema } from '@rjsf/utils';
+import deepEqual from 'fast-deep-equal';
 
 import { VariableInfo } from '@/types/variables';
 import { DocumentDetails } from '@/types/documents';
@@ -28,7 +29,7 @@ import { formatFilename } from '@/utils/format-filename';
 import { savePdfToIndexedDb } from '@/lib/indexed-db-pdf';
 import { IChangeEvent } from '@rjsf/core';
 import { JSONValue } from '@/types/json';
-import { SaveVariablesModal } from './SaveVariablesModal';
+import { SaveVariablesModal, SaveCandidate } from './SaveVariablesModal';
 import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentInputForm';
 import { applyTitleFallbacks } from '@/utils/json-schema';
 
@@ -124,13 +125,31 @@ export default function SelectedDocumentPage() {
     } as RJSFSchema;
   }, [documentDetails?.variables.template_variables, documentDetails?.variables.variables]);
 
-  const hasSaveableVariables = useMemo(() => {
-    if (!documentDetails) {
-      return false;
-    }
+  const calculateSaveCandidates = useCallback(
+    (formValues: Record<string, JSONValue>): SaveCandidate[] => {
+      if (!documentDetails) {
+        return [];
+      }
 
-    return documentDetails.variables.variables.some((v) => v.allow_save && v.id);
-  }, [documentDetails]);
+      return documentDetails.variables.variables
+        .filter((v): v is VariableInfo & { id: string } =>
+          Boolean(v.allow_save && v.id && v.variable in formValues),
+        )
+        .map((v) => {
+          const currentValue = formValues[v.variable];
+          const isChanged = !deepEqual(currentValue, v.saved_value);
+          return {
+            id: v.id,
+            variable: v.variable,
+            currentValue,
+            savedValue: v.saved_value,
+            isChanged,
+          };
+        })
+        .filter((c) => c.isChanged || c.savedValue === null);
+    },
+    [documentDetails],
+  );
 
   const handleGenerate = async (data: Record<string, JSONValue>) => {
     if (!documentId || !documentDetails) {
@@ -145,7 +164,9 @@ export default function SelectedDocumentPage() {
 
       await savePdfToIndexedDb('generatedPdf', blob);
 
-      if (hasSaveableVariables) {
+      const saveCandidates = calculateSaveCandidates(data);
+
+      if (saveCandidates.length > 0) {
         setGeneratedFormValues({ ...data });
         setShowSaveModal(true);
       } else {
@@ -176,6 +197,13 @@ export default function SelectedDocumentPage() {
     setGeneratedFormValues(null);
     router.push('/documents/result/');
   };
+
+  const saveCandidates = useMemo(() => {
+    if (!generatedFormValues) {
+      return [];
+    }
+    return calculateSaveCandidates(generatedFormValues);
+  }, [generatedFormValues, calculateSaveCandidates]);
 
   if (loading) {
     return (
@@ -281,11 +309,10 @@ export default function SelectedDocumentPage() {
         </Paper>
       </Stack>
 
-      {showSaveModal && documentDetails && generatedFormValues && (
+      {showSaveModal && (
         <SaveVariablesModal
           open={showSaveModal}
-          variables={documentDetails.variables.variables}
-          formValues={generatedFormValues}
+          candidates={saveCandidates}
           onClose={handleAfterSaveModal}
           onSaved={handleAfterSaveModal}
         />

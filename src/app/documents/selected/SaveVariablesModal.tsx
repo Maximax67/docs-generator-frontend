@@ -1,4 +1,4 @@
-import { FC, useEffect, useState, useMemo } from 'react';
+import { FC, useEffect, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,15 +12,13 @@ import {
   Divider,
 } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import { VariableInfo } from '@/types/variables';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { JSONValue } from '@/types/json';
-import deepEqual from 'fast-deep-equal';
 import { ValueDisplay } from '@/components/ValueDisplay';
 
-interface SaveCandidate {
+export interface SaveCandidate {
   id: string;
   variable: string;
   currentValue: JSONValue;
@@ -30,16 +28,14 @@ interface SaveCandidate {
 
 interface SaveVariablesModalProps {
   open: boolean;
-  variables: VariableInfo[];
-  formValues: Record<string, JSONValue>;
+  candidates: SaveCandidate[];
   onClose: () => void;
   onSaved: () => void;
 }
 
 export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
   open,
-  variables,
-  formValues,
+  candidates,
   onClose,
   onSaved,
 }) => {
@@ -47,31 +43,11 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
-  const candidates: SaveCandidate[] = useMemo(() => {
-    return variables
-      .filter((v): v is VariableInfo & { id: string } =>
-        Boolean(v.allow_save && v.id && v.variable in formValues),
-      )
-      .map((v) => {
-        const currentValue = formValues[v.variable];
-        const isChanged = !deepEqual(currentValue, v.saved_value);
-        return {
-          id: v.id,
-          variable: v.variable,
-          currentValue,
-          savedValue: v.saved_value,
-          isChanged,
-        };
-      });
-  }, [variables, formValues]);
-
   useEffect(() => {
     if (!open) return;
     const autoChecked = new Set(candidates.filter((c) => c.isChanged).map((c) => c.id));
     setChecked(autoChecked);
   }, [open, candidates]);
-
-  if (candidates.length === 0) return null;
 
   const toggleOne = (id: string) => {
     setChecked((prev) => {
