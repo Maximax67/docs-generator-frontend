@@ -35,11 +35,7 @@ export const adminApi = {
     await api.patch(`/users/${userId}`, { email: newEmail });
   },
 
-  async updateUserNames(
-    userId: string,
-    firstName: string,
-    lastName: string | null,
-  ): Promise<void> {
+  async updateUserNames(userId: string, firstName: string, lastName: string | null): Promise<void> {
     await api.patch<User>(`/users/${userId}`, {
       first_name: firstName,
       last_name: lastName,

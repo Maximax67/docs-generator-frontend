@@ -1,4 +1,4 @@
-import { JSONValue } from "@/types/json";
+import { JSONValue } from '@/types/json';
 
 export const applyTitleFallbacks = (node: Record<string, JSONValue>): Record<string, JSONValue> => {
   const result: Record<string, JSONValue> = { ...node };

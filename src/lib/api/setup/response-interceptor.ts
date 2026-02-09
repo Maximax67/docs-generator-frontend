@@ -4,7 +4,6 @@ import { useRateLimitStore } from '@/store/rate-limit';
 import { refreshToken } from './refresh-token';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {

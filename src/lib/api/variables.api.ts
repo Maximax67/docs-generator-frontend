@@ -57,9 +57,7 @@ export const variablesApi = {
   },
 
   async getVariableInfo(variableId: string): Promise<VariableInfo> {
-    const response = await api.get<VariableInfo>(
-      `/variables/${encodeURIComponent(variableId)}`,
-    );
+    const response = await api.get<VariableInfo>(`/variables/${encodeURIComponent(variableId)}`);
     return response.data;
   },
 

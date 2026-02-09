@@ -4,14 +4,17 @@ import { tokenManager } from './token-manager';
 import { useUserStore } from '@/store/user';
 import { refreshToken } from './refresh-token';
 
-
 api.interceptors.request.use(async (config) => {
   if (isBootstrapping()) {
     await bootstrapReady;
   }
 
   const url = config.url ?? '';
-  if (url.includes('/auth/refresh') || url.includes('/auth/login') || url.includes('/auth/register')) {
+  if (
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/login') ||
+    url.includes('/auth/register')
+  ) {
     return config;
   }
 

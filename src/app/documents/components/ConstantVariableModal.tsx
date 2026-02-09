@@ -174,7 +174,9 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
         );
 
         if (existingValidationInCurrentScope) {
-          updatedVariable = await variablesApi.updateVariable(existingValidationInCurrentScope.id, { value });
+          updatedVariable = await variablesApi.updateVariable(existingValidationInCurrentScope.id, {
+            value,
+          });
         } else {
           const payload = {
             variable: nameTrimmed,

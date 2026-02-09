@@ -18,7 +18,7 @@ export const documentsApi = {
     return response.data;
   },
 
-  async getDocumentPreview(documentId: string, format: string = "pdf"): Promise<Blob> {
+  async getDocumentPreview(documentId: string, format: string = 'pdf'): Promise<Blob> {
     const response = await api.get(`/drive/documents/${documentId}/preview`, {
       params: { format },
       responseType: 'blob',
@@ -26,10 +26,18 @@ export const documentsApi = {
     return response.data;
   },
 
-  async generateDocument(documentId: string, variables: Record<string, JSONValue>, format: string = "pdf"): Promise<Blob> {
+  async generateDocument(
+    documentId: string,
+    variables: Record<string, JSONValue>,
+    format: string = 'pdf',
+  ): Promise<Blob> {
     const url = `/drive/documents/${documentId}/generate`;
 
-    const response = await api.post(url, { variables }, { params: { format }, responseType: 'blob' });
+    const response = await api.post(
+      url,
+      { variables },
+      { params: { format }, responseType: 'blob' },
+    );
     return response.data;
   },
 };

@@ -1,4 +1,4 @@
-import { VariableInfo } from "./variables";
+import { VariableInfo } from './variables';
 
 export interface DriveItem {
   id: string;
@@ -8,7 +8,7 @@ export interface DriveItem {
   web_view_link?: string;
 }
 
-type FolderMimeType = "application/vnd.google-apps.folder";
+type FolderMimeType = 'application/vnd.google-apps.folder';
 
 export interface DriveFile extends DriveItem {
   mime_type: Exclude<string, FolderMimeType>;

@@ -1,6 +1,7 @@
-
-const ACCESS_TOKEN_LIFETIME_MINUTES =
-  parseInt(process.env.NEXT_PUBLIC_ACCESS_TOKEN_LIFETIME_MINUTES || '10', 10);
+const ACCESS_TOKEN_LIFETIME_MINUTES = parseInt(
+  process.env.NEXT_PUBLIC_ACCESS_TOKEN_LIFETIME_MINUTES || '10',
+  10,
+);
 
 const ACCESS_TOKEN_LIFETIME_MS = ACCESS_TOKEN_LIFETIME_MINUTES * 60 * 1000;
 const REFRESH_BUFFER_MS = 30 * 1000; // Refresh 30 seconds before expiration
@@ -40,7 +41,7 @@ class TokenManager {
     const now = Date.now();
     const timeSinceRefresh = now - this.lastRefreshTime;
 
-    return timeSinceRefresh >= (ACCESS_TOKEN_LIFETIME_MS - REFRESH_BUFFER_MS);
+    return timeSinceRefresh >= ACCESS_TOKEN_LIFETIME_MS - REFRESH_BUFFER_MS;
   }
 
   shouldRefreshOnBootstrap(): boolean {
@@ -51,7 +52,7 @@ class TokenManager {
     const now = Date.now();
     const timeSinceRefresh = now - this.lastRefreshTime;
 
-    return timeSinceRefresh >= (ACCESS_TOKEN_LIFETIME_MS - REFRESH_BUFFER_MS);
+    return timeSinceRefresh >= ACCESS_TOKEN_LIFETIME_MS - REFRESH_BUFFER_MS;
   }
 
   getTimeUntilExpiration(): number {

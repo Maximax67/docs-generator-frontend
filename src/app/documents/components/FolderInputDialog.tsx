@@ -201,8 +201,8 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
           <DialogContent>
             <Box sx={{ pt: 1 }}>
               <Alert severity="info" sx={{ mb: 2 }}>
-                До папки не заданий доступ. Налаштуйте його, щоб дозволити
-                користувачам переглядати цей розділ.
+                До папки не заданий доступ. Налаштуйте його, щоб дозволити користувачам переглядати
+                цей розділ.
               </Alert>
               {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>

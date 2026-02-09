@@ -21,7 +21,10 @@ export const scopesApi = {
     return response.data;
   },
 
-  async updateScopeRestrictions(driveId: string, restrictions: ScopeRestrictions): Promise<ScopeResponse> {
+  async updateScopeRestrictions(
+    driveId: string,
+    restrictions: ScopeRestrictions,
+  ): Promise<ScopeResponse> {
     const response = await api.put<ScopeResponse>(`/drive/scopes/${driveId}/restrictions`, {
       restrictions,
     });

@@ -263,7 +263,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
   const handleLogoutEverywhere = useCallback(async () => {
     const confirmed = await confirm({
       title: 'Вийти з усіх сесій',
-      message: 'Ви впевнені, що хочете вийти з усіх активних сесій? Вам доведеться увійти знову на всіх пристроях.',
+      message:
+        'Ви впевнені, що хочете вийти з усіх активних сесій? Вам доведеться увійти знову на всіх пристроях.',
       confirmText: 'Вийти з усіх',
       cancelText: 'Скасувати',
       severity: 'error',
@@ -418,7 +419,15 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         }
       }, 'Не вдалось видалити генерацію');
     },
-    [targetUser, confirm, withAsyncHandler, generations?.data.length, generationPage, handleChangeGenerationPage, handleRefreshGenerations],
+    [
+      targetUser,
+      confirm,
+      withAsyncHandler,
+      generations?.data.length,
+      generationPage,
+      handleChangeGenerationPage,
+      handleRefreshGenerations,
+    ],
   );
 
   const handleDeleteAllGenerations = useCallback(async () => {

@@ -1,13 +1,6 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import deepEqual from 'fast-deep-equal';
-import {
-  Box,
-  Typography,
-  TextField,
-  MenuItem,
-  FormControlLabel,
-  Switch,
-} from '@mui/material';
+import { Box, Typography, TextField, MenuItem, FormControlLabel, Switch } from '@mui/material';
 import { AccessLevel, ScopeSettings } from '@/types/scopes';
 
 interface ScopeSettingsTabProps {
@@ -85,69 +78,67 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
 
   return (
     <Box sx={{ p: 2 }}>
-        <Typography variant="h6" sx={{ mb: 3 }}>
-          Налаштування доступу
-        </Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        Налаштування доступу
+      </Typography>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <TextField
-            select
-            fullWidth
-            label="Рівень доступу"
-            value={accessLevel}
-            onChange={(e) => handleAccessLevelChange(e.target.value)}
-            helperText="Хто може переглядати цей розділ та його вміст"
-          >
-            {Object.entries(accessLevelLabels).map(([value, label]) => (
-              <MenuItem key={value} value={value}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <TextField
+          select
+          fullWidth
+          label="Рівень доступу"
+          value={accessLevel}
+          onChange={(e) => handleAccessLevelChange(e.target.value)}
+          helperText="Хто може переглядати цей розділ та його вміст"
+        >
+          {Object.entries(accessLevelLabels).map(([value, label]) => (
+            <MenuItem key={value} value={value}>
+              {label}
+            </MenuItem>
+          ))}
+        </TextField>
 
-          {isFolder && (
-            <>
-              <Box>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={isInfiniteDepth}
-                      onChange={(e) => handleInfiniteDepthToggle(e.target.checked)}
-                    />
-                  }
-                  label="Необмежена глибина"
-                />
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
-                  Якщо увімкнено, доступ поширюється на всі вкладені елементи
-                </Typography>
-              </Box>
+        {isFolder && (
+          <>
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isInfiniteDepth}
+                    onChange={(e) => handleInfiniteDepthToggle(e.target.checked)}
+                  />
+                }
+                label="Необмежена глибина"
+              />
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
+                Якщо увімкнено, доступ поширюється на всі вкладені елементи
+              </Typography>
+            </Box>
 
-              {!isInfiniteDepth && (
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Максимальна глибина"
-                  value={maxDepth ?? 1}
-                  onChange={(e) => handleMaxDepthChange(e.target.value)}
-                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
-                  helperText="1 = тільки файли цієї папки"
-                />
-              )}
-            </>
-          )}
+            {!isInfiniteDepth && (
+              <TextField
+                fullWidth
+                type="number"
+                label="Максимальна глибина"
+                value={maxDepth ?? 1}
+                onChange={(e) => handleMaxDepthChange(e.target.value)}
+                slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                helperText="1 = тільки файли цієї папки"
+              />
+            )}
+          </>
+        )}
 
-          <Box>
-            <FormControlLabel
-              control={
-                <Switch checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} />
-              }
-              label="Закріпити в кореневому дереві"
-            />
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
-              Показувати цей елемент у кореневому дереві документів
-            </Typography>
-          </Box>
+        <Box>
+          <FormControlLabel
+            control={<Switch checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} />}
+            label="Закріпити в кореневому дереві"
+          />
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
+            Показувати цей елемент у кореневому дереві документів
+          </Typography>
         </Box>
+      </Box>
     </Box>
   );
 };
