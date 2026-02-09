@@ -187,7 +187,7 @@ export default function GenerationsPage() {
         <Alert severity="info">Немає згенерованих документів</Alert>
       )}
 
-      {isFetched.current && generations && generations.data.length && (
+      {isFetched.current && generations && generations.data.length > 0 && (
         <>
           <PageSizeControl
             pageSize={pageSize}

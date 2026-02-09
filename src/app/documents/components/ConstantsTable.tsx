@@ -166,15 +166,17 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
                     <ScopeBadge folderTree={folderTree} scope={variable.scope} />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => handleEditClick(variable)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleClearClick(variable.id)}>
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDeleteClick(variable.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                      <IconButton size="small" onClick={() => handleEditClick(variable)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleClearClick(variable.id)}>
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDeleteClick(variable.id)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

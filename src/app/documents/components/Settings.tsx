@@ -403,7 +403,12 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         </Paper>
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={activeTab} onChange={handleTabChange}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
             <Tab
               value="validation"
               label={
