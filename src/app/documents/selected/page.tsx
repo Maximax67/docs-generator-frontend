@@ -17,6 +17,7 @@ import {
   ArrowBack as ArrowBackIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
+  Description as DescriptionIcon,
 } from '@mui/icons-material';
 import { RJSFSchema } from '@rjsf/utils';
 import deepEqual from 'fast-deep-equal';
@@ -33,6 +34,14 @@ import { SaveVariablesModal, SaveCandidate } from './SaveVariablesModal';
 import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentInputForm';
 import { applyTitleFallbacks } from '@/utils/json-schema';
 import { useUserStore } from '@/store/user';
+import { GenerationSuccessModal } from './GenerationSuccessModal';
+
+interface GeneratedDocument {
+  blob: Blob;
+  filename: string;
+  format: 'pdf' | 'docx';
+  formData: Record<string, JSONValue>;
+}
 
 export default function SelectedDocumentPage() {
   const router = useRouter();
@@ -40,6 +49,7 @@ export default function SelectedDocumentPage() {
   const { user } = useUserStore();
   const documentId = searchParams.get('id');
   const formRef = useRef<DocumentInputFormRef>(null);
+  const requestedFormatRef = useRef<'pdf' | 'docx'>('pdf');
 
   const [documentDetails, setDocumentDetails] = useState<DocumentDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,10 +59,9 @@ export default function SelectedDocumentPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
-  const [generatedFormValues, setGeneratedFormValues] = useState<Record<string, JSONValue> | null>(
-    null,
-  );
+  const [generatedDocument, setGeneratedDocument] = useState<GeneratedDocument | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!documentId) {
@@ -170,24 +179,52 @@ export default function SelectedDocumentPage() {
       return;
     }
 
+    const format = requestedFormatRef.current;
+
     try {
       setIsGenerating(true);
       setGenerateError(null);
+      requestedFormatRef.current = format;
 
-      const blob = await documentsApi.generateDocument(documentId, data);
+      const formatParam = format === 'docx' ? 'docx' : undefined;
+      const blob = await documentsApi.generateDocument(documentId, data, formatParam);
 
-      await savePdfToIndexedDb('generatedPdf', blob);
+      const baseFilename = formatFilename(
+        documentDetails.file.name,
+        documentDetails.file.mime_type,
+      );
+      const filename = format === 'docx' ? baseFilename.replace(/\.pdf$/, '.docx') : baseFilename;
 
-      const saveCandidates = calculateSaveCandidates(data);
+      const generated: GeneratedDocument = {
+        blob,
+        filename,
+        format: format,
+        formData: data,
+      };
 
-      if (saveCandidates.length > 0) {
-        setGeneratedFormValues({ ...data });
-        setShowSaveModal(true);
+      setGeneratedDocument(generated);
+
+      if (format === 'pdf') {
+        // Save PDF to IndexedDB for preview
+        await savePdfToIndexedDb('generatedPdf', blob);
+
+        // Check if we need to show save variables modal
+        const saveCandidates = calculateSaveCandidates(data);
+        if (saveCandidates.length > 0) {
+          setShowSaveModal(true);
+        } else {
+          setShowSuccessModal(true);
+        }
       } else {
-        router.push('/documents/result/');
+        // For DOCX, show success modal immediately
+        setShowSuccessModal(true);
       }
     } catch {
-      setGenerateError('Не вдалося згенерувати документ');
+      setGenerateError(
+        format === 'docx'
+          ? 'Не вдалося згенерувати DOCX документ'
+          : 'Не вдалося згенерувати документ',
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -197,27 +234,57 @@ export default function SelectedDocumentPage() {
     handleGenerate(e.formData);
   };
 
-  const onGenerateEmpty = async () => {
+  const onGenerateEmpty = async (format: 'pdf' | 'docx') => {
+    requestedFormatRef.current = format;
     handleGenerate({});
   };
 
-  const handleSubmitClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePdfClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    requestedFormatRef.current = 'pdf';
+    formRef.current?.submit();
+  };
+
+  const handleDocxClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    requestedFormatRef.current = 'docx';
     formRef.current?.submit();
   };
 
   const handleAfterSaveModal = () => {
     setShowSaveModal(false);
-    setGeneratedFormValues(null);
-    router.push('/documents/result/');
+    setShowSuccessModal(true);
+  };
+
+  const handleDownload = () => {
+    if (!generatedDocument) return;
+
+    const url = URL.createObjectURL(generatedDocument.blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = generatedDocument.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePreview = () => {
+    // This will work because it's a direct response to user click
+    window.open('/documents/result/', '_blank');
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    setGeneratedDocument(null);
   };
 
   const saveCandidates = useMemo(() => {
-    if (!generatedFormValues) {
+    if (!generatedDocument) {
       return [];
     }
-    return calculateSaveCandidates(generatedFormValues);
-  }, [generatedFormValues, calculateSaveCandidates]);
+    return calculateSaveCandidates(generatedDocument.formData);
+  }, [generatedDocument, calculateSaveCandidates]);
 
   if (loading) {
     return (
@@ -259,7 +326,6 @@ export default function SelectedDocumentPage() {
   }
 
   const isNoVariables = documentDetails?.variables.template_variables.length === 0;
-  const onClick = isNoVariables ? onGenerateEmpty : handleSubmitClick;
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -306,29 +372,68 @@ export default function SelectedDocumentPage() {
             </Alert>
           )}
 
-          <Button
-            variant="contained"
-            size="large"
-            type="submit"
-            startIcon={isGenerating ? <CircularProgress size={20} /> : <DownloadIcon />}
-            disabled={isGenerating}
-            onClick={onClick}
-            sx={{
-              minWidth: { xs: '100%', sm: 200 },
-              mb: 2,
-            }}
-          >
-            {isGenerating ? 'Генерація...' : 'Згенерувати PDF'}
-          </Button>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={
+                isGenerating && requestedFormatRef.current === 'pdf' ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <DownloadIcon />
+                )
+              }
+              disabled={isGenerating}
+              onClick={isNoVariables ? () => onGenerateEmpty('pdf') : handlePdfClick}
+              sx={{
+                minWidth: { xs: '100%', sm: 200 },
+              }}
+            >
+              {isGenerating && requestedFormatRef.current === 'pdf' ? 'Генерація...' : 'Згенерувати PDF'}
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={
+                isGenerating && requestedFormatRef.current === 'docx' ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  <DescriptionIcon />
+                )
+              }
+              disabled={isGenerating}
+              onClick={isNoVariables ? () => onGenerateEmpty('docx') : handleDocxClick}
+              sx={{
+                minWidth: { xs: '100%', sm: 200 },
+              }}
+            >
+              {isGenerating && requestedFormatRef.current === 'docx'
+                ? 'Генерація...'
+                : 'Згенерувати DOCX'}
+            </Button>
+          </Stack>
         </Paper>
       </Stack>
 
-      {showSaveModal && (
+      {showSaveModal && generatedDocument && (
         <SaveVariablesModal
           open={showSaveModal}
           candidates={saveCandidates}
           onClose={handleAfterSaveModal}
           onSaved={handleAfterSaveModal}
+        />
+      )}
+
+      {showSuccessModal && generatedDocument && (
+        <GenerationSuccessModal
+          open={showSuccessModal}
+          filename={generatedDocument.filename}
+          fileSize={generatedDocument.blob.size}
+          format={generatedDocument.format}
+          onDownload={handleDownload}
+          onPreview={generatedDocument.format === 'pdf' ? handlePreview : undefined}
+          onClose={handleCloseSuccessModal}
         />
       )}
     </Container>
