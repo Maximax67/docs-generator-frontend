@@ -8,6 +8,7 @@ import {
   SavedVariable,
   ValidateVariableResponse,
   VariableUpdate,
+  VariableOrderUpdate,
 } from '@/types/variables';
 import { JSONSchema } from 'jsonjoy-builder';
 import { JSONValue } from '@/types/json';
@@ -39,6 +40,12 @@ export const variablesApi = {
 
   async deleteVariable(id: string): Promise<void> {
     await api.delete(`/variables/${id}`);
+  },
+
+  async updateVariableOrder(
+    variables: VariableOrderUpdate[],
+  ): Promise<void> {
+    await api.post('/variables/reorder', { variables });
   },
 
   async saveVariables(variables: SaveVariableEntry[]): Promise<void> {

@@ -125,7 +125,7 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
     }
   };
 
-  const handleScopeSettingsChange = (settings: ScopeSettings) => {
+  const handleScopeSettingsChange = (settings: ScopeSettings | null) => {
     setScopeSettings(settings);
   };
 
@@ -211,6 +211,7 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
               )}
               {scopeSettings && (
                 <ScopeSettingsTab
+                  setupOnly
                   driveId={pendingFolderId!}
                   isFolder={true}
                   initialSettings={scopeSettings}

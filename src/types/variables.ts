@@ -14,7 +14,8 @@ export interface VariableInfo {
   allow_save: boolean;
   scope: string | null;
   saved_value: JSONValue;
-  override: VariableOverride[];
+  overrides: VariableOverride[];
+  order: number;
 }
 
 export interface SavedVariable {
@@ -46,6 +47,7 @@ export interface VariableCreate {
   validation_schema?: Record<string, JSONValue> | null;
   required: boolean;
   allow_save: boolean;
+  order?: number;
 }
 
 export interface VariableUpdate {
@@ -55,6 +57,12 @@ export interface VariableUpdate {
   validation_schema?: Record<string, JSONValue> | null;
   required?: boolean;
   allow_save?: boolean;
+  order?: number;
+}
+
+export interface VariableOrderUpdate {
+  id: string;
+  order: number;
 }
 
 export interface SaveVariableEntry {

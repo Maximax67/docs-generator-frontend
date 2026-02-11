@@ -113,12 +113,24 @@ export default function SelectedDocumentPage() {
       }
     });
 
-    const sortedProperties = Object.keys(properties)
-      .sort((a, b) => a.localeCompare(b))
-      .reduce<Record<string, JSONValue>>((acc, key) => {
-        acc[key] = properties[key];
-        return acc;
-      }, {});
+    const sortedKeys = Object.keys(properties).sort((a, b) => {
+      const infoA = variableMap.get(a);
+      const infoB = variableMap.get(b);
+
+      const orderA = infoA?.order ?? 10;
+      const orderB = infoB?.order ?? 10;
+
+      if (orderA === orderB) {
+        return a.localeCompare(b);
+      }
+
+      return orderA - orderB;
+    });
+
+    const sortedProperties = sortedKeys.reduce<Record<string, JSONValue>>((acc, key) => {
+      acc[key] = properties[key];
+      return acc;
+    }, {});
 
     return {
       type: 'object',

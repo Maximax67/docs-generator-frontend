@@ -28,10 +28,12 @@ import { ConstantsTable } from './ConstantsTable';
 import { FolderTree, FolderTreeGlobal } from '@/types/documents';
 import { SavingTable } from './SavingTable';
 import { ScopeSettingsTab } from './ScopeSettingsTab';
-import { AccessLevel, ScopeSettings } from '@/types/scopes';
+import { FieldOrderTab } from './FieldOrderTab';
+import { ScopeSettings } from '@/types/scopes';
 
 import 'jsonjoy-builder/styles.css';
 import './Settings.module.css';
+import { filterOverriddenVariables } from '@/utils/filter-overriden-variables';
 
 interface SettingsProps {
   scope: string | null;
@@ -51,7 +53,7 @@ const emptySchema: JSONSchema = {
   required: [],
 };
 
-type TabValue = 'validation' | 'constants' | 'saving' | 'access';
+type TabValue = 'validation' | 'constants' | 'saving' | 'access' | 'order';
 
 interface ParentScopeSchema {
   scope: string | null;
@@ -65,22 +67,28 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
     const notify = useNotify();
     const [activeTab, setActiveTab] = useState<TabValue>('validation');
 
-    // Validation schema state
     const [schema, setSchema] = useState<JSONSchema>({ ...emptySchema });
     const [initialSchema, setInitialSchema] = useState<JSONSchema>({ ...emptySchema });
     const [variables, setVariables] = useState<VariableInfo[]>([]);
     const [loading, setLoading] = useState(false);
     const [fetchingSchema, setFetchingSchema] = useState(false);
 
-    // Parent scope schemas state
     const [parentSchemas, setParentSchemas] = useState<ParentScopeSchema[]>([]);
     const [parentSchemasExpanded, setParentSchemasExpanded] = useState(false);
 
-    // Scope settings state
     const [scopeSettings, setScopeSettings] = useState<ScopeSettings | null>(null);
     const [initialScopeSettings, setInitialScopeSettings] = useState<ScopeSettings | null>(null);
     const [fetchingScopeSettings, setFetchingScopeSettings] = useState(false);
     const [savingScopeSettings, setSavingScopeSettings] = useState(false);
+
+    const [orderResetKey, setOrderResetKey] = useState(0);
+    const [changedFieldOrders, setChangedFieldOrders] = useState<VariableInfo[]>([]);
+    const [savingFieldOrders, setSavingFieldOrders] = useState(false);
+
+    const orderableVariables = useMemo(
+      () => filterOverriddenVariables(variables).filter((v) => v.value === null),
+      [variables],
+    );
 
     const hasSchemaChanges = useMemo(
       () => !deepEqual(schema, initialSchema),
@@ -88,11 +96,11 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
     );
 
     const hasScopeChanges = useMemo(() => {
-      if (!scopeSettings || !initialScopeSettings) return false;
       return !deepEqual(scopeSettings, initialScopeSettings);
     }, [scopeSettings, initialScopeSettings]);
 
-    const hasChanges = hasSchemaChanges || hasScopeChanges;
+    const hasOrderChanges = changedFieldOrders.length > 0;
+    const hasChanges = hasSchemaChanges || hasScopeChanges || hasOrderChanges;
 
     useImperativeHandle(
       ref,
@@ -102,13 +110,11 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
       [hasChanges],
     );
 
-    // Helper to get scope name from folder tree
     const getScopeName = useCallback(
       (targetScope: string | null): string => {
         if (!targetScope) return 'Глобальна область';
         if (!folderTree) return 'Папка';
 
-        // Try to find the folder in the tree
         const findFolder = (tree: FolderTreeGlobal | FolderTree, id: string): string | null => {
           if ('current_folder' in tree && tree.current_folder && tree.current_folder.id === id) {
             return tree.current_folder.name;
@@ -144,13 +150,15 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         }
         setVariables(response.variables);
 
+        // Reset field order changes when reloading
+        setChangedFieldOrders([]);
+
         // Load parent scope schemas
         const parentScopes: ParentScopeSchema[] = [];
         const variablesWithValidation = response.variables.filter(
           (v) => v.validation_schema && Object.keys(v.validation_schema).length > 0,
         );
 
-        // Group by scope
         const scopeMap = new Map<string | null, VariableInfo[]>();
         for (const variable of variablesWithValidation) {
           if (variable.scope !== scope) {
@@ -160,7 +168,6 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
           }
         }
 
-        // Build parent schemas
         for (const [parentScope, vars] of scopeMap.entries()) {
           const parentSchemaObj: JSONSchema = {
             type: 'object',
@@ -210,16 +217,8 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
           setScopeSettings(settings);
           setInitialScopeSettings(settings);
         } else {
-          const defaultSettings: ScopeSettings = {
-            drive_id: scope,
-            is_pinned: false,
-            restrictions: {
-              access_level: AccessLevel.ANY,
-              max_depth: null,
-            },
-          };
-          setScopeSettings(defaultSettings);
-          setInitialScopeSettings(defaultSettings);
+          setScopeSettings(null);
+          setInitialScopeSettings(null);
         }
       } catch (err) {
         console.error('Failed to load scope settings:', err);
@@ -238,8 +237,12 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
       setSchema(newSchema);
     };
 
-    const handleScopeSettingsChange = useCallback((settings: ScopeSettings) => {
+    const handleScopeSettingsChange = useCallback((settings: ScopeSettings | null) => {
       setScopeSettings(settings);
+    }, []);
+
+    const handleFieldOrdersChange = useCallback((changedOrders: VariableInfo[]) => {
+      setChangedFieldOrders(changedOrders);
     }, []);
 
     const handleSaveSchema = async () => {
@@ -252,7 +255,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
 
       try {
         await variablesApi.updateValidationSchema(scope, schema);
-        await loadSchema();
+        setInitialSchema(schema);
 
         notify('Схему успішно збережено');
       } catch (err) {
@@ -263,12 +266,24 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
     };
 
     const handleSaveScopeSettings = async () => {
-      if (!hasScopeChanges || !scopeSettings || !scope) {
+      if (!hasScopeChanges || !scope) {
         notify('Немає змін для збереження', 'info');
         return;
       }
 
       setSavingScopeSettings(true);
+
+      if (!scopeSettings) {
+        try {
+          await scopesApi.deleteScope(scope);
+          notify('Налаштування доступу успішно видалено');
+        } catch (err) {
+          notify(toErrorMessage(err, 'Не вдалося видалити налаштування доступу'), 'error');
+        } finally {
+          setSavingScopeSettings(false);
+        }
+        return;
+      }
 
       try {
         const existingScope = await scopesApi.getScope(scope);
@@ -295,6 +310,32 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         notify(toErrorMessage(err, 'Не вдалося зберегти налаштування доступу'), 'error');
       } finally {
         setSavingScopeSettings(false);
+      }
+    };
+
+    const handleSaveFieldOrders = async () => {
+      if (!hasOrderChanges) {
+        notify('Немає змін для збереження', 'info');
+        return;
+      }
+
+      setSavingFieldOrders(true);
+      try {
+        await variablesApi.updateVariableOrder(changedFieldOrders);
+        notify('Порядок полів успішно збережено');
+
+        setVariables((prev) =>
+          prev.map((v) => {
+            const changed = changedFieldOrders.find((c) => c.id === v.id);
+            return changed ? { ...v, order: changed.order } : v;
+          }),
+        );
+        setChangedFieldOrders([]);
+        setOrderResetKey((prev) => prev + 1);
+      } catch (err) {
+        notify(toErrorMessage(err, 'Не вдалося зберегти порядок полів'), 'error');
+      } finally {
+        setSavingFieldOrders(false);
       }
     };
 
@@ -349,9 +390,19 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         ? hasSchemaChanges
         : activeTab === 'access'
           ? hasScopeChanges
-          : false;
+          : activeTab === 'order'
+            ? hasOrderChanges
+            : false;
+
     const isSaving =
-      activeTab === 'validation' ? loading : activeTab === 'access' ? savingScopeSettings : false;
+      activeTab === 'validation'
+        ? loading
+        : activeTab === 'access'
+          ? savingScopeSettings
+          : activeTab === 'order'
+            ? savingFieldOrders
+            : false;
+
     const isFetching =
       activeTab === 'validation'
         ? fetchingSchema
@@ -364,7 +415,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         ? handleSaveSchema
         : activeTab === 'access'
           ? handleSaveScopeSettings
-          : undefined;
+          : activeTab === 'order'
+            ? handleSaveFieldOrders
+            : undefined;
 
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -413,7 +466,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
               value="validation"
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography>Валідація</Typography>
+                  <Typography variant="button">Валідація</Typography>
                   {hasSchemaChanges && (
                     <Box
                       sx={{
@@ -432,10 +485,30 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
             <Tab label="Константи" value="constants" />
             <Tab label="Збереження значень" value="saving" />
             <Tab
+              value="order"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="button">Порядок полів</Typography>
+                  {hasOrderChanges && (
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        bgcolor: 'warning.main',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </Box>
+              }
+              title={hasOrderChanges ? 'Не збережені зміни' : undefined}
+            />
+            <Tab
               value="access"
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography>Доступ</Typography>
+                  <Typography variant="button">Доступ</Typography>
                   {hasScopeChanges && (
                     <Box
                       sx={{
@@ -562,6 +635,14 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                   onChangeSave={handleChangeSave}
                   onAddVariable={handleAddVariable}
                   onDeleteVariable={handleDeleteVariable}
+                />
+              )}
+              {activeTab === 'order' && (
+                <FieldOrderTab
+                  folderTree={folderTree}
+                  orderableVariables={orderableVariables}
+                  onChange={handleFieldOrdersChange}
+                  resetKey={orderResetKey}
                 />
               )}
               {activeTab === 'access' && (

@@ -24,6 +24,7 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { FolderTreeGlobal } from '@/types/documents';
 import { ScopeBadge } from '@/components/ScopeBadge';
 import { ValueDisplay } from '@/components/ValueDisplay';
+import { filterOverriddenVariables } from '@/utils/filter-overriden-variables';
 
 interface SavingTableProps {
   scope: string | null;
@@ -48,7 +49,7 @@ export const SavingTable: FC<SavingTableProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [savingToggle, setSavingToggle] = useState(false);
 
-  const savingVariables = variables.filter((v) => v.value === null);
+  const savingVariables = filterOverriddenVariables(variables).filter((v) => v.value === null);
 
   const handleAddClick = async () => {
     setModalOpen(true);

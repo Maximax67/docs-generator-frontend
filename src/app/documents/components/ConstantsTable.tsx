@@ -31,6 +31,7 @@ import { ValueDisplay } from '@/components/ValueDisplay';
 import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialog';
 import { JSONValue } from '@/types/json';
 import { ScopeBadge } from '@/components/ScopeBadge';
+import { filterOverriddenVariables } from '@/utils/filter-overriden-variables';
 
 interface ConstantsTableProps {
   scope: string | null;
@@ -55,7 +56,7 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
   const [editingVariable, setEditingVariable] = useState<VariableInfo | null>(null);
   const fullValueDialogRef = useRef<FullValueDialogRef>(null);
 
-  const allConstants = variables.filter((v) => v.value !== null);
+  const allConstants = filterOverriddenVariables(variables).filter((v) => v.value !== null);
 
   const showFullValue = (value: JSONValue) => {
     fullValueDialogRef.current?.open(value);
