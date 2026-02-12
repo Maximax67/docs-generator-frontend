@@ -1,6 +1,6 @@
 import { LegalInfoRecord } from '@/types/legal-info-record';
 
-export const privacyUpdateDate = '12.02.2025';
+export const privacyUpdateDate = '12.02.2026';
 export const privacy: LegalInfoRecord[] = [
   {
     c: [
