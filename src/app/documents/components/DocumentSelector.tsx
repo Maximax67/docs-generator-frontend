@@ -181,6 +181,11 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
       if (!previewCache.has(result.item.id)) {
         fetchPreview(result.item.id);
+      } else {
+        const cachedPreview = previewCache.get(result.item.id);
+        if (cachedPreview) {
+          setPreviews((prev) => ({ ...prev, [result.item.id]: cachedPreview }));
+        }
       }
     }
   }, [folderTree, scope, pathParam, mode, isAdmin, user, fetchPreview, notify]);
@@ -240,6 +245,11 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
         if (!previewCache.has(document.id)) {
           fetchPreview(document.id);
+        } else {
+          const cachedPreview = previewCache.get(document.id);
+          if (cachedPreview) {
+            setPreviews((prev) => ({ ...prev, [document.id]: cachedPreview }));
+          }
         }
       };
 
@@ -410,7 +420,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         open={showConfirmDialog}
         title="Незбережені зміни"
         message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
-        confirmText="Вийти без збереження"
+        confirmText="Війти без збереження"
         cancelText="Скасувати"
         onConfirm={handleConfirmProceed}
         onCancel={handleConfirmCancel}
