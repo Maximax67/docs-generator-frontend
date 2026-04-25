@@ -8,6 +8,7 @@ import { DriveFile, DocumentPreview } from '@/types/documents';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
 import { PdfViewerClient } from '@/components/PdfViewerClient';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface PdfPreviewProps {
   showWebLink?: boolean;
@@ -18,6 +19,8 @@ interface PdfPreviewProps {
 
 export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview, onRefresh }) => {
   const router = useRouter();
+  const dict = useDictionary();
+  const d = dict.documents;
 
   const documentSelectHandler = () => {
     if (document) {
@@ -37,7 +40,7 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
         }}
       >
         <Typography variant="h6" color="text.secondary" sx={{ textAlign: 'center' }}>
-          Оберіть документ для перегляду
+          {d.selectDocument}
         </Typography>
       </Box>
     );
@@ -63,12 +66,12 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
           {formatFilename(document.name, document.mime_type)}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Оновлено: {formatDateTime(document.modified_time)}
+          {d.updated} {formatDateTime(document.modified_time)}
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', gap: 2 }}>
         <Button size="medium" variant="outlined" onClick={documentSelectHandler}>
-          Обрати
+          {d.select}
         </Button>
         {showWebLink && document.web_view_link && (
           <IconButton
@@ -103,7 +106,7 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
       >
         <CircularProgress size={40} />
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-          Завантаження попереднього перегляду...
+          {d.loadingPreview}
         </Typography>
       </Box>
     );
@@ -140,7 +143,7 @@ export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview
         }}
       >
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-          Неможливо завантажити попередній перегляд
+          {d.previewUnavailable}
         </Typography>
       </Box>
     );

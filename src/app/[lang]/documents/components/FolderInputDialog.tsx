@@ -16,6 +16,7 @@ import { toErrorMessage } from '@/utils/errors-messages';
 import { isAxiosError } from '@/utils/is-axios-error';
 import { ScopeSettingsTab } from './ScopeSettingsTab';
 import { AccessLevel, ScopeSettings } from '@/types/scopes';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface FolderInputDialogProps {
   open: boolean;
@@ -32,6 +33,9 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const dict = useDictionary();
+  const d = dict.documents.drive;
+
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,7 +72,7 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
     const folderId = extractFolderId(input);
 
     if (!folderId) {
-      setError('Невірний формат. Введіть ID папки або URL Google Drive');
+      setError(d.invalidFormat);
       return;
     }
 
@@ -98,10 +102,10 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
           setScopeSettings(defaultSettings);
           setDialogState('scope-creation');
         } else {
-          setError('У вас немає доступу до цієї папки');
+          setError(d.noAccess);
         }
       } else {
-        setError(toErrorMessage(err, 'Не вдалося завантажити папку'));
+        setError(toErrorMessage(err, d.loadError));
       }
     } finally {
       setLoading(false);
@@ -119,7 +123,7 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
       onSubmit(pendingFolderId);
       handleClose();
     } catch (err) {
-      setError(toErrorMessage(err, 'Не вдалося створити налаштування доступу'));
+      setError(toErrorMessage(err, d.createError));
     } finally {
       setSavingScope(false);
     }
@@ -150,11 +154,11 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       {dialogState === 'input' ? (
         <>
-          <DialogTitle>Відкрити папку Google Drive</DialogTitle>
+          <DialogTitle>{d.dialogTitle}</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Введіть URL папки Google Drive або ID папки
+                {d.description}
               </Typography>
               {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -164,8 +168,8 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
               <TextField
                 autoFocus
                 fullWidth
-                label="URL або ID папки"
-                placeholder="https://drive.google.com/drive/folders/... або 1a2b3c4d..."
+                label={d.label}
+                placeholder={d.placeholder}
                 value={input}
                 onChange={(e) => {
                   setInput(e.target.value);
@@ -183,7 +187,7 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose} disabled={loading}>
-              Скасувати
+              {dict.common.cancel}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -191,18 +195,17 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
               disabled={!input.trim() || loading}
               startIcon={loading ? <CircularProgress size={20} /> : null}
             >
-              {loading ? 'Завантаження...' : 'Відкрити'}
+              {loading ? dict.common.loading : dict.common.open}
             </Button>
           </DialogActions>
         </>
       ) : (
         <>
-          <DialogTitle>Створити налаштування доступу</DialogTitle>
+          <DialogTitle>{d.createAccessTitle}</DialogTitle>
           <DialogContent>
             <Box sx={{ pt: 1 }}>
               <Alert severity="info" sx={{ mb: 2 }}>
-                До папки не заданий доступ. Налаштуйте його, щоб дозволити користувачам переглядати
-                цей розділ.
+                {d.createAccessInfo}
               </Alert>
               {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -222,10 +225,10 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
           </DialogContent>
           <DialogActions>
             <Button onClick={handleBackToInput} disabled={savingScope}>
-              Назад
+              {dict.common.back}
             </Button>
             <Button onClick={handleClose} disabled={savingScope}>
-              Скасувати
+              {dict.common.cancel}
             </Button>
             <Button
               onClick={handleScopeCreate}
@@ -233,7 +236,7 @@ export const FolderInputDialog: FC<FolderInputDialogProps> = ({
               disabled={savingScope}
               startIcon={savingScope ? <CircularProgress size={20} /> : null}
             >
-              {savingScope ? 'Створення...' : 'Створити і відкрити'}
+              {savingScope ? dict.common.creating : d.createAndOpen}
             </Button>
           </DialogActions>
         </>

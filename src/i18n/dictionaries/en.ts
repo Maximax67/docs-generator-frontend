@@ -166,20 +166,32 @@ export const en = {
     selectDocument: 'Select a document to view',
     updated: 'Updated:',
     select: 'Select',
+    loadFolderStructureError: 'Failed to load folder structure',
     loadingPreview: 'Loading preview...',
+    loadingPreivewError: 'Failed to load preview.',
     previewUnavailable: 'Unable to load preview',
     documentNotFound: 'Document not found',
+    documentOrFolderNotFound: 'Document or folder not found',
     documentNotSelected: 'No document selected!',
+    accessDenied: 'Access denied',
+    loginForSettingsAccess: 'Sign in to access settings',
     loadError: 'Failed to load document data',
     generating: 'Generating...',
     generatePdf: 'Generate PDF',
     generateDocx: 'Generate DOCX',
+    generateError: 'Failed to generate document',
+    generateDocxError: 'Failed to generate DOCX document',
     noFields: 'The document has no fields to fill!',
     globalScope: 'Global scope',
     folder: 'Folder',
     loadingScope: 'Loading...',
     loadScopeError: 'Load error',
     resultNotFound: 'Generated PDF not found',
+    fileSize: {
+      bytes: 'B',
+      kb: 'KB',
+      mb: 'MB',
+    },
 
     drive: {
       dialogTitle: 'Open Google Drive Folder',
@@ -193,6 +205,7 @@ export const en = {
       createAccessInfo:
         'Folder access is not configured. Set it up to allow users to view this section.',
       createAndOpen: 'Create and open',
+      createError: 'Failed to create access settings',
     },
 
     settings: {
@@ -253,7 +266,11 @@ export const en = {
       deleteMessage: 'Are you sure you want to delete this variable?',
       deletedSuccess: 'Variable deleted successfully',
       clearedSuccess: 'Constant value cleared successfully',
+      clearError: 'Failed to clear constant value',
+      deleteError: 'Failed to delete variable',
       emptyName: 'Variable name cannot be empty',
+      invalidNumber: 'Invalid number value',
+      invalidJson: 'Invalid JSON format',
       parentScopeWarning: 'You are editing a constant from a parent scope.',
       overrideConstantWarning:
         'This variable is already defined in "Validation". Are you sure you want to make it a constant?',
@@ -280,6 +297,7 @@ export const en = {
       deleteWithSchemaMessage:
         'Are you sure you want to delete the variable "{name}"? This variable has a validation schema. Deleting it will also remove the validation schema.',
       deletedSuccess: 'Variable deleted successfully',
+      toggleError: 'Failed to update allow save setting',
       emptyName: 'Variable name cannot be empty',
       duplicateInScope: 'A variable with this name already exists in this scope.',
       constantInScope: 'This variable is a constant in the current scope.',
@@ -325,6 +343,8 @@ export const en = {
       download: 'Download',
       preview: 'Preview',
       close: 'Close',
+      pdfDescription: 'You can preview or download the document to your device.',
+      docxDescription: 'Click the button below to download the document.',
     },
 
     saveVariables: {
@@ -423,6 +443,7 @@ export const en = {
       actionsCol: 'Actions',
       editTitle: 'Edit variable',
       editPlaceholder: 'Enter value (text, number, true/false or JSON)',
+      saveError: 'Failed to save value',
     },
 
     sessions: {
@@ -525,6 +546,35 @@ export const en = {
         confirm: 'Delete',
         cancel: 'Cancel',
       },
+    },
+
+    errors: {
+      changeEmail: 'Failed to change email',
+      changePassword: 'Failed to change password',
+      updateNames: 'Failed to update name',
+      sendConfirmation: 'Failed to send confirmation email',
+      confirmEmail: 'Failed to confirm email',
+      revokeConfirmation: 'Failed to revoke email confirmation',
+      banUser: 'Failed to block user',
+      unbanUser: 'Failed to unblock user',
+      promoteUser: 'Failed to promote user',
+      demoteUser: 'Failed to demote user',
+      loadSessions: 'Failed to load sessions',
+      deleteSession: 'Failed to end session',
+      loadVars: 'Failed to load data',
+      clearVars: 'Failed to clear data',
+      deleteVar: 'Failed to delete variable',
+      updateVar: 'Failed to update variable',
+      loadGenerations: 'Failed to load generations',
+      regenerate: 'Failed to regenerate PDF',
+      deleteGeneration: 'Failed to delete generation',
+      deleteAllGenerations: 'Failed to delete all generations',
+      deleteAccount: 'Account deletion error',
+      loadProfile: 'Failed to load profile',
+      loadFolderTree: 'Failed to load document structure',
+      initSessions: 'Failed to load sessions',
+      initVars: 'Failed to load variables',
+      initGenerations: 'Failed to load generations',
     },
   },
 

@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import { FolderInputDialog } from './FolderInputDialog';
 import { TreeNodePath } from '@/utils/document-tree';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface TreeScopeHeaderProps {
   scopeFolderId: string | null;
@@ -29,6 +30,8 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
   onSettingsOpen,
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const dict = useDictionary();
+  const d = dict.documents;
 
   const handleOpenDialog = () => {
     setDialogOpen(true);
@@ -48,18 +51,17 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
 
   const handleSettingsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const name = scopeFolderId ? scopeFolderName || 'Папка' : 'Глобальна область';
+    const name = scopeFolderId ? scopeFolderName || d.folder : dict.scope.global;
     const id = scopeFolderId || '__global__';
     onSettingsOpen?.(id, name, id, true);
   };
 
   const isGlobalScope = !scopeFolderId;
 
-  // Determine display state
   const getDisplayContent = () => {
     if (treeLoading && scopeFolderId) {
       return {
-        text: 'Завантаження...',
+        text: d.loadingScope,
         icon: null,
         color: 'text.secondary',
       };
@@ -67,7 +69,7 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
 
     if (treeError && scopeFolderId) {
       return {
-        text: 'Помилка завантаження',
+        text: d.loadScopeError,
         icon: <ErrorIcon fontSize="small" color="error" />,
         color: 'error.main',
       };
@@ -75,14 +77,14 @@ export const TreeScopeHeader: FC<TreeScopeHeaderProps> = ({
 
     if (isGlobalScope) {
       return {
-        text: 'Глобальна область',
+        text: dict.scope.global,
         icon: null,
         color: 'text.secondary',
       };
     }
 
     return {
-      text: scopeFolderName || 'Папка',
+      text: scopeFolderName || d.folder,
       icon: null,
       color: 'text.primary',
     };

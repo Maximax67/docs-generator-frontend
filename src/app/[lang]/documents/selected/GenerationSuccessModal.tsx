@@ -19,6 +19,7 @@ import {
   Description as DescriptionIcon,
   PictureAsPdf as PictureAsPdfIcon,
 } from '@mui/icons-material';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface GenerationSuccessModalProps {
   open: boolean;
@@ -30,12 +31,6 @@ interface GenerationSuccessModalProps {
   onClose: () => void;
 }
 
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} Б`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
-};
-
 export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
   open,
   filename,
@@ -45,18 +40,30 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
   onPreview,
   onClose,
 }) => {
+  const dict = useDictionary();
+  const g = dict.documents.generation;
+  const fs = dict.documents.fileSize;
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} ${fs.bytes}`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ${fs.kb}`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} ${fs.mb}`;
+  };
+
   const isPdf = format === 'pdf';
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-        }
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+          },
+        },
       }}
     >
       <DialogTitle>
@@ -64,20 +71,20 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
           <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main' }} />
           <Box>
             <Typography variant="h6" component="div">
-              Документ успішно згенеровано!
+              {g.success}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Ваш файл готовий до завантаження
+              {g.readyToDownload}
             </Typography>
           </Box>
         </Stack>
       </DialogTitle>
 
       <DialogContent>
-        <Paper 
-          variant="outlined" 
-          sx={{ 
-            p: 3, 
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
           }}
@@ -90,9 +97,9 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
                 <DescriptionIcon sx={{ fontSize: 48, color: 'primary.main' }} />
               )}
               <Box sx={{ flex: 1 }}>
-                <Typography 
-                  variant="subtitle1" 
-                  sx={{ 
+                <Typography
+                  variant="subtitle1"
+                  sx={{
                     fontWeight: 600,
                     wordBreak: 'break-word',
                   }}
@@ -100,17 +107,13 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
                   {filename}
                 </Typography>
                 <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-                  <Chip 
-                    label={format.toUpperCase()} 
-                    size="small" 
+                  <Chip
+                    label={format.toUpperCase()}
+                    size="small"
                     color={isPdf ? 'error' : 'primary'}
                     sx={{ fontWeight: 600 }}
                   />
-                  <Chip 
-                    label={formatFileSize(fileSize)} 
-                    size="small" 
-                    variant="outlined"
-                  />
+                  <Chip label={formatFileSize(fileSize)} size="small" variant="outlined" />
                 </Stack>
               </Box>
             </Stack>
@@ -119,7 +122,7 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
 
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {isPdf ? 'Ви можете переглянути документ або завантажити його на свій пристрій.' : 'Натисніть кнопку нижче, щоб завантажити документ.'}
+                {isPdf ? g.pdfDescription : g.docxDescription}
               </Typography>
             </Box>
           </Stack>
@@ -128,17 +131,12 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
 
       <DialogActions sx={{ px: 3, pb: 3, pt: 0 }}>
         <Button onClick={onClose} color="inherit">
-          Закрити
+          {g.close}
         </Button>
         <Box sx={{ flex: 1 }} />
         <Stack direction="row" spacing={2}>
-          <Button
-            variant="outlined"
-            startIcon={<DownloadIcon />}
-            onClick={onDownload}
-            size="large"
-          >
-            Завантажити
+          <Button variant="outlined" startIcon={<DownloadIcon />} onClick={onDownload} size="large">
+            {g.download}
           </Button>
           {isPdf && onPreview && (
             <Button
@@ -147,7 +145,7 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
               onClick={onPreview}
               size="large"
             >
-              Переглянути
+              {g.preview}
             </Button>
           )}
         </Stack>

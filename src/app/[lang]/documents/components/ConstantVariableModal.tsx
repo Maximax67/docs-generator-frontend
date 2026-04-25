@@ -19,6 +19,7 @@ import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { JSONValue } from '@/types/json';
+import { useDictionary } from '@/contexts/LangContext';
 
 type VariableType = 'text' | 'number' | 'boolean' | 'json';
 
@@ -40,6 +41,9 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   onSave,
 }) => {
   const notify = useNotify();
+  const dict = useDictionary();
+  const c = dict.documents.constants;
+
   const [variableName, setVariableName] = useState('');
   const [variableType, setVariableType] = useState<VariableType>('text');
   const [variableValue, setVariableValue] = useState('');
@@ -100,9 +104,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
     );
 
     if (existingValidationInCurrentScope) {
-      setOverrideWarning(
-        `Ця змінна вже задана в розіділі "Валідація". Ви дійсно впевнені, що хочете зробити її константою?`,
-      );
+      setOverrideWarning(c.overrideConstantWarning);
       return;
     }
 
@@ -115,13 +117,9 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
 
     if (existingInOtherScope) {
       if (existingInOtherScope.value === null) {
-        setOverrideWarning(
-          `Ця змінна вже існує та не є константою в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'}. Ви дійсно впевнені, що хочете перевизначити її?`,
-        );
+        setOverrideWarning(c.overrideParentWarning);
       } else {
-        setOverrideWarning(
-          `Ця змінна вже визначена в ${existingInOtherScope.scope ? 'вищих scope' : 'глобальному scope'} і буде перевизначена`,
-        );
+        setOverrideWarning(c.overrideParentConstantWarning);
       }
 
       return;
@@ -134,17 +132,18 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
     switch (variableType) {
       case 'boolean':
         return booleanValue;
-      case 'number':
+      case 'number': {
         const num = parseFloat(variableValue);
         if (isNaN(num)) {
-          throw new Error('Некоректне числове значення');
+          throw new Error(c.invalidNumber);
         }
         return num;
+      }
       case 'json':
         try {
           return JSON.parse(variableValue);
         } catch {
-          throw new Error('Некоректний JSON формат');
+          throw new Error(c.invalidJson);
         }
       case 'text':
       default:
@@ -155,7 +154,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   const handleSave = async () => {
     const nameTrimmed = variableName.trim();
     if (!nameTrimmed) {
-      notify('Назва змінної не може бути порожньою', 'error');
+      notify(c.emptyName, 'error');
       return;
     }
 
@@ -167,7 +166,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
 
       if (editingVariable) {
         updatedVariable = await variablesApi.updateVariable(editingVariable.id, { value });
-        notify('Константу успішно оновлено', 'success');
+        notify(c.updatedSuccess, 'success');
       } else {
         const existingValidationInCurrentScope = existingVariables.find(
           (v) => v.variable === nameTrimmed && v.scope === scope && v.value === null,
@@ -188,7 +187,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
           };
           updatedVariable = await variablesApi.createVariable(payload);
         }
-        notify('Константу успішно створено');
+        notify(c.createdSuccess);
       }
 
       onSave(updatedVariable);
@@ -207,8 +206,8 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
             value={booleanValue}
             onChange={(e) => setBooleanValue(e.target.value === 'true')}
           >
-            <FormControlLabel value="true" control={<Radio />} label="Так" />
-            <FormControlLabel value="false" control={<Radio />} label="Ні" />
+            <FormControlLabel value="true" control={<Radio />} label={c.boolTrue} />
+            <FormControlLabel value="false" control={<Radio />} label={c.boolFalse} />
           </RadioGroup>
         );
       case 'number':
@@ -216,7 +215,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
           <TextField
             fullWidth
             type="number"
-            label="Значення"
+            label={c.numberValue}
             value={variableValue}
             onChange={(e) => setVariableValue(e.target.value)}
             slotProps={{ htmlInput: { step: 'any' } }}
@@ -229,7 +228,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
             fullWidth
             multiline
             rows={8}
-            label="JSON значення"
+            label={c.jsonValue}
             value={variableValue}
             onChange={(e) => setVariableValue(e.target.value)}
             disabled={loading}
@@ -242,7 +241,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
             fullWidth
             multiline
             rows={4}
-            label="Значення"
+            label={c.textValue}
             value={variableValue}
             onChange={(e) => setVariableValue(e.target.value)}
             disabled={loading}
@@ -253,12 +252,12 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{editingVariable ? 'Редагувати константу' : 'Додати константу'}</DialogTitle>
+      <DialogTitle>{editingVariable ? c.editTitle : c.addTitle}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {isEditingParentScope && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              Ви редагуєте константу з вищого scope.
+              {c.parentScopeWarning}
             </Alert>
           )}
 
@@ -270,7 +269,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
 
           <TextField
             fullWidth
-            label="Назва змінної"
+            label={c.variableName}
             value={variableName}
             onChange={(e) => handleNameChange(e.target.value)}
             disabled={loading || !!editingVariable}
@@ -279,15 +278,15 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
           <TextField
             select
             fullWidth
-            label="Тип"
+            label={c.typeLabel}
             value={variableType}
             onChange={(e) => setVariableType(e.target.value as VariableType)}
             disabled={loading}
           >
-            <MenuItem value="text">Текст</MenuItem>
-            <MenuItem value="number">Число</MenuItem>
-            <MenuItem value="boolean">Булеве значення</MenuItem>
-            <MenuItem value="json">JSON</MenuItem>
+            <MenuItem value="text">{c.text}</MenuItem>
+            <MenuItem value="number">{c.number}</MenuItem>
+            <MenuItem value="boolean">{c.boolean}</MenuItem>
+            <MenuItem value="json">{c.json}</MenuItem>
           </TextField>
 
           {renderValueInput()}
@@ -295,7 +294,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Скасувати
+          {dict.common.cancel}
         </Button>
         <Button
           onClick={handleSave}
@@ -303,7 +302,7 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
           disabled={loading || !variableName.trim()}
           startIcon={loading && <CircularProgress size={20} />}
         >
-          {loading ? 'Збереження...' : editingVariable ? 'Зберегти' : 'Додати'}
+          {loading ? dict.common.saving : editingVariable ? c.saveConfirm : c.addConfirm}
         </Button>
       </DialogActions>
     </Dialog>

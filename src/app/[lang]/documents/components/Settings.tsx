@@ -196,7 +196,6 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
 
         setParentSchemas(parentScopes);
       } catch (err) {
-        console.error('Failed to load existing schema:', err);
         notify(toErrorMessage(err, dict.documents.settings.loadSchemaError), 'error');
       } finally {
         setFetchingSchema(false);
@@ -223,7 +222,6 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
           setInitialScopeSettings(null);
         }
       } catch (err) {
-        console.error('Failed to load scope settings:', err);
         notify(toErrorMessage(err, dict.documents.settings.loadAccessError), 'error');
       } finally {
         setFetchingScopeSettings(false);

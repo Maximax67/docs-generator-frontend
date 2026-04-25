@@ -14,6 +14,7 @@ import { VariableInfo } from '@/types/variables';
 import { variablesApi } from '@/lib/api';
 import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface SavingVariableModalProps {
   open: boolean;
@@ -31,6 +32,9 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
   onAddVariable,
 }) => {
   const notify = useNotify();
+  const dict = useDictionary();
+  const sv = dict.documents.savingVars;
+
   const [variableName, setVariableName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -60,7 +64,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
       (v) => v.variable === trimmed && v.scope === scope && v.value === null,
     );
     if (duplicateInScope) {
-      setBlockingError('Змінна з такою назвою вже існує в цьому scope.');
+      setBlockingError(sv.duplicateInScope);
       return;
     }
 
@@ -69,7 +73,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
       (v) => v.variable === trimmed && v.scope === scope && v.value !== null,
     );
     if (constantInScope) {
-      setBlockingError('Ця змінна є константою в поточному scope.');
+      setBlockingError(sv.constantInScope);
       return;
     }
 
@@ -78,11 +82,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
       (v) => v.variable === trimmed && v.scope !== scope && v.value !== null,
     );
     if (constantElsewhere) {
-      const location = constantElsewhere.scope ? 'вищому scope' : 'глобальному scope';
-      setParentWarning(
-        `Ця змінна є константою в ${location}. ` +
-          'Додавання savable-змінної перевизначить її для поточного scope.',
-      );
+      setParentWarning(sv.constantParentWarning);
     }
   };
 
@@ -94,7 +94,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
   const handleSave = async () => {
     const trimmed = variableName.trim();
     if (!trimmed) {
-      notify('Назва змінної не може бути порожньою', 'error');
+      notify(sv.emptyName, 'error');
       return;
     }
 
@@ -114,7 +114,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
       };
 
       const newVariable = await variablesApi.createVariable(payload);
-      notify('Змінну для збереження успішно створено');
+      notify(sv.createdSuccess);
       onAddVariable(newVariable);
     } catch (error) {
       notify(toErrorMessage(error), 'error');
@@ -127,7 +127,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Додати змінну для збереження</DialogTitle>
+      <DialogTitle>{sv.addTitle}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
           {blockingError && <Alert severity="error">{blockingError}</Alert>}
@@ -135,7 +135,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
 
           <TextField
             fullWidth
-            label="Назва змінної"
+            label={sv.variableName}
             value={variableName}
             onChange={(e) => handleNameChange(e.target.value)}
             disabled={loading}
@@ -145,7 +145,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Скасувати
+          {dict.common.cancel}
         </Button>
         <Button
           onClick={handleSave}
@@ -153,7 +153,7 @@ export const SavingVariableModal: FC<SavingVariableModalProps> = ({
           disabled={isSubmitDisabled}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
-          {loading ? 'Збереження...' : 'Додати'}
+          {loading ? dict.common.saving : sv.addConfirm}
         </Button>
       </DialogActions>
     </Dialog>

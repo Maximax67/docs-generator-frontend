@@ -168,20 +168,32 @@ export const uk: Dictionary = {
     selectDocument: 'Оберіть документ для перегляду',
     updated: 'Оновлено:',
     select: 'Обрати',
+    loadFolderStructureError: 'Не вдалося завантажити структуру папок',
     loadingPreview: 'Завантаження попереднього перегляду...',
+    loadingPreivewError: 'Не вдалося завантажити попередній перегляд',
     previewUnavailable: 'Неможливо завантажити попередній перегляд',
     documentNotFound: 'Документ не знайдено',
+    documentOrFolderNotFound: 'Документ або папку не знайдено',
     documentNotSelected: 'Документ не обрано!',
+    accessDenied: 'Доступ заборонено',
+    loginForSettingsAccess: 'Увійдіть для доступу до налаштувань',
     loadError: 'Не вдалося завантажити дані документа',
     generating: 'Генерація...',
     generatePdf: 'Згенерувати PDF',
     generateDocx: 'Згенерувати DOCX',
+    generateError: 'Не вдалося згенерувати документ',
+    generateDocxError: 'Не вдалося згенерувати DOCX документ',
     noFields: 'Документ не містить полів для заповнення!',
     globalScope: 'Глобальна область',
     folder: 'Папка',
     loadingScope: 'Завантаження...',
     loadScopeError: 'Помилка завантаження',
     resultNotFound: 'Згенерований PDF не знайдено',
+    fileSize: {
+      bytes: 'Б',
+      kb: 'КБ',
+      mb: 'МБ',
+    },
 
     drive: {
       dialogTitle: 'Відкрити папку Google Drive',
@@ -195,6 +207,7 @@ export const uk: Dictionary = {
       createAccessInfo:
         'До папки не заданий доступ. Налаштуйте його, щоб дозволити користувачам переглядати цей розділ.',
       createAndOpen: 'Створити і відкрити',
+      createError: 'Не вдалося створити налаштування доступу',
     },
 
     settings: {
@@ -255,7 +268,11 @@ export const uk: Dictionary = {
       deleteMessage: 'Ви впевнені, що хочете видалити цю змінну?',
       deletedSuccess: 'Змінну успішно видалено',
       clearedSuccess: 'Значення константи успішно видалено',
+      clearError: 'Не вдалося видалити значення константи',
+      deleteError: 'Не вдалося видалити змінну',
       emptyName: 'Назва змінної не може бути порожньою',
+      invalidNumber: 'Некоректне числове значення',
+      invalidJson: 'Некоректний JSON формат',
       parentScopeWarning: 'Ви редагуєте константу з вищого scope.',
       overrideConstantWarning:
         'Ця змінна вже задана в розділі "Валідація". Ви дійсно впевнені, що хочете зробити її константою?',
@@ -282,6 +299,7 @@ export const uk: Dictionary = {
       deleteWithSchemaMessage:
         'Ви впевнені, що хочете видалити змінну "{name}"? Ця змінна має схему валідації. При видаленні схема валідації також буде видалена.',
       deletedSuccess: 'Змінну успішно видалено',
+      toggleError: 'Не вдалося оновити налаштування збереження',
       emptyName: 'Назва змінної не може бути порожньою',
       duplicateInScope: 'Змінна з такою назвою вже існує в цьому scope.',
       constantInScope: 'Ця змінна є константою в поточному scope.',
@@ -327,6 +345,8 @@ export const uk: Dictionary = {
       download: 'Завантажити',
       preview: 'Переглянути',
       close: 'Закрити',
+      pdfDescription: 'Ви можете переглянути документ або завантажити його на свій пристрій.',
+      docxDescription: 'Натисніть кнопку нижче, щоб завантажити документ.',
     },
 
     saveVariables: {
@@ -425,6 +445,7 @@ export const uk: Dictionary = {
       actionsCol: 'Дії',
       editTitle: 'Редагувати змінну',
       editPlaceholder: 'Введіть значення (текст, число, true/false або JSON)',
+      saveError: 'Не вдалося зберегти значення',
     },
 
     sessions: {
@@ -527,6 +548,35 @@ export const uk: Dictionary = {
         confirm: 'Видалити',
         cancel: 'Скасувати',
       },
+    },
+
+    errors: {
+      changeEmail: 'Не вдалося змінити пошту',
+      changePassword: 'Не вдалося змінити пароль',
+      updateNames: "Не вдалося оновити ім'я",
+      sendConfirmation: 'Не вдалося надіслати лист підтвердження',
+      confirmEmail: 'Не вдалося підтвердити пошту',
+      revokeConfirmation: 'Не вдалося зняти підтвердження пошти',
+      banUser: 'Не вдалося заблокувати користувача',
+      unbanUser: 'Не вдалося розблокувати користувача',
+      promoteUser: 'Не вдалося підвищити користувача',
+      demoteUser: 'Не вдалося понизити користувача',
+      loadSessions: 'Не вдалося завантажити сесії',
+      deleteSession: 'Не вдалося видалити сесію',
+      loadVars: 'Не вдалося завантажити дані',
+      clearVars: 'Не вдалося очистити дані',
+      deleteVar: 'Не вдалося видалити змінну',
+      updateVar: 'Не вдалося оновити змінну',
+      loadGenerations: 'Не вдалось отримати список генерацій',
+      regenerate: 'Не вдалось перегенерувати PDF',
+      deleteGeneration: 'Не вдалось видалити генерацію',
+      deleteAllGenerations: 'Не вдалось видалити всі генерації',
+      deleteAccount: 'Помилка при видаленні акаунта',
+      loadProfile: 'Не вдалось завантажити профіль',
+      loadFolderTree: 'Помилка завантаження структури документів',
+      initSessions: 'Помилка завантаження сесій',
+      initVars: 'Помилка завантаження змінних',
+      initGenerations: 'Помилка завантаження генерацій',
     },
   },
 

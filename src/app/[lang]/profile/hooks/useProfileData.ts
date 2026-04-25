@@ -5,6 +5,7 @@ import { adminApi } from '@/lib/api';
 import { User } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { isAdminUser } from '@/utils/is-admin';
+import { useDictionary } from '@/contexts/LangContext';
 
 export function useProfileData() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export function useProfileData() {
   const userId = searchParams.get('id');
   const { user: currentUser } = useUserStore();
   const isAdmin = isAdminUser(currentUser);
+  const dict = useDictionary();
 
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,11 +45,11 @@ export function useProfileData() {
       const user = await adminApi.getUserById(userId);
       setTargetUser(user);
     } catch (err) {
-      setError(toErrorMessage(err, 'Не вдалось завантажити профіль'));
+      setError(toErrorMessage(err, dict.profile.errors.loadProfile));
     } finally {
       setLoading(false);
     }
-  }, [currentUser, isAdmin, userId, router]);
+  }, [currentUser, isAdmin, userId, router, dict.profile.errors.loadProfile]);
 
   useEffect(() => {
     fetchUser();

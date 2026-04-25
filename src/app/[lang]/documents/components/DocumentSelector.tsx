@@ -62,63 +62,69 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   const mode = searchParams.get('mode') as ViewMode | null;
   const treeScopeParam = searchParams.get('treeScope');
 
-  const loadFolderTree = useCallback(async (folderId: string | null) => {
-    setTreeLoading(true);
-    setTreeError(null);
+  const loadFolderTree = useCallback(
+    async (folderId: string | null) => {
+      setTreeLoading(true);
+      setTreeError(null);
 
-    try {
-      if (folderId) {
-        setScopeFolderId(folderId);
-        const data = await documentsApi.getFolderTree(folderId);
-        setFolderTree(data);
-        setScopeFolderName(data.current_folder.name);
-      } else {
-        setScopeFolderId(null);
-        setScopeFolderName(null);
-        const data = await documentsApi.getGlobalFolderTree();
-        setFolderTree(data);
+      try {
+        if (folderId) {
+          setScopeFolderId(folderId);
+          const data = await documentsApi.getFolderTree(folderId);
+          setFolderTree(data);
+          setScopeFolderName(data.current_folder.name);
+        } else {
+          setScopeFolderId(null);
+          setScopeFolderName(null);
+          const data = await documentsApi.getGlobalFolderTree();
+          setFolderTree(data);
+        }
+      } catch (error) {
+        setTreeError(toErrorMessage(error, dict.documents.loadFolderStructureError));
+      } finally {
+        setTreeLoading(false);
       }
-    } catch (error) {
-      setTreeError(toErrorMessage(error, 'Не вдалося завантажити структуру папок'));
-    } finally {
-      setTreeLoading(false);
-    }
-  }, []);
+    },
+    [dict.documents.loadFolderStructureError],
+  );
 
   useEffect(() => {
     loadFolderTree(treeScopeParam);
   }, [loadFolderTree, treeScopeParam]);
 
-  const fetchPreview = useCallback(async (documentId: string) => {
-    const current = previewCache.get(documentId);
-    if (current?.loading) {
-      return;
-    }
+  const fetchPreview = useCallback(
+    async (documentId: string) => {
+      const current = previewCache.get(documentId);
+      if (current?.loading) {
+        return;
+      }
 
-    if (previewCache.has(documentId)) {
-      return;
-    }
+      if (previewCache.has(documentId)) {
+        return;
+      }
 
-    const loadingPreview = previewCache.createLoadingPreview(documentId);
-    previewCache.set(documentId, loadingPreview);
-    setPreviews(previewCache.toRecord());
-
-    try {
-      const blob = await documentsApi.getDocumentPreview(documentId);
-      await convertBlobToUrl(blob, (dataUrl) => {
-        const successPreview = previewCache.createSuccessPreview(documentId, dataUrl, blob);
-        previewCache.set(documentId, successPreview);
-        setPreviews(previewCache.toRecord());
-      });
-    } catch (error) {
-      const errorPreview = previewCache.createErrorPreview(
-        documentId,
-        toErrorMessage(error, 'Не вдалося завантажити попередній перегляд'),
-      );
-      previewCache.set(documentId, errorPreview);
+      const loadingPreview = previewCache.createLoadingPreview(documentId);
+      previewCache.set(documentId, loadingPreview);
       setPreviews(previewCache.toRecord());
-    }
-  }, []);
+
+      try {
+        const blob = await documentsApi.getDocumentPreview(documentId);
+        await convertBlobToUrl(blob, (dataUrl) => {
+          const successPreview = previewCache.createSuccessPreview(documentId, dataUrl, blob);
+          previewCache.set(documentId, successPreview);
+          setPreviews(previewCache.toRecord());
+        });
+      } catch (error) {
+        const errorPreview = previewCache.createErrorPreview(
+          documentId,
+          toErrorMessage(error, dict.documents.loadingPreivewError),
+        );
+        previewCache.set(documentId, errorPreview);
+        setPreviews(previewCache.toRecord());
+      }
+    },
+    [dict.documents.loadingPreivewError],
+  );
 
   useEffect(() => {
     if (isInitFromUrlParamsDoneRef.current || !folderTree || !scope) return;
@@ -135,12 +141,12 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
     const result = findInTree(folderTree, scope);
     if (!result) {
-      notify('Документ або папку не знайдено', 'error');
+      notify(dict.documents.documentOrFolderNotFound, 'error');
       return;
     }
 
     if (mode === 'settings' && !isAdmin) {
-      notify(user ? 'Доступ заборонено' : 'Увійдіть для доступу до налаштувань', 'warning');
+      notify(user ? dict.documents.accessDenied : dict.documents.loginForSettingsAccess, 'warning');
       return;
     }
 
@@ -191,7 +197,19 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         }
       }
     }
-  }, [folderTree, scope, pathParam, mode, isAdmin, user, fetchPreview, notify]);
+  }, [
+    folderTree,
+    scope,
+    pathParam,
+    mode,
+    isAdmin,
+    user,
+    fetchPreview,
+    notify,
+    dict.documents.documentOrFolderNotFound,
+    dict.documents.accessDenied,
+    dict.documents.loginForSettingsAccess,
+  ]);
 
   const updateUrl = useCallback(
     (

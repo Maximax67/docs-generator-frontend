@@ -16,6 +16,7 @@ import { IChangeEvent } from '@rjsf/core';
 import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentInputForm';
 import { applyTitleFallbacks } from '@/utils/json-schema';
 import { VariableInfo } from '@/types/variables';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface EditVariableDialogProps {
   open: boolean;
@@ -32,6 +33,9 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
   onClose,
   onSave,
 }) => {
+  const dict = useDictionary();
+  const v = dict.profile.vars;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [schema, setSchema] = useState<RJSFSchema | null>(null);
@@ -66,7 +70,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
       onSave(valueToSave);
       onClose();
     } catch (err) {
-      setError(toErrorMessage(err, 'Не вдалося зберегти значення'));
+      setError(toErrorMessage(err, v.saveError));
     } finally {
       setLoading(false);
     }
@@ -97,7 +101,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Редагувати: {variable.variable}</DialogTitle>
+      <DialogTitle>{`${v.editTitle}: ${variable.variable}`}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -126,17 +130,17 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
             rows={6}
             value={textValue}
             onChange={handleTextChange}
-            placeholder="Введіть значення"
-            helperText="Можна ввести текст, число, true/false або JSON"
+            placeholder={v.editPlaceholder}
+            helperText={v.editPlaceholder}
           />
         )}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={loading}>
-          Скасувати
+          {dict.common.cancel}
         </Button>
         <Button variant="contained" onClick={handleSave} disabled={loading}>
-          {loading ? <CircularProgress size={20} /> : 'Зберегти'}
+          {loading ? <CircularProgress size={20} /> : dict.common.save}
         </Button>
       </DialogActions>
     </Dialog>

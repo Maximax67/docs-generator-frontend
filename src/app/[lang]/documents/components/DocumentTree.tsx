@@ -10,6 +10,7 @@ import { DriveFile, FolderTreeGlobal, FolderTree } from '@/types/documents';
 import { isAdminUser } from '@/utils/is-admin';
 import { TreeDocument } from './TreeDocument';
 import { TreeNodePath } from '@/utils/document-tree';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface DocumentTreeProps {
   folderTree: FolderTreeGlobal | FolderTree | null;
@@ -42,6 +43,7 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
 }) => {
   const { user } = useUserStore();
   const isAdmin = isAdminUser(user);
+  const dict = useDictionary();
 
   const renderContent = () => {
     if (treeLoading) {
@@ -80,7 +82,7 @@ export const DocumentTree: FC<DocumentTreeProps> = ({
       return (
         <Box sx={{ p: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Папки та документи відсутні
+            {dict.documents.noFoldersOrDocuments}
           </Typography>
         </Box>
       );

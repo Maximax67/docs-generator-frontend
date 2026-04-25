@@ -32,6 +32,7 @@ import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialo
 import { JSONValue } from '@/types/json';
 import { ScopeBadge } from '@/components/ScopeBadge';
 import { filterOverriddenVariables } from '@/utils/filter-overriden-variables';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface ConstantsTableProps {
   scope: string | null;
@@ -52,6 +53,9 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
 }) => {
   const notify = useNotify();
   const { confirm } = useConfirm();
+  const dict = useDictionary();
+  const c = dict.documents.constants;
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<VariableInfo | null>(null);
   const fullValueDialogRef = useRef<FullValueDialogRef>(null);
@@ -74,11 +78,10 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
 
   const handleClearClick = async (variableId: string) => {
     const confirmed = await confirm({
-      title: 'Видалити значення',
-      message:
-        'Ви впевнені, що хочете видалити значення константи? Змінна залишиться в розділі "Збереження значень".',
-      confirmText: 'Видалити',
-      cancelText: 'Скасувати',
+      title: c.clearTitle,
+      message: c.clearMessage,
+      confirmText: dict.common.delete,
+      cancelText: dict.common.cancel,
       severity: 'error',
     });
 
@@ -88,19 +91,19 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
 
     try {
       await variablesApi.updateVariable(variableId, { value: null });
-      notify('Значення константи успішно видалено');
+      notify(c.clearedSuccess);
       onConstantClear(variableId);
     } catch (error) {
-      notify(toErrorMessage(error, 'Не вдалося видалити значення константи'), 'error');
+      notify(toErrorMessage(error, c.clearError), 'error');
     }
   };
 
   const handleDeleteClick = async (variableId: string) => {
     const confirmed = await confirm({
-      title: 'Видалити змінну',
-      message: 'Ви впевнені, що хочете видалити цю змінну?',
-      confirmText: 'Видалити',
-      cancelText: 'Скасувати',
+      title: c.deleteTitle,
+      message: c.deleteMessage,
+      confirmText: dict.common.delete,
+      cancelText: dict.common.cancel,
       severity: 'error',
     });
 
@@ -110,10 +113,10 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
 
     try {
       await variablesApi.deleteVariable(variableId);
-      notify('Змінну успішно видалено');
+      notify(c.deletedSuccess);
       onConstantDelete(variableId);
     } catch (error) {
-      notify(toErrorMessage(error, 'Не вдалося видалити змінну'), 'error');
+      notify(toErrorMessage(error, c.deleteError), 'error');
     }
   };
 
@@ -131,24 +134,24 @@ export const ConstantsTable: FC<ConstantsTableProps> = ({
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Константи</Typography>
+        <Typography variant="h6">{c.title}</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddClick}>
-          Додати константу
+          {c.addButton}
         </Button>
       </Box>
 
       {allConstants.length === 0 ? (
-        <Alert severity="info">Немає визначених констант</Alert>
+        <Alert severity="info">{c.noData}</Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Змінна</TableCell>
-                <TableCell>Тип</TableCell>
-                <TableCell>Значення</TableCell>
-                <TableCell>Scope</TableCell>
-                <TableCell align="right">Дії</TableCell>
+                <TableCell>{c.variableCol}</TableCell>
+                <TableCell>{c.typeCol}</TableCell>
+                <TableCell>{c.valueCol}</TableCell>
+                <TableCell>{c.scopeCol}</TableCell>
+                <TableCell align="right">{c.actionsCol}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

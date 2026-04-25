@@ -208,25 +208,18 @@ export default function SelectedDocumentPage() {
       setGeneratedDocument(generated);
 
       if (format === 'pdf') {
-        // Save PDF to IndexedDB for preview
         await savePdfToIndexedDb('generatedPdf', blob);
+      }
 
-        // Check if we need to show save variables modal
-        const saveCandidates = calculateSaveCandidates(data);
-        if (saveCandidates.length > 0) {
-          setShowSaveModal(true);
-        } else {
-          setShowSuccessModal(true);
-        }
+      const saveCandidates = calculateSaveCandidates(data);
+      if (saveCandidates.length > 0) {
+        setShowSaveModal(true);
       } else {
-        // For DOCX, show success modal immediately
         setShowSuccessModal(true);
       }
     } catch {
       setGenerateError(
-        format === 'docx'
-          ? 'Не вдалося згенерувати DOCX документ'
-          : 'Не вдалося згенерувати документ',
+        format === 'docx' ? dict.documents.generateDocxError : dict.documents.generateError,
       );
     } finally {
       setIsGenerating(false);
@@ -273,7 +266,6 @@ export default function SelectedDocumentPage() {
   };
 
   const handlePreview = () => {
-    // This will work because it's a direct response to user click
     window.open(`/${lang}/documents/result/`, '_blank');
   };
 
@@ -348,9 +340,7 @@ export default function SelectedDocumentPage() {
         </Box>
 
         <Paper sx={{ p: 3, pb: 1 }}>
-          {isNoVariables && (
-            <Alert severity="warning">{dict.documents.noFields}</Alert>
-          )}
+          {isNoVariables && <Alert severity="warning">{dict.documents.noFields}</Alert>}
 
           {!isNoVariables && (
             <DocumentInputForm

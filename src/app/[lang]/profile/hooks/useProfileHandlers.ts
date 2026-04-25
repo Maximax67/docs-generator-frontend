@@ -11,16 +11,17 @@ import { Generation } from '@/types/generations';
 import { SavedVariable } from '@/types/variables';
 import { FolderTreeGlobal } from '@/types/documents';
 import { useConfirm } from '@/providers/ConfirmProvider';
+import { useDictionary } from '@/contexts/LangContext';
 
 export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolean) {
   const router = useRouter();
   const userStore = useUserStore();
   const { confirm } = useConfirm();
+  const dict = useDictionary();
+  const pe = dict.profile.errors;
+  const pc = dict.profile.confirmations;
 
-  // UI State
-  const [activeTab, setActiveTab] = useState<
-    'info' | 'generations' | 'vars' | 'sessions' | 'logout'
-  >('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'generations' | 'vars' | 'sessions' | 'logout'>('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,8 +85,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       }
       setEmailDialogOpen(false);
       setEmailForm({ newEmail: '' });
-    }, 'Не вдалося змінити пошту');
-  }, [targetUser, isOwnProfile, emailForm.newEmail, router, withAsyncHandler, userStore]);
+    }, pe.changeEmail);
+  }, [targetUser, isOwnProfile, emailForm.newEmail, router, withAsyncHandler, userStore, pe.changeEmail]);
 
   // Password Handlers
   const handleOpenPasswordDialog = useCallback(() => {
@@ -97,8 +98,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       await userStore.changePassword(passwordForm.oldPassword, passwordForm.newPassword);
       setPasswordDialogOpen(false);
       router.push('/login');
-    }, 'Не вдалося змінити пароль');
-  }, [passwordForm, router, withAsyncHandler, userStore]);
+    }, pe.changePassword);
+  }, [passwordForm, router, withAsyncHandler, userStore, pe.changePassword]);
 
   // Names Handlers
   const handleOpenNamesDialog = useCallback(() => {
@@ -125,17 +126,17 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         targetUser.last_name = namesForm.lastName || null;
       }
       setNamesDialogOpen(false);
-    }, "Не вдалося оновити ім'я");
-  }, [targetUser, isOwnProfile, namesForm, withAsyncHandler, userStore]);
+    }, pe.updateNames);
+  }, [targetUser, isOwnProfile, namesForm, withAsyncHandler, userStore, pe.updateNames]);
 
   // Account Actions
   const handleSendEmailConfirm = useCallback(
     () =>
       withAsyncHandler(
         () => userStore.sendEmailConfirmation(),
-        'Не вдалося надіслати лист підтвердження',
+        pe.sendConfirmation,
       ),
-    [withAsyncHandler, userStore],
+    [withAsyncHandler, userStore, pe.sendConfirmation],
   );
 
   const handleConfirmEmail = useCallback(
@@ -144,8 +145,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         if (!targetUser) return;
         await adminApi.confirmUserEmail(targetUser.id);
         targetUser.email_verified = true;
-      }, 'Не вдалося підтвердити пошту'),
-    [targetUser, withAsyncHandler],
+      }, pe.confirmEmail),
+    [targetUser, withAsyncHandler, pe.confirmEmail],
   );
 
   const handleRevokeConfirmEmail = useCallback(
@@ -154,8 +155,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         if (!targetUser) return;
         await adminApi.revokeUserEmailConfirmation(targetUser.id);
         targetUser.email_verified = false;
-      }, 'Не вдалося зняти підтвердження пошту'),
-    [targetUser, withAsyncHandler],
+      }, pe.revokeConfirmation),
+    [targetUser, withAsyncHandler, pe.revokeConfirmation],
   );
 
   const handleBanUser = useCallback(
@@ -164,8 +165,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         if (!targetUser) return;
         await adminApi.banUser(targetUser.id);
         targetUser.is_banned = true;
-      }, 'Не вдалося заблокувати користувача'),
-    [targetUser, withAsyncHandler],
+      }, pe.banUser),
+    [targetUser, withAsyncHandler, pe.banUser],
   );
 
   const handleUnbanUser = useCallback(
@@ -174,8 +175,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         if (!targetUser) return;
         await adminApi.unbanUser(targetUser.id);
         targetUser.is_banned = false;
-      }, 'Не вдалося розблокувати користувача'),
-    [targetUser, withAsyncHandler],
+      }, pe.unbanUser),
+    [targetUser, withAsyncHandler, pe.unbanUser],
   );
 
   const handlePromoteUser = useCallback(
@@ -184,8 +185,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         if (!targetUser) return;
         await adminApi.promoteUserToAdmin(targetUser.id);
         targetUser.role = 'admin';
-      }, 'Не вдалося підвищити користувача'),
-    [targetUser, withAsyncHandler],
+      }, pe.promoteUser),
+    [targetUser, withAsyncHandler, pe.promoteUser],
   );
 
   const handleDemoteUser = useCallback(
@@ -194,8 +195,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         if (!targetUser) return;
         await adminApi.demoteAdminToUser(targetUser.id);
         targetUser.role = 'user';
-      }, 'Не вдалося понизити користувача'),
-    [targetUser, withAsyncHandler],
+      }, pe.demoteUser),
+    [targetUser, withAsyncHandler, pe.demoteUser],
   );
 
   const handleOpenDeleteDialog = useCallback(() => {
@@ -215,9 +216,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       setDeleteDialogOpen(false);
       router.push(isOwnProfile ? '/' : '/users');
     } catch {
-      setDeleteForm((prev) => ({ ...prev, error: 'Помилка при видаленні акаунта.' }));
+      setDeleteForm((prev) => ({ ...prev, error: pe.deleteAccount }));
     }
-  }, [targetUser, isOwnProfile, router, userStore]);
+  }, [targetUser, isOwnProfile, router, userStore, pe.deleteAccount]);
 
   // Session Handlers
   const handleRefreshSessions = useCallback(async () => {
@@ -226,18 +227,16 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     await withAsyncHandler(async () => {
       const list = await authApi.listSessions();
       setSessions(list);
-    }, 'Не вдалося завантажити сесії');
-  }, [targetUser, withAsyncHandler]);
+    }, pe.loadSessions);
+  }, [targetUser, withAsyncHandler, pe.loadSessions]);
 
   const handleRevokeSession = useCallback(
     async (sessionId: string, isCurrent: boolean) => {
       const confirmed = await confirm({
-        title: 'Завершити сесію',
-        message: isCurrent
-          ? 'Ви впевнені, що хочете завершити поточну сесію?'
-          : 'Ви впевнені, що хочете завершити сесію?',
-        confirmText: 'Завершити',
-        cancelText: 'Скасувати',
+        title: pc.endSession.title,
+        message: isCurrent ? pc.endSession.currentMessage : pc.endSession.message,
+        confirmText: pc.endSession.confirm,
+        cancelText: dict.common.cancel,
         severity: 'warning',
       });
 
@@ -250,9 +249,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
           userStore.logoutLocal();
           router.push('/');
         }
-      }, 'Не вдалося видалити сесію');
+      }, pe.deleteSession);
     },
-    [confirm, withAsyncHandler, userStore, router],
+    [confirm, withAsyncHandler, userStore, router, pc, dict.common.cancel, pe.deleteSession],
   );
 
   const handleLogout = useCallback(async () => {
@@ -262,11 +261,10 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
   const handleLogoutEverywhere = useCallback(async () => {
     const confirmed = await confirm({
-      title: 'Вийти з усіх сесій',
-      message:
-        'Ви впевнені, що хочете вийти з усіх активних сесій? Вам доведеться увійти знову на всіх пристроях.',
-      confirmText: 'Вийти з усіх',
-      cancelText: 'Скасувати',
+      title: pc.logoutAll.title,
+      message: pc.logoutAll.message,
+      confirmText: pc.logoutAll.confirm,
+      cancelText: dict.common.cancel,
       severity: 'error',
     });
 
@@ -274,7 +272,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
     await userStore.logoutEverywhere();
     router.push('/');
-  }, [confirm, router, userStore]);
+  }, [confirm, router, userStore, pc, dict.common.cancel]);
 
   // Variables Handlers
   const handleRefreshSavedVars = useCallback(async () => {
@@ -283,8 +281,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     await withAsyncHandler(async () => {
       const vars = await variablesApi.getSavedVariables(savedVarsPage);
       setSavedVars(vars);
-    }, 'Не вдалося завантажити дані');
-  }, [targetUser, savedVarsPage, withAsyncHandler]);
+    }, pe.loadVars);
+  }, [targetUser, savedVarsPage, withAsyncHandler, pe.loadVars]);
 
   const handleSavedVarsPageChange = useCallback(
     async (page: number) => {
@@ -294,19 +292,19 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         const vars = await variablesApi.getSavedVariables(page);
         setSavedVarsPage(page);
         setSavedVars(vars);
-      }, 'Не вдалося завантажити дані');
+      }, pe.loadVars);
     },
-    [targetUser, withAsyncHandler],
+    [targetUser, withAsyncHandler, pe.loadVars],
   );
 
   const handleClearSavedVariables = useCallback(async () => {
     if (!targetUser) return;
 
     const confirmed = await confirm({
-      title: 'Очистити всі дані',
-      message: 'Ви впевнені, що хочете видалити всі збережені дані? Цю дію не можна скасувати.',
-      confirmText: 'Очистити',
-      cancelText: 'Скасувати',
+      title: pc.clearData.title,
+      message: pc.clearData.message,
+      confirmText: pc.clearData.confirm,
+      cancelText: dict.common.cancel,
       severity: 'warning',
     });
 
@@ -316,18 +314,18 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       await variablesApi.clearSavedVariables();
       setSavedVars(null);
       setSavedVarsPage(1);
-    }, 'Не вдалося очистити дані');
-  }, [confirm, targetUser, withAsyncHandler]);
+    }, pe.clearVars);
+  }, [confirm, targetUser, withAsyncHandler, pc, dict.common.cancel, pe.clearVars]);
 
   const handleDeleteVariable = useCallback(
     async (variableId: string) => {
       if (!targetUser) return;
 
       const confirmed = await confirm({
-        title: 'Видалити змінну',
-        message: 'Ви впевнені, що хочете видалити цю змінну?',
-        confirmText: 'Видалити',
-        cancelText: 'Скасувати',
+        title: pc.deleteVar.title,
+        message: pc.deleteVar.message,
+        confirmText: pc.deleteVar.confirm,
+        cancelText: dict.common.cancel,
         severity: 'error',
       });
 
@@ -337,9 +335,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         await variablesApi.deleteSavedVariable(variableId);
         const vars = await variablesApi.getSavedVariables(savedVarsPage);
         setSavedVars(vars);
-      }, 'Не вдалося видалити змінну');
+      }, pe.deleteVar);
     },
-    [targetUser, confirm, withAsyncHandler, savedVarsPage],
+    [targetUser, confirm, withAsyncHandler, savedVarsPage, pc, dict.common.cancel, pe.deleteVar],
   );
 
   const handleUpdateVariable = useCallback(
@@ -351,9 +349,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         const vars = await variablesApi.getSavedVariables(1);
         setSavedVars(vars);
         setSavedVarsPage(1);
-      }, 'Не вдалося оновити змінну');
+      }, pe.updateVar);
     },
-    [targetUser, withAsyncHandler],
+    [targetUser, withAsyncHandler, pe.updateVar],
   );
 
   const handleRefreshGenerations = useCallback(async () => {
@@ -365,8 +363,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         userId: targetUser.id,
       });
       setGenerations(results);
-    }, 'Не вдалось отримати список генерацій');
-  }, [targetUser, generationPage, withAsyncHandler]);
+    }, pe.loadGenerations);
+  }, [targetUser, generationPage, withAsyncHandler, pe.loadGenerations]);
 
   const handleChangeGenerationPage = useCallback(
     async (page: number) => {
@@ -376,9 +374,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         const results = await generationsApi.getGenerations({ page, userId: targetUser.id });
         setGenerationPage(page);
         setGenerations(results);
-      }, 'Не вдалось отримати список генерацій');
+      }, pe.loadGenerations);
     },
-    [targetUser, withAsyncHandler],
+    [targetUser, withAsyncHandler, pe.loadGenerations],
   );
 
   const handleRegenerateGeneration = useCallback(
@@ -387,9 +385,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         const blob = await generationsApi.regenerateGeneration(id, variables);
         await savePdfToIndexedDb('generatedPdf', blob);
         router.push('/documents/result');
-      }, 'Не вдалось перегенерувати PDF');
+      }, pe.regenerate);
     },
-    [router, withAsyncHandler],
+    [router, withAsyncHandler, pe.regenerate],
   );
 
   const handleDeleteGeneration = useCallback(
@@ -397,10 +395,10 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       if (!targetUser) return;
 
       const confirmed = await confirm({
-        title: 'Видалити генерацію',
-        message: 'Ви впевнені, що хочете видалити цю генерацію?',
-        confirmText: 'Видалити',
-        cancelText: 'Скасувати',
+        title: pc.deleteGeneration.title,
+        message: pc.deleteGeneration.message,
+        confirmText: pc.deleteGeneration.confirm,
+        cancelText: dict.common.cancel,
         severity: 'error',
       });
 
@@ -417,7 +415,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         } else {
           await handleRefreshGenerations();
         }
-      }, 'Не вдалось видалити генерацію');
+      }, pe.deleteGeneration);
     },
     [
       targetUser,
@@ -427,6 +425,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       generationPage,
       handleChangeGenerationPage,
       handleRefreshGenerations,
+      pc,
+      dict.common.cancel,
+      pe.deleteGeneration,
     ],
   );
 
@@ -434,10 +435,10 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!targetUser) return;
 
     const confirmed = await confirm({
-      title: 'Видалити всі генерації',
-      message: 'Ви впевнені, що хочете видалити всі генерації? Цю дію не можна скасувати.',
-      confirmText: 'Видалити все',
-      cancelText: 'Скасувати',
+      title: pc.deleteAllGenerations.title,
+      message: pc.deleteAllGenerations.message,
+      confirmText: pc.deleteAllGenerations.confirm,
+      cancelText: dict.common.cancel,
       severity: 'error',
     });
 
@@ -445,11 +446,11 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
 
     await withAsyncHandler(
       () => generationsApi.deleteAllUserGenerations(targetUser.id),
-      'Не вдалось видалити всі генерації',
+      pe.deleteAllGenerations,
     );
 
     await handleChangeGenerationPage(1);
-  }, [targetUser, confirm, withAsyncHandler, handleChangeGenerationPage]);
+  }, [targetUser, confirm, withAsyncHandler, handleChangeGenerationPage, pc, dict.common.cancel, pe.deleteAllGenerations]);
 
   // Initialize data on mount
   useEffect(() => {
@@ -461,37 +462,37 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
           const sessionList = await authApi.listSessions();
           setSessions(sessionList);
         } catch (e) {
-          setError(toErrorMessage(e, 'Помилка завантаження сесій'));
+          setError(toErrorMessage(e, pe.initSessions));
         }
 
         try {
           const vars = await variablesApi.getSavedVariables(1);
           setSavedVars(vars);
         } catch (e) {
-          setError(toErrorMessage(e, 'Помилка завантаження змінних'));
+          setError(toErrorMessage(e, pe.initVars));
         }
 
         try {
           const data = await documentsApi.getGlobalFolderTree();
           setFolderTree(data);
         } catch (e) {
-          setError(toErrorMessage(e, 'Помилка завантаження структури документів'));
+          setError(toErrorMessage(e, pe.loadFolderTree));
         }
       }
 
       try {
-        const generations = await generationsApi.getGenerations({
+        const gens = await generationsApi.getGenerations({
           page: 1,
           userId: targetUser.id,
         });
-        setGenerations(generations);
+        setGenerations(gens);
       } catch (e) {
-        setError(toErrorMessage(e, 'Помилка завантаження генерацій'));
+        setError(toErrorMessage(e, pe.initGenerations));
       }
     };
 
     init();
-  }, [isOwnProfile, targetUser]);
+  }, [isOwnProfile, targetUser, pe]);
 
   return {
     // State

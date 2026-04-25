@@ -17,6 +17,7 @@ import { useNotify } from '@/providers/NotificationProvider';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { JSONValue } from '@/types/json';
 import { ValueDisplay } from '@/components/ValueDisplay';
+import { useDictionary } from '@/contexts/LangContext';
 
 export interface SaveCandidate {
   id: string;
@@ -40,6 +41,9 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
   onSaved,
 }) => {
   const notify = useNotify();
+  const dict = useDictionary();
+  const sv = dict.documents.saveVariables;
+
   const [saving, setSaving] = useState(false);
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
@@ -83,10 +87,10 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
     setSaving(true);
     try {
       await variablesApi.saveVariables(payload);
-      notify('Зміни успішно збережені');
+      notify(sv.savedSuccess);
       onSaved();
     } catch (err) {
-      notify(toErrorMessage(err, 'Не вдалося зберегти зміни'), 'error');
+      notify(toErrorMessage(err, sv.saveError), 'error');
     } finally {
       setSaving(false);
     }
@@ -97,11 +101,11 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Зберегти значення?</DialogTitle>
+      <DialogTitle>{sv.title}</DialogTitle>
 
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Оберіть змінні, значення яких ви хочете зберегти для наступних генерацій.
+          {sv.description}
         </Typography>
 
         <Box
@@ -123,7 +127,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
             size="small"
           />
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-            Змінна
+            {sv.variableCol}
           </Typography>
           <Box sx={{ flex: 1 }} />
           <Typography
@@ -131,7 +135,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
             color="text.secondary"
             sx={{ width: 120, textAlign: 'right' }}
           >
-            Поточне значення
+            {sv.currentValueCol}
           </Typography>
         </Box>
 
@@ -152,7 +156,6 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
                 onChange={() => toggleOne(c.id)}
                 disabled={saving}
                 size="small"
-                // eat the click so the row onClick doesn't double-toggle
                 onClick={(e) => e.stopPropagation()}
               />
 
@@ -164,7 +167,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
                 {c.isChanged && c.savedValue !== null && c.savedValue !== undefined && (
                   <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
                     <Typography variant="caption" color="text.secondary">
-                      Було:
+                      {sv.was}
                     </Typography>
                     <ValueDisplay value={c.savedValue} />
                   </Box>
@@ -172,7 +175,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
 
                 {c.isChanged && (c.savedValue === null || c.savedValue === undefined) && (
                   <Typography variant="caption" color="warning.main">
-                    Ще не збережено
+                    {sv.notSaved}
                   </Typography>
                 )}
               </Box>
@@ -189,7 +192,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
 
       <DialogActions>
         <Button onClick={onClose} disabled={saving}>
-          Пропустити
+          {sv.skip}
         </Button>
         <Button
           variant="contained"
@@ -197,7 +200,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
           disabled={saving || checked.size === 0}
           startIcon={saving ? <CircularProgress size={18} /> : <SaveIcon />}
         >
-          {saving ? 'Збереження…' : `Зберегти (${checked.size})`}
+          {saving ? dict.common.saving : sv.save.replace('{count}', checked.size.toString())}
         </Button>
       </DialogActions>
     </Dialog>

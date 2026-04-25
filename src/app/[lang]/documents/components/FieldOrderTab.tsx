@@ -18,6 +18,7 @@ import {
 import { VariableInfo } from '@/types/variables';
 import { ScopeBadge } from '@/components/ScopeBadge';
 import { FolderTreeGlobal } from '@/types/documents';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface FieldOrderTabProps {
   folderTree: FolderTreeGlobal | null;
@@ -32,6 +33,9 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
   resetKey,
   onChange,
 }) => {
+  const dict = useDictionary();
+  const fo = dict.documents.fieldOrder;
+
   const [orderChanges, setOrderChanges] = useState<Record<string, number>>({});
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -90,7 +94,6 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
     }
   };
 
-  // Apply order change for a variable
   const applyOrderChange = (id: string, newOrder: number) => {
     const originalVariable = orderableVariables.find((v) => v.id === id);
     if (!originalVariable) return;
@@ -109,7 +112,6 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
     }
   };
 
-  // Calculate what order the dragged item would get if dropped at target position
   const calculateDragOrder = (fromIndex: number, toIndex: number): number => {
     const tempVariables = [...displayVariables];
     tempVariables.splice(fromIndex, 1);
@@ -169,14 +171,12 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
     setDragBlocked(false);
   };
 
-
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
 
     const variable = displayVariables[index];
     const variableOrder = orderChanges[variable.id] ?? variable.order;
 
-    // Find previous item with DIFFERENT order
     let prevDifferentOrder: number | null = null;
 
     for (let i = index - 1; i >= 0; i--) {
@@ -186,13 +186,7 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
       }
     }
 
-    let newOrder: number;
-
-    if (prevDifferentOrder !== null) {
-      newOrder = prevDifferentOrder;
-    } else {
-      newOrder = variableOrder - 1;
-    }
+    const newOrder = prevDifferentOrder !== null ? prevDifferentOrder : variableOrder - 1;
 
     applyOrderChange(variable.id, newOrder);
   };
@@ -203,7 +197,6 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
     const variable = displayVariables[index];
     const variableOrder = orderChanges[variable.id] ?? variable.order;
 
-    // Find next item with DIFFERENT order
     let nextDifferentOrder: number | null = null;
 
     for (let i = index + 1; i < displayVariables.length; i++) {
@@ -213,13 +206,7 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
       }
     }
 
-    let newOrder: number;
-
-    if (nextDifferentOrder !== null) {
-      newOrder = nextDifferentOrder;
-    } else {
-      newOrder = variableOrder + 1;
-    }
+    const newOrder = nextDifferentOrder !== null ? nextDifferentOrder : variableOrder + 1;
 
     applyOrderChange(variable.id, newOrder);
   };
@@ -227,7 +214,7 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
   if (displayVariables.length === 0) {
     return (
       <Box sx={{ p: 2 }}>
-        <Alert severity="info">Немає полів для сортування.</Alert>
+        <Alert severity="info">{fo.noData}</Alert>
       </Box>
     );
   }
@@ -235,7 +222,7 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Порядок полів
+        {fo.title}
       </Typography>
 
       <Paper variant="outlined">

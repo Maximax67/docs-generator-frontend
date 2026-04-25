@@ -11,6 +11,7 @@ import {
   Button,
 } from '@mui/material';
 import { AccessLevel, ScopeSettings } from '@/types/scopes';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface ScopeSettingsTabProps {
   driveId: string;
@@ -19,13 +20,6 @@ interface ScopeSettingsTabProps {
   setupOnly?: boolean;
   onChange: (settings: ScopeSettings | null) => void;
 }
-
-const accessLevelLabels: Record<AccessLevel, string> = {
-  [AccessLevel.ANY]: 'Усі користувачі',
-  [AccessLevel.AUTHENTICATED]: 'Авторизовані користувачі',
-  [AccessLevel.VERIFIED]: 'Підтверджена пошта',
-  [AccessLevel.ADMIN]: 'Адміністратори',
-};
 
 const DEFAULT_SETTINGS = (driveId: string): ScopeSettings => ({
   drive_id: driveId,
@@ -43,6 +37,16 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
   setupOnly,
   onChange,
 }) => {
+  const dict = useDictionary();
+  const a = dict.documents.access;
+
+  const accessLevelLabels: Record<AccessLevel, string> = {
+    [AccessLevel.ANY]: a.allUsers,
+    [AccessLevel.AUTHENTICATED]: a.authenticated,
+    [AccessLevel.VERIFIED]: a.verified,
+    [AccessLevel.ADMIN]: a.adminsOnly,
+  };
+
   const [hasLocalScope, setHasLocalScope] = useState<boolean>(!!initialSettings || !!setupOnly);
   const [accessLevel, setAccessLevel] = useState<AccessLevel>(
     initialSettings?.restrictions.access_level ?? AccessLevel.ANY,
@@ -127,7 +131,7 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h6" sx={{ mb: 3 }}>
-        Налаштування доступу
+        {a.title}
       </Typography>
 
       {!hasLocalScope && !setupOnly ? (
@@ -135,21 +139,21 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
           severity="info"
           action={
             <Button color="inherit" size="small" onClick={handleAddScope}>
-              Додати доступ
+              {a.addAccess}
             </Button>
           }
         >
-          Доступ не налаштовано. Використовується доступ з батьківського розділу.
+          {a.noAccess}
         </Alert>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <TextField
             select
             fullWidth
-            label="Рівень доступу"
+            label={a.accessLevel}
             value={accessLevel}
             onChange={(e) => handleAccessLevelChange(e.target.value)}
-            helperText="Хто може переглядати цей розділ та його вміст"
+            helperText={a.accessLevelHelp}
           >
             {Object.entries(accessLevelLabels).map(([value, label]) => (
               <MenuItem key={value} value={value}>
@@ -168,10 +172,10 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
                       onChange={(e) => handleInfiniteDepthToggle(e.target.checked)}
                     />
                   }
-                  label="Необмежена глибина"
+                  label={a.unlimitedDepth}
                 />
                 <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
-                  Якщо увімкнено, доступ поширюється на всі вкладені елементи
+                  {a.unlimitedDepthHelp}
                 </Typography>
               </Box>
 
@@ -179,11 +183,11 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
                 <TextField
                   fullWidth
                   type="number"
-                  label="Максимальна глибина"
+                  label={a.maxDepth}
                   value={maxDepth ?? 1}
                   onChange={(e) => handleMaxDepthChange(e.target.value)}
                   slotProps={{ htmlInput: { min: 0, step: 1 } }}
-                  helperText="1 = тільки файли цієї папки"
+                  helperText={a.maxDepthHelp}
                 />
               )}
             </>
@@ -194,10 +198,10 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
               control={
                 <Switch checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} />
               }
-              label="Закріпити в кореневому дереві"
+              label={a.pinned}
             />
             <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
-              Показувати цей елемент у кореневому дереві документів
+              {a.pinnedHelp}
             </Typography>
           </Box>
 
@@ -206,7 +210,7 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
               color={initialSettings ? 'error' : 'primary'}
               onClick={initialSettings ? handleDelete : handleCancel}
             >
-              {initialSettings ? 'Видалити доступ' : 'Скасувати'}
+              {initialSettings ? a.deleteAccess : a.cancelAccess}
             </Button>
           )}
         </Box>

@@ -25,6 +25,7 @@ import { FolderTreeGlobal } from '@/types/documents';
 import { ScopeBadge } from '@/components/ScopeBadge';
 import { ValueDisplay } from '@/components/ValueDisplay';
 import { filterOverriddenVariables } from '@/utils/filter-overriden-variables';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface SavingTableProps {
   scope: string | null;
@@ -45,6 +46,8 @@ export const SavingTable: FC<SavingTableProps> = ({
 }) => {
   const notify = useNotify();
   const { confirm } = useConfirm();
+  const dict = useDictionary();
+  const sv = dict.documents.savingVars;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [savingToggle, setSavingToggle] = useState(false);
@@ -71,7 +74,7 @@ export const SavingTable: FC<SavingTableProps> = ({
       });
       onChangeSave(variable.id, newValue);
     } catch (error) {
-      notify(toErrorMessage(error), 'error');
+      notify(toErrorMessage(error, sv.toggleError), 'error');
     } finally {
       setSavingToggle(false);
     }
@@ -82,14 +85,14 @@ export const SavingTable: FC<SavingTableProps> = ({
       variable.validation_schema && Object.keys(variable.validation_schema).length > 0;
 
     const message = hasValidation
-      ? `Ви впевнені, що хочете видалити змінну "${variable.variable}"? Ця змінна має схему валідації. При видаленні схема валідації також буде видалена.`
-      : `Ви впевнені, що хочете видалити змінну "${variable.variable}"?`;
+      ? sv.deleteWithSchemaMessage.replace('{name}', variable.variable)
+      : sv.deleteMessage.replace('{name}', variable.variable);
 
     const confirmed = await confirm({
-      title: 'Видалити змінну',
+      title: sv.deleteTitle,
       message,
-      confirmText: 'Видалити',
-      cancelText: 'Скасувати',
+      confirmText: dict.common.delete,
+      cancelText: dict.common.cancel,
       severity: 'error',
     });
 
@@ -99,33 +102,33 @@ export const SavingTable: FC<SavingTableProps> = ({
 
     try {
       await variablesApi.deleteVariable(variable.id);
-      notify('Змінну успішно видалено');
+      notify(sv.deletedSuccess);
       onDeleteVariable(variable.id);
     } catch (error) {
-      notify(toErrorMessage(error, 'Не вдалося видалити змінну'), 'error');
+      notify(toErrorMessage(error, dict.documents.constants.deleteError), 'error');
     }
   };
 
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Збереження значень</Typography>
+        <Typography variant="h6">{sv.title}</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddClick}>
-          Додати змінну
+          {sv.addButton}
         </Button>
       </Box>
 
       {savingVariables.length === 0 ? (
-        <Alert severity="info">Немає змінних для збереження</Alert>
+        <Alert severity="info">{sv.noData}</Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Змінна</TableCell>
-                <TableCell>Scope</TableCell>
-                <TableCell>Дозволити збереження</TableCell>
-                <TableCell align="right">Дії</TableCell>
+                <TableCell>{sv.variableCol}</TableCell>
+                <TableCell>{sv.scopeCol}</TableCell>
+                <TableCell>{sv.allowSaveCol}</TableCell>
+                <TableCell align="right">{sv.actionsCol}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
