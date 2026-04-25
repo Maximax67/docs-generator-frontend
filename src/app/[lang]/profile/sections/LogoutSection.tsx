@@ -1,5 +1,6 @@
 import { Stack, Typography, Button } from '@mui/material';
 import { Logout as LogoutIcon } from '@mui/icons-material';
+import { useDictionary } from '@/contexts/LangContext';
 
 type LogoutSectionProps = {
   onLogout: () => void;
@@ -12,12 +13,14 @@ export default function LogoutSection({
   onLogoutEverywhere,
   onDeleteAccount,
 }: LogoutSectionProps) {
+  const dict = useDictionary();
+
   return (
     <Stack spacing={2}>
-      <Typography variant="h5">Вихід</Typography>
+      <Typography variant="h5">{dict.profile.logout.title}</Typography>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <Button startIcon={<LogoutIcon />} color="warning" variant="outlined" onClick={onLogout}>
-          Вийти
+          {dict.profile.logout.signOut}
         </Button>
 
         <Button
@@ -26,11 +29,11 @@ export default function LogoutSection({
           variant="outlined"
           onClick={onLogoutEverywhere}
         >
-          Вийти з усіх сесій
+          {dict.profile.logout.signOutAll}
         </Button>
 
         <Button color="error" variant="contained" onClick={onDeleteAccount}>
-          Видалити акаунт
+          {dict.profile.logout.deleteAccount}
         </Button>
       </Stack>
     </Stack>

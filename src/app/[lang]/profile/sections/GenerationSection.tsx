@@ -37,6 +37,7 @@ import { Paginated } from '@/types/pagination';
 import { PaginationControls } from '@/components/PaginationControls';
 import { LoadingContent } from '@/components/LoadingContent';
 import { JSONValue } from '@/types/json';
+import { useDictionary } from '@/contexts/LangContext';
 
 type GenerationSectionProps = {
   deleteAllowed: boolean;
@@ -61,6 +62,7 @@ export default function GenerationSection({
   onRefresh,
   onPageChange,
 }: GenerationSectionProps) {
+  const dict = useDictionary();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const theme = useTheme();
@@ -68,13 +70,13 @@ export default function GenerationSection({
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5">Генерації</Typography>
+      <Typography variant="h5">{dict.profile.generations.title}</Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         {!generations ||
           (generations.data.length !== 0 && deleteAllowed && (
             <Button variant="outlined" color="warning" onClick={onDeleteAll} disabled={loading}>
-              Видалити все
+              {dict.profile.generations.deleteAll}
             </Button>
           ))}
         <Button
@@ -83,14 +85,14 @@ export default function GenerationSection({
           onClick={onRefresh}
           disabled={loading}
         >
-          Оновити
+          {dict.common.refresh}
         </Button>
       </Stack>
 
       <Divider />
 
       {!generations || generations.data.length === 0 ? (
-        <Alert severity="info">Немає згенерованих документів</Alert>
+        <Alert severity="info">{dict.profile.generations.noData}</Alert>
       ) : (
         <>
           <LoadingContent loading={loading} sx={{ mb: 2 }}>
@@ -112,7 +114,7 @@ export default function GenerationSection({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   size="small"
-                                  title="Відкрити шаблон"
+                                  title={dict.generations.openTemplate}
                                 >
                                   <LaunchIcon fontSize="small" />
                                 </IconButton>
@@ -120,7 +122,7 @@ export default function GenerationSection({
                               <IconButton
                                 size="small"
                                 onClick={() => onRegenerate(generation.id, generation.variables)}
-                                title="Перегенерувати"
+                                title={dict.generations.regenerate}
                                 disabled={loading}
                               >
                                 <ReplayIcon fontSize="small" />
@@ -128,7 +130,7 @@ export default function GenerationSection({
                               <IconButton
                                 size="small"
                                 onClick={() => onRegenerate(generation.id)}
-                                title="Перегенерувати зі старими значеннями"
+                                title={dict.generations.regenerateOld}
                                 disabled={loading}
                               >
                                 <RestoreIcon fontSize="small" />
@@ -138,7 +140,7 @@ export default function GenerationSection({
                                   size="small"
                                   color="error"
                                   onClick={() => onDelete(generation.id)}
-                                  title="Видалити"
+                                  title={dict.generations.delete}
                                   disabled={loading}
                                 >
                                   <DeleteIcon fontSize="small" />
@@ -161,7 +163,7 @@ export default function GenerationSection({
                                 onClick={() => setExpanded(isExpanded ? null : generation.id)}
                                 sx={{ alignSelf: 'flex-start' }}
                               >
-                                {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
+                                {isExpanded ? dict.profile.generations.hideVars : dict.profile.generations.showVars}
                               </Button>
 
                               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -197,10 +199,10 @@ export default function GenerationSection({
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Шаблон</TableCell>
-                    <TableCell>Дата генерації</TableCell>
-                    <TableCell>Змінні</TableCell>
-                    <TableCell align="right">Дії</TableCell>
+                    <TableCell>{dict.profile.generations.templateCol}</TableCell>
+                    <TableCell>{dict.profile.generations.dateCol}</TableCell>
+                    <TableCell>{dict.profile.generations.variablesCol}</TableCell>
+                    <TableCell align="right">{dict.profile.generations.actionsCol}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -232,7 +234,7 @@ export default function GenerationSection({
                                   href={`https://docs.google.com/document/d/${generation.template_id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  title="Відкрити шаблон"
+                                  title={dict.generations.openTemplate}
                                 >
                                   <LaunchIcon />
                                 </IconButton>
@@ -240,14 +242,14 @@ export default function GenerationSection({
                               <IconButton
                                 onClick={() => onRegenerate(generation.id, generation.variables)}
                                 disabled={loading}
-                                title="Перегенерувати"
+                                title={dict.generations.regenerate}
                               >
                                 <ReplayIcon />
                               </IconButton>
                               <IconButton
                                 onClick={() => onRegenerate(generation.id)}
                                 disabled={loading}
-                                title="Перегенерувати зі старими значеннями"
+                                title={dict.generations.regenerateOld}
                               >
                                 <RestoreIcon />
                               </IconButton>
@@ -256,7 +258,7 @@ export default function GenerationSection({
                                   color="error"
                                   onClick={() => onDelete(generation.id)}
                                   disabled={loading}
-                                  title="Видалити"
+                                  title={dict.generations.delete}
                                 >
                                   <DeleteIcon />
                                 </IconButton>

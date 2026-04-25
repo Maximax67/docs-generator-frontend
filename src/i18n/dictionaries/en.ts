@@ -406,6 +406,7 @@ export const en = {
       noData: 'No generated documents',
       templateCol: 'Template',
       dateCol: 'Generation date',
+      variablesCol: 'Variables',
       actionsCol: 'Actions',
       showVars: 'Show variables',
       hideVars: 'Hide variables',

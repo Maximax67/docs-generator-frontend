@@ -1,3 +1,4 @@
+import { useDictionary } from '@/contexts/LangContext';
 import { Box, FormControl, Select, MenuItem, Typography } from '@mui/material';
 
 type PageSizeControlProps = {
@@ -15,9 +16,11 @@ export function PageSizeControl({
   disabled = false,
   pageSizeOptions = [10, 25, 50, 100],
 }: PageSizeControlProps) {
+  const dict = useDictionary();
+
   return (
     <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-      <Typography variant="body2">Елементів на сторінці:</Typography>
+      <Typography variant="body2">{dict.common.perPage}</Typography>
       <FormControl size="small" variant="outlined">
         <Select
           value={pageSize}
@@ -32,7 +35,7 @@ export function PageSizeControl({
         </Select>
       </FormControl>
       <Typography variant="body2" color="text.secondary">
-        Всього: {totalItems}
+        {dict.common.total} {totalItems}
       </Typography>
     </Box>
   );

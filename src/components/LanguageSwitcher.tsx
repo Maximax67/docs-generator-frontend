@@ -7,6 +7,8 @@ import { KeyboardArrowDown as ArrowDownIcon } from '@mui/icons-material';
 import { locales, localeLabels, type Locale, getFlagUrl } from '@/i18n';
 import { useLang } from '@/contexts/LangContext';
 
+const localePattern = new RegExp(`^/(${locales.join('|')})`);
+
 export function LanguageSwitcher() {
   const lang = useLang();
   const pathname = usePathname();
@@ -26,7 +28,7 @@ export function LanguageSwitcher() {
     handleClose();
     if (newLang === lang) return;
 
-    const newPath = pathname.replace(/^\/(en|uk)/, `/${newLang}`);
+    const newPath = pathname.replace(localePattern, `/${newLang}`);
 
     startTransition(() => {
       router.push(newPath);

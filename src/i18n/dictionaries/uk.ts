@@ -408,6 +408,7 @@ export const uk: Dictionary = {
       noData: 'Немає згенерованих документів',
       templateCol: 'Шаблон',
       dateCol: 'Дата генерації',
+      variablesCol: 'Змінні',
       actionsCol: 'Дії',
       showVars: 'Показати змінні',
       hideVars: 'Приховати змінні',

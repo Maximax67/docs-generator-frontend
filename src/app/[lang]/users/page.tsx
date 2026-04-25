@@ -344,7 +344,7 @@ export default function UsersPage() {
                   <TableCell align="right">
                     <IconButton
                       component={Link}
-                      href={`/profile?id=${user.id}`}
+                      href={`/${lang}/profile?id=${user.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={dict.users.viewProfile}

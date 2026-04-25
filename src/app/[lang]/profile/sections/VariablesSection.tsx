@@ -29,6 +29,7 @@ import { ValueDisplay } from '@/components/ValueDisplay';
 import { FullValueDialog, FullValueDialogRef } from '@/components/FullValueDialog';
 import { FolderTreeGlobal } from '@/types/documents';
 import { ScopeBadge } from '@/components/ScopeBadge';
+import { useDictionary } from '@/contexts/LangContext';
 
 type VariablesSectionProps = {
   savedVars: Paginated<SavedVariable> | null;
@@ -51,6 +52,7 @@ export default function VariablesSection({
   onUpdate,
   onPageChange,
 }: VariablesSectionProps) {
+  const dict = useDictionary();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingVariable, setEditingVariable] = useState<SavedVariable | null>(null);
   const fullValueDialogRef = useRef<FullValueDialogRef>(null);
@@ -79,12 +81,12 @@ export default function VariablesSection({
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5">Збережені дані</Typography>
+      <Typography variant="h5">{dict.profile.vars.title}</Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         {totalItems > 0 && (
           <Button variant="outlined" color="warning" onClick={onClear} disabled={loading}>
-            Очистити все
+            {dict.profile.vars.clearAll}
           </Button>
         )}
         <Button
@@ -93,14 +95,14 @@ export default function VariablesSection({
           onClick={onRefresh}
           disabled={loading}
         >
-          Оновити
+          {dict.common.refresh}
         </Button>
       </Stack>
 
       <Divider />
 
       {!savedVars || savedVars.data.length === 0 ? (
-        <Alert severity="info">Немає збережених данних</Alert>
+        <Alert severity="info">{dict.profile.vars.noData}</Alert>
       ) : (
         <>
           <LoadingContent loading={loading} sx={{ mb: 2 }}>
@@ -117,11 +119,11 @@ export default function VariablesSection({
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Змінна</TableCell>
-                      <TableCell>Тип</TableCell>
-                      <TableCell>Значення</TableCell>
-                      <TableCell>Scope</TableCell>
-                      <TableCell align="right">Дії</TableCell>
+                      <TableCell>{dict.profile.vars.variableCol}</TableCell>
+                      <TableCell>{dict.profile.vars.typeCol}</TableCell>
+                      <TableCell>{dict.profile.vars.valueCol}</TableCell>
+                      <TableCell>{dict.profile.vars.scopeCol}</TableCell>
+                      <TableCell align="right">{dict.profile.vars.actionsCol}</TableCell>
                     </TableRow>
                   </TableHead>
 
@@ -145,7 +147,7 @@ export default function VariablesSection({
                             size="small"
                             onClick={() => handleEdit(savedVar)}
                             disabled={loading}
-                            title="Редагувати"
+                            title={dict.common.edit}
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
@@ -154,7 +156,7 @@ export default function VariablesSection({
                             color="error"
                             onClick={() => onDelete(savedVar.variable.id)}
                             disabled={loading}
-                            title="Видалити"
+                            title={dict.common.delete}
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>

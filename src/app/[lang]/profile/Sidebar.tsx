@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import { User } from '@/types/user';
 import { ProfileTab } from '@/types/profile';
+import { useDictionary } from '@/contexts/LangContext';
 
 type SidebarProps = {
   active: ProfileTab;
@@ -26,6 +27,8 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ active, onChange, user, isOwnProfile }: SidebarProps) {
+  const dict = useDictionary();
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center">
@@ -42,14 +45,14 @@ export default function Sidebar({ active, onChange, user, isOwnProfile }: Sideba
           <ListItemIcon>
             <SettingsIcon />
           </ListItemIcon>
-          <ListItemText primary="Інформація" />
+          <ListItemText primary={dict.profile.tabs.info} />
         </ListItemButton>
 
         <ListItemButton selected={active === 'generations'} onClick={() => onChange('generations')}>
           <ListItemIcon>
             <PictureAsPdfIcon />
           </ListItemIcon>
-          <ListItemText primary="Генерації" />
+          <ListItemText primary={dict.profile.tabs.generations} />
         </ListItemButton>
 
         {isOwnProfile && (
@@ -58,21 +61,21 @@ export default function Sidebar({ active, onChange, user, isOwnProfile }: Sideba
               <ListItemIcon>
                 <StorageIcon />
               </ListItemIcon>
-              <ListItemText primary="Збережені дані" />
+              <ListItemText primary={dict.profile.tabs.vars} />
             </ListItemButton>
 
             <ListItemButton selected={active === 'sessions'} onClick={() => onChange('sessions')}>
               <ListItemIcon>
                 <KeyIcon />
               </ListItemIcon>
-              <ListItemText primary="Сесії" />
+              <ListItemText primary={dict.profile.tabs.sessions} />
             </ListItemButton>
 
             <ListItemButton selected={active === 'logout'} onClick={() => onChange('logout')}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
-              <ListItemText primary="Вийти" />
+              <ListItemText primary={dict.profile.tabs.logout} />
             </ListItemButton>
           </>
         )}

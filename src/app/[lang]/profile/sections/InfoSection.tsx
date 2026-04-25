@@ -12,6 +12,7 @@ import {
 } from '@mui/icons-material';
 import { User } from '@/types/user';
 import RoleChip from '@/components/RoleChip';
+import { useDictionary } from '@/contexts/LangContext';
 
 type InfoSectionProps = {
   user: User;
@@ -48,19 +49,21 @@ export default function InfoSection({
   onDemote,
   onDelete,
 }: InfoSectionProps) {
+  const dict = useDictionary();
+
   return (
     <Stack spacing={2}>
-      <Typography variant="h5">Обліковий запис</Typography>
+      <Typography variant="h5">{dict.profile.info.title}</Typography>
 
       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
         <RoleChip role={user.role} />
         <Chip
-          label={user.is_banned ? 'Заблокований' : 'Активний'}
+          label={user.is_banned ? dict.profile.info.banned : dict.profile.info.active}
           color={user.is_banned ? 'error' : 'success'}
           icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
         />
         <Chip
-          label={user.email_verified ? 'Пошта підтверджена' : 'Пошта не підтверджена'}
+          label={user.email_verified ? dict.profile.info.emailVerified : dict.profile.info.emailNotVerified}
           color={user.email_verified ? 'success' : 'warning'}
           icon={user.email_verified ? <VerifiedIcon /> : <ErrorOutlineIcon />}
         />
@@ -76,7 +79,7 @@ export default function InfoSection({
         }}
       >
         <Typography variant="subtitle2" color="text.secondary">
-          Ел. пошта
+          {dict.profile.info.emailLabel}
         </Typography>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -92,12 +95,12 @@ export default function InfoSection({
                 onClick={isOwnProfile ? onSendEmailConfirm : onConfirmEmail}
                 disabled={loading}
               >
-                {isOwnProfile ? 'Надіслати підтвердження' : 'Підтвердити'}
+                {isOwnProfile ? dict.profile.info.sendConfirmation : dict.profile.info.confirmEmail}
               </Button>
             )}
             {user.email_verified && !isOwnProfile && (isGod || user.role == 'user') && (
               <Button size="small" onClick={onRevokeConfirmEmail} disabled={loading}>
-                Зняти підтвердження
+                {dict.profile.info.revokeConfirmation}
               </Button>
             )}
             {(isOwnProfile || isGod) && (
@@ -108,7 +111,7 @@ export default function InfoSection({
                 onClick={onOpenChangeEmail}
                 disabled={loading}
               >
-                Змінити пошту
+                {dict.profile.info.changeEmail}
               </Button>
             )}
           </Stack>
@@ -125,7 +128,7 @@ export default function InfoSection({
         }}
       >
         <Typography variant="subtitle2" color="text.secondary">
-          ПІБ
+          {dict.profile.info.nameLabel}
         </Typography>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -144,7 +147,7 @@ export default function InfoSection({
               onClick={onOpenEditNames}
               disabled={loading}
             >
-              Редагувати ім&apos;я
+              {dict.profile.info.editName}
             </Button>
           )}
         </Stack>
@@ -161,7 +164,7 @@ export default function InfoSection({
           }}
         >
           <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-            Безпека
+            {dict.profile.info.securityLabel}
           </Typography>
           <Box
             sx={{
@@ -182,7 +185,7 @@ export default function InfoSection({
                 onClick={onOpenChangePassword}
                 disabled={loading}
               >
-                Змінити пароль
+                {dict.profile.info.changePassword}
               </Button>
             )}
 
@@ -196,7 +199,7 @@ export default function InfoSection({
                     onClick={onUnban}
                     disabled={loading}
                   >
-                    Розблокувати
+                    {dict.profile.info.unblock}
                   </Button>
                 ) : (
                   <Button
@@ -206,7 +209,7 @@ export default function InfoSection({
                     onClick={onBan}
                     disabled={loading}
                   >
-                    Заблокувати
+                    {dict.profile.info.block}
                   </Button>
                 )}
 
@@ -220,7 +223,7 @@ export default function InfoSection({
                         onClick={onDemote}
                         disabled={loading}
                       >
-                        Зробити користувачем
+                        {dict.profile.info.makeUser}
                       </Button>
                     ) : (
                       <Button
@@ -230,7 +233,7 @@ export default function InfoSection({
                         onClick={onPromote}
                         disabled={loading}
                       >
-                        Зробити адміном
+                        {dict.profile.info.makeAdmin}
                       </Button>
                     )}
                     <Button
@@ -240,7 +243,7 @@ export default function InfoSection({
                       onClick={onDelete}
                       disabled={loading}
                     >
-                      Видалити
+                      {dict.profile.info.deleteUser}
                     </Button>
                   </>
                 )}

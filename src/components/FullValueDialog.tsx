@@ -1,14 +1,15 @@
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { JSONValue } from '@/types/json';
+import { useDictionary } from '@/contexts/LangContext';
 
-const formatValue = (value: JSONValue) => {
+const formatValue = (value: JSONValue, yes: string, no: string) => {
   if (value === null) {
     return '-';
   }
 
   if (typeof value === 'boolean') {
-    return value ? 'Так' : 'Ні';
+    return value ? yes : no;
   }
 
   if (typeof value === 'object') {
@@ -25,6 +26,7 @@ export interface FullValueDialogRef {
 
 export const FullValueDialog = forwardRef<FullValueDialogRef>((_, ref) => {
   const [value, setValue] = useState<JSONValue | undefined>(undefined);
+  const dict = useDictionary();
   const handleClose = () => setValue(undefined);
 
   useImperativeHandle(ref, () => ({
@@ -34,7 +36,7 @@ export const FullValueDialog = forwardRef<FullValueDialogRef>((_, ref) => {
 
   return (
     <Dialog open={typeof value !== 'undefined'} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Значення змінної</DialogTitle>
+      <DialogTitle>{dict.fullValueDialog.title}</DialogTitle>
       <DialogContent>
         <Box
           component="pre"
@@ -47,11 +49,11 @@ export const FullValueDialog = forwardRef<FullValueDialogRef>((_, ref) => {
             fontSize: '0.875rem',
           }}
         >
-          {typeof value !== 'undefined' && formatValue(value)}
+          {typeof value !== 'undefined' && formatValue(value, dict.common.yes, dict.common.no)}
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Закрити</Button>
+        <Button onClick={handleClose}>{dict.fullValueDialog.close}</Button>
       </DialogActions>
     </Dialog>
   );

@@ -2,6 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { Folder as FolderIcon, Description as DocumentIcon } from '@mui/icons-material';
 import { FolderTreeGlobal } from '@/types/documents';
 import { findInTree } from '@/utils/document-tree';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface ScopeBadgeProps {
   folderTree: FolderTreeGlobal | null;
@@ -11,9 +12,10 @@ interface ScopeBadgeProps {
 const getScopeNameAndType = (
   folderTree: FolderTreeGlobal | null,
   scopeId: string | null,
+  globalScopeName: string,
 ): [string, boolean] => {
   if (!scopeId) {
-    return ['Глобальний', true];
+    return [globalScopeName, true];
   }
 
   if (!folderTree) {
@@ -33,7 +35,8 @@ const getScopeNameAndType = (
 };
 
 export const ScopeBadge = ({ folderTree, scope }: ScopeBadgeProps) => {
-  const [name, is_folder] = getScopeNameAndType(folderTree, scope);
+  const dict = useDictionary();
+  const [name, is_folder] = getScopeNameAndType(folderTree, scope, dict.scope.global);
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

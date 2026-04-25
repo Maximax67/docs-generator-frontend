@@ -1,5 +1,6 @@
 import { Typography } from '@mui/material';
 import { JSONValue } from '@/types/json';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface ValueDisplayProps {
   value: JSONValue;
@@ -7,13 +8,13 @@ interface ValueDisplayProps {
   onClick?: (value: JSONValue) => void;
 }
 
-const formatShortValue = (value: JSONValue, maxLength: number) => {
+const formatShortValue = (value: JSONValue, maxLength: number, yes: string, no: string) => {
   if (value === null || value === undefined) {
     return '-';
   }
 
   if (typeof value === 'boolean') {
-    return value ? 'Так' : 'Ні';
+    return value ? yes : no;
   }
 
   if (typeof value === 'object') {
@@ -29,6 +30,7 @@ const formatShortValue = (value: JSONValue, maxLength: number) => {
 };
 
 export const ValueDisplay = ({ value, maxLength = 20, onClick }: ValueDisplayProps) => {
+  const dict = useDictionary();
   const clickable =
     onClick &&
     ((typeof value === 'object' && value !== null) ||
@@ -47,7 +49,7 @@ export const ValueDisplay = ({ value, maxLength = 20, onClick }: ValueDisplayPro
       }}
       onClick={() => clickable && onClick(value)}
     >
-      {formatShortValue(value, maxLength)}
+      {formatShortValue(value, maxLength, dict.common.yes, dict.common.no)}
     </Typography>
   );
 };

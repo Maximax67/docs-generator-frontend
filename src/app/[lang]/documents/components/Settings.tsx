@@ -30,6 +30,7 @@ import { SavingTable } from './SavingTable';
 import { ScopeSettingsTab } from './ScopeSettingsTab';
 import { FieldOrderTab } from './FieldOrderTab';
 import { ScopeSettings } from '@/types/scopes';
+import { useDictionary } from '@/contexts/LangContext';
 
 import 'jsonjoy-builder/styles.css';
 import './Settings.module.css';
@@ -64,6 +65,7 @@ interface ParentScopeSchema {
 
 export const Settings = forwardRef<SettingsRef, SettingsProps>(
   ({ scope, scopeName, isFolder, folderTree, onClose }, ref) => {
+    const dict = useDictionary();
     const notify = useNotify();
     const [activeTab, setActiveTab] = useState<TabValue>('validation');
 
@@ -112,8 +114,8 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
 
     const getScopeName = useCallback(
       (targetScope: string | null): string => {
-        if (!targetScope) return 'Глобальна область';
-        if (!folderTree) return 'Папка';
+        if (!targetScope) return dict.scope.global;
+        if (!folderTree) return dict.documents.folder;
 
         const findFolder = (tree: FolderTreeGlobal | FolderTree, id: string): string | null => {
           if ('current_folder' in tree && tree.current_folder && tree.current_folder.id === id) {
@@ -131,9 +133,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
           return null;
         };
 
-        return findFolder(folderTree, targetScope) || 'Папка';
+        return findFolder(folderTree, targetScope) || dict.documents.folder;
       },
-      [folderTree],
+      [folderTree, dict.scope.global, dict.documents.folder],
     );
 
     const loadSchema = useCallback(async () => {
@@ -195,11 +197,11 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         setParentSchemas(parentScopes);
       } catch (err) {
         console.error('Failed to load existing schema:', err);
-        notify(toErrorMessage(err, 'Не вдалося завантажити схему'), 'error');
+        notify(toErrorMessage(err, dict.documents.settings.loadSchemaError), 'error');
       } finally {
         setFetchingSchema(false);
       }
-    }, [notify, scope, getScopeName]);
+    }, [notify, scope, getScopeName, dict.documents.settings.loadSchemaError]);
 
     const loadScopeSettings = useCallback(async () => {
       if (!scope) return;
@@ -222,11 +224,11 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         }
       } catch (err) {
         console.error('Failed to load scope settings:', err);
-        notify(toErrorMessage(err, 'Не вдалося завантажити налаштування доступу'), 'error');
+        notify(toErrorMessage(err, dict.documents.settings.loadAccessError), 'error');
       } finally {
         setFetchingScopeSettings(false);
       }
-    }, [notify, scope]);
+    }, [notify, scope, dict.documents.settings.loadAccessError]);
 
     useEffect(() => {
       loadSchema();
@@ -247,7 +249,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
 
     const handleSaveSchema = async () => {
       if (!hasSchemaChanges) {
-        notify('Немає змін для збереження', 'info');
+        notify(dict.documents.settings.noChanges, 'info');
         return;
       }
 
@@ -257,9 +259,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         await variablesApi.updateValidationSchema(scope, schema);
         setInitialSchema(schema);
 
-        notify('Схему успішно збережено');
+        notify(dict.documents.settings.schemaSaved);
       } catch (err) {
-        notify(toErrorMessage(err, 'Не вдалося зберегти схему'), 'error');
+        notify(toErrorMessage(err, dict.documents.settings.schemaError), 'error');
       } finally {
         setLoading(false);
       }
@@ -267,7 +269,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
 
     const handleSaveScopeSettings = async () => {
       if (!hasScopeChanges || !scope) {
-        notify('Немає змін для збереження', 'info');
+        notify(dict.documents.settings.noChanges, 'info');
         return;
       }
 
@@ -276,9 +278,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
       if (!scopeSettings) {
         try {
           await scopesApi.deleteScope(scope);
-          notify('Налаштування доступу успішно видалено');
+          notify(dict.documents.settings.accessDeleted);
         } catch (err) {
-          notify(toErrorMessage(err, 'Не вдалося видалити налаштування доступу'), 'error');
+          notify(toErrorMessage(err, dict.documents.settings.accessDeleteError), 'error');
         } finally {
           setSavingScopeSettings(false);
         }
@@ -305,9 +307,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         }
 
         await loadScopeSettings();
-        notify('Налаштування доступу успішно збережено');
+        notify(dict.documents.settings.accessSaved);
       } catch (err) {
-        notify(toErrorMessage(err, 'Не вдалося зберегти налаштування доступу'), 'error');
+        notify(toErrorMessage(err, dict.documents.settings.accessError), 'error');
       } finally {
         setSavingScopeSettings(false);
       }
@@ -315,14 +317,14 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
 
     const handleSaveFieldOrders = async () => {
       if (!hasOrderChanges) {
-        notify('Немає змін для збереження', 'info');
+        notify(dict.documents.settings.noChanges, 'info');
         return;
       }
 
       setSavingFieldOrders(true);
       try {
         await variablesApi.updateVariableOrder(changedFieldOrders);
-        notify('Порядок полів успішно збережено');
+        notify(dict.documents.settings.orderSaved);
 
         setVariables((prev) =>
           prev.map((v) => {
@@ -333,7 +335,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         setChangedFieldOrders([]);
         setOrderResetKey((prev) => prev + 1);
       } catch (err) {
-        notify(toErrorMessage(err, 'Не вдалося зберегти порядок полів'), 'error');
+        notify(toErrorMessage(err, dict.documents.settings.orderError), 'error');
       } finally {
         setSavingFieldOrders(false);
       }
@@ -444,12 +446,12 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                 color="primary"
                 onClick={handleSave}
                 disabled={isSaving || isFetching || !canSave}
-                title={canSave ? 'Зберегти зміни' : 'Немає змін для збереження'}
+                title={canSave ? dict.documents.settings.saveChanges : dict.documents.settings.noChanges}
               >
                 <SaveIcon />
               </IconButton>
             )}
-            <IconButton onClick={onClose} title="Закрити">
+            <IconButton onClick={onClose} title={dict.documents.settings.close}>
               <CloseIcon />
             </IconButton>
           </Box>
@@ -466,7 +468,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
               value="validation"
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="button">Валідація</Typography>
+                  <Typography variant="button">{dict.documents.settings.validation}</Typography>
                   {hasSchemaChanges && (
                     <Box
                       sx={{
@@ -480,15 +482,15 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                   )}
                 </Box>
               }
-              title={hasSchemaChanges ? 'Не збережені зміни' : undefined}
+              title={hasSchemaChanges ? dict.documents.settings.unsavedChanges : undefined}
             />
-            <Tab label="Константи" value="constants" />
-            <Tab label="Збереження значень" value="saving" />
+            <Tab label={dict.documents.settings.constants} value="constants" />
+            <Tab label={dict.documents.settings.saving} value="saving" />
             <Tab
               value="order"
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="button">Порядок полів</Typography>
+                  <Typography variant="button">{dict.documents.settings.order}</Typography>
                   {hasOrderChanges && (
                     <Box
                       sx={{
@@ -502,13 +504,13 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                   )}
                 </Box>
               }
-              title={hasOrderChanges ? 'Не збережені зміни' : undefined}
+              title={hasOrderChanges ? dict.documents.settings.unsavedChanges : undefined}
             />
             <Tab
               value="access"
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="button">Доступ</Typography>
+                  <Typography variant="button">{dict.documents.settings.access}</Typography>
                   {hasScopeChanges && (
                     <Box
                       sx={{
@@ -522,7 +524,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                   )}
                 </Box>
               }
-              title={hasScopeChanges ? 'Не збережені зміни' : undefined}
+              title={hasScopeChanges ? dict.documents.settings.unsavedChanges : undefined}
             />
           </Tabs>
         </Box>
@@ -555,7 +557,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                       >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                            Валідація з вищих scope
+                            {dict.documents.settings.parentValidation}
                           </Typography>
                           <Chip
                             label={parentSchemas.length}
@@ -650,7 +652,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                   {!scope && (
                     <Box sx={{ p: 2 }}>
                       <Alert severity="warning">
-                        Доступ не можна налаштовувати на глобальну область, лише до папок та файлів!
+                        {dict.documents.settings.globalAccessWarning}
                       </Alert>
                     </Box>
                   )}

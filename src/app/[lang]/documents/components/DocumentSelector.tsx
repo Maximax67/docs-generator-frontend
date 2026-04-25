@@ -16,6 +16,7 @@ import { convertBlobToUrl } from '@/utils/convert-blob-to-url';
 import { findInTree, getExpandPath, TreeNodePath } from '@/utils/document-tree';
 import { isAdminUser } from '@/utils/is-admin';
 import { useNotify } from '@/providers/NotificationProvider';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 interface DocumentSelectorProps {
   showWebLink?: boolean;
@@ -26,6 +27,8 @@ type ViewMode = 'preview' | 'settings';
 const previewCache = new PreviewCache();
 
 export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => {
+  const dict = useDictionary();
+  const lang = useLang();
   const notify = useNotify();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -209,10 +212,10 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         params.set('treeScope', treeScopeParam);
       }
 
-      const newUrl = params.toString() ? `?${params.toString()}` : '/documents';
+      const newUrl = params.toString() ? `?${params.toString()}` : `/${lang}/documents`;
       router.push(newUrl, { scroll: false });
     },
-    [router, treeScopeParam],
+    [lang, router, treeScopeParam],
   );
 
   const confirmWithUnsavedChanges = useCallback((action: () => void) => {
@@ -418,10 +421,10 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
 
       <ConfirmDialog
         open={showConfirmDialog}
-        title="Незбережені зміни"
-        message="У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?"
-        confirmText="Війти без збереження"
-        cancelText="Скасувати"
+        title={dict.documents.unsavedDialog.title}
+        message={dict.documents.unsavedDialog.message}
+        confirmText={dict.documents.unsavedDialog.confirm}
+        cancelText={dict.documents.unsavedDialog.cancel}
         onConfirm={handleConfirmProceed}
         onCancel={handleConfirmCancel}
         severity="warning"

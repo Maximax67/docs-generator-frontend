@@ -7,6 +7,7 @@ import {
   Button,
 } from '@mui/material';
 import { validateName } from '@/utils/validators';
+import { useDictionary } from '@/contexts/LangContext';
 
 type EditNamesDialogProps = {
   open: boolean;
@@ -29,39 +30,40 @@ export default function EditNamesDialog({
   onClose,
   onSubmit,
 }: EditNamesDialogProps) {
+  const dict = useDictionary();
   const firstNameError = firstName && !validateName(firstName);
   const lastNameError = lastName && !validateName(lastName);
   const isDisabled = loading || !firstName || !!firstNameError || !!lastNameError;
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Оновити ім&apos;я</DialogTitle>
+      <DialogTitle>{dict.profile.dialogs.editNames.title}</DialogTitle>
       <DialogContent>
         <TextField
           required
           autoFocus
           fullWidth
-          label="Ім'я"
+          label={dict.auth.firstName}
           margin="normal"
           value={firstName}
           onChange={(e) => onChangeFirst(e.target.value)}
           error={!!firstNameError}
-          helperText={firstNameError ? "Не валідне ім'я" : ''}
+          helperText={firstNameError ? dict.auth.invalidFirstName : ''}
         />
         <TextField
           fullWidth
-          label="Прізвище"
+          label={dict.auth.lastName}
           margin="normal"
           value={lastName}
           onChange={(e) => onChangeLast(e.target.value)}
           error={!!lastNameError}
-          helperText={lastNameError ? 'Не валідне прізвище' : ''}
+          helperText={lastNameError ? dict.auth.invalidLastName : ''}
         />
       </DialogContent>
       <DialogActions sx={{ p: 2, pt: 0 }}>
-        <Button onClick={onClose}>Скасувати</Button>
+        <Button onClick={onClose}>{dict.profile.dialogs.editNames.cancel}</Button>
         <Button variant="contained" onClick={onSubmit} disabled={isDisabled}>
-          Зберегти
+          {dict.profile.dialogs.editNames.save}
         </Button>
       </DialogActions>
     </Dialog>

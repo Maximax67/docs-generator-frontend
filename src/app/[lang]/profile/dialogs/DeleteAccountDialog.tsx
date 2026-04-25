@@ -7,6 +7,7 @@ import {
   DialogActions,
   Button,
 } from '@mui/material';
+import { useDictionary } from '@/contexts/LangContext';
 
 type DeleteAccountDialogProps = {
   open: boolean;
@@ -27,12 +28,14 @@ export default function DeleteAccountDialog({
   onClose,
   onSubmit,
 }: DeleteAccountDialogProps) {
+  const dict = useDictionary();
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs">
-      <DialogTitle>Підтвердження видалення акаунта</DialogTitle>
+      <DialogTitle>{dict.profile.dialogs.deleteAccount.title}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          Для видалення введіть &quot;{email}&quot;:
+          {dict.profile.dialogs.deleteAccount.description} "{email}":
         </Typography>
 
         <TextField
@@ -51,14 +54,14 @@ export default function DeleteAccountDialog({
       </DialogContent>
 
       <DialogActions sx={{ p: 2, pt: 0 }}>
-        <Button onClick={onClose}>Скасувати</Button>
+        <Button onClick={onClose}>{dict.profile.dialogs.deleteAccount.cancelButton}</Button>
         <Button
           color="error"
           variant="contained"
           disabled={confirmValue !== email}
           onClick={onSubmit}
         >
-          Видалити
+          {dict.profile.dialogs.deleteAccount.confirmButton}
         </Button>
       </DialogActions>
     </Dialog>

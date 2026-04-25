@@ -7,8 +7,10 @@ import { useProfileHandlers } from './hooks/useProfileHandlers';
 import { ProfileContent } from './components/ProfileContent';
 import { ProfileDialogs } from './components/ProfileDialogs';
 import { isAdminUser } from '@/utils/is-admin';
+import { useDictionary } from '@/contexts/LangContext';
 
 export default function ProfilePage() {
+  const dict = useDictionary();
   const { user: currentUser } = useUserStore();
   const isAdmin = isAdminUser(currentUser);
   const { targetUser, isOwnProfile, loading, error } = useProfileData();
@@ -17,7 +19,7 @@ export default function ProfilePage() {
   if (!currentUser) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="info">Ви не авторизовані</Alert>
+        <Alert severity="info">{dict.profile.notAuthorized}</Alert>
       </Container>
     );
   }
@@ -25,7 +27,7 @@ export default function ProfilePage() {
   if (!isOwnProfile && !isAdmin) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="error">Лише модератор може переглядати профіль інших</Alert>
+        <Alert severity="error">{dict.profile.adminOnly}</Alert>
       </Container>
     );
   }
@@ -41,7 +43,7 @@ export default function ProfilePage() {
   if (error || !targetUser) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="error">{error || 'Користувач не знайдений'}</Alert>
+        <Alert severity="error">{error || dict.profile.notFound}</Alert>
       </Container>
     );
   }

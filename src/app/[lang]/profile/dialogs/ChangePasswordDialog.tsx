@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { validatePassword } from '@/utils/validators';
+import { useDictionary } from '@/contexts/LangContext';
 
 type ChangePasswordDialogProps = {
   open: boolean;
@@ -40,6 +41,7 @@ export default function ChangePasswordDialog({
   onToggleNew,
   onSubmit,
 }: ChangePasswordDialogProps) {
+  const dict = useDictionary();
   const oldPasswordError = oldPassword && !validatePassword(oldPassword);
   const newPasswordError = newPassword && !validatePassword(newPassword);
   const isDisabled =
@@ -47,11 +49,11 @@ export default function ChangePasswordDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Зміна пароля</DialogTitle>
+      <DialogTitle>{dict.profile.dialogs.changePassword.title}</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
-          label="Старий пароль"
+          label={dict.profile.dialogs.changePassword.oldPassword}
           type={showOld ? 'text' : 'password'}
           value={oldPassword}
           onChange={(e) => onChangeOld(e.target.value)}
@@ -60,7 +62,7 @@ export default function ChangePasswordDialog({
           size="medium"
           margin="dense"
           error={!!oldPasswordError}
-          helperText={oldPasswordError ? 'Пароль має бути від 8 до 32 символів' : ''}
+          helperText={oldPasswordError ? dict.profile.dialogs.changePassword.invalidPassword : ''}
           slotProps={{
             input: {
               endAdornment: (
@@ -79,7 +81,7 @@ export default function ChangePasswordDialog({
         />
 
         <TextField
-          label="Новий пароль"
+          label={dict.profile.dialogs.changePassword.newPassword}
           type={showNew ? 'text' : 'password'}
           value={newPassword}
           onChange={(e) => onChangeNew(e.target.value)}
@@ -88,7 +90,7 @@ export default function ChangePasswordDialog({
           size="medium"
           margin="dense"
           error={!!newPasswordError}
-          helperText={newPasswordError ? 'Пароль має бути від 8 до 32 символів' : ''}
+          helperText={newPasswordError ? dict.profile.dialogs.changePassword.invalidPassword : ''}
           slotProps={{
             input: {
               endAdornment: (
@@ -107,9 +109,9 @@ export default function ChangePasswordDialog({
         />
       </DialogContent>
       <DialogActions sx={{ p: 2, pt: 0 }}>
-        <Button onClick={onClose}>Скасувати</Button>
+        <Button onClick={onClose}>{dict.profile.dialogs.changePassword.cancel}</Button>
         <Button variant="contained" onClick={onSubmit} disabled={isDisabled}>
-          Зберегти
+          {dict.profile.dialogs.changePassword.save}
         </Button>
       </DialogActions>
     </Dialog>

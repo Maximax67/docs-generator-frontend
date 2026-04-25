@@ -6,14 +6,16 @@ import {
   Bolt as BoltIcon,
 } from '@mui/icons-material';
 import { UserRole } from '@/types/user';
+import { useDictionary } from '@/contexts/LangContext';
 
 type RoleChipInputProps = {
   role: UserRole;
 };
 
 export const RoleChip: FC<RoleChipInputProps> = ({ role }) => {
+  const dict = useDictionary();
   let chipProps: ChipProps = {
-    label: 'Користувач',
+    label: dict.roles.user,
     color: 'default',
     icon: <PersonIcon />,
     variant: 'outlined',
@@ -22,7 +24,7 @@ export const RoleChip: FC<RoleChipInputProps> = ({ role }) => {
   switch (role) {
     case 'admin':
       chipProps = {
-        label: 'Адмін',
+        label: dict.roles.admin,
         color: 'secondary',
         icon: <AdminPanelSettingsIcon />,
         variant: 'outlined',
@@ -31,7 +33,7 @@ export const RoleChip: FC<RoleChipInputProps> = ({ role }) => {
 
     case 'god':
       chipProps = {
-        label: 'Бог',
+        label: dict.roles.god,
         color: 'warning',
         icon: <BoltIcon />,
         sx: {

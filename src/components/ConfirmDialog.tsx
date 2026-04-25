@@ -9,6 +9,7 @@ import {
   AlertColor,
 } from '@mui/material';
 import { Warning as WarningIcon } from '@mui/icons-material';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -23,14 +24,15 @@ interface ConfirmDialogProps {
 
 export const ConfirmDialog: FC<ConfirmDialogProps> = ({
   open,
-  title = 'Підтвердження',
+  title,
   message,
-  confirmText = 'Підтвердити',
-  cancelText = 'Скасувати',
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel,
   severity = 'warning',
 }) => {
+  const dict = useDictionary();
   return (
     <Dialog
       open={open}
@@ -45,17 +47,17 @@ export const ConfirmDialog: FC<ConfirmDialogProps> = ({
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
         <WarningIcon />
-        {title}
+        {title ?? dict.confirmDialog.defaultTitle}
       </DialogTitle>
       <DialogContent>
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onCancel} color="inherit">
-          {cancelText}
+          {cancelText ?? dict.confirmDialog.cancel}
         </Button>
         <Button onClick={onConfirm} variant="contained" color={severity} autoFocus>
-          {confirmText}
+          {confirmText ?? dict.confirmDialog.defaultConfirm}
         </Button>
       </DialogActions>
     </Dialog>

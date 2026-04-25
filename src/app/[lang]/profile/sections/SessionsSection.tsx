@@ -12,6 +12,7 @@ import {
 import { Logout as LogoutIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { SessionInfo } from '@/types/user';
 import { formatDateTime } from '@/utils/dates';
+import { useDictionary } from '@/contexts/LangContext';
 
 type SessionsSectionProps = {
   sessions: SessionInfo[];
@@ -28,9 +29,11 @@ export default function SessionsSection({
   onRevoke,
   onLogoutEverywhere,
 }: SessionsSectionProps) {
+  const dict = useDictionary();
+
   return (
     <Stack spacing={2}>
-      <Typography variant="h5">Сесії</Typography>
+      <Typography variant="h5">{dict.profile.sessions.title}</Typography>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
         <Button
@@ -39,10 +42,10 @@ export default function SessionsSection({
           variant="contained"
           onClick={onLogoutEverywhere}
         >
-          Вийти з усіх сесій
+          {dict.profile.sessions.logoutAll}
         </Button>
         <Button startIcon={<RefreshIcon />} variant="outlined" onClick={onRefresh}>
-          Оновити
+          {dict.common.refresh}
         </Button>
       </Stack>
 
@@ -59,17 +62,17 @@ export default function SessionsSection({
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Назва</TableCell>
-                <TableCell>Створено</TableCell>
-                <TableCell>Оновлено</TableCell>
-                <TableCell align="right">Дії</TableCell>
+                <TableCell>{dict.profile.sessions.nameCol}</TableCell>
+                <TableCell>{dict.profile.sessions.createdCol}</TableCell>
+                <TableCell>{dict.profile.sessions.updatedCol}</TableCell>
+                <TableCell align="right">{dict.profile.sessions.actionsCol}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {Array.isArray(sessions) &&
                 sessions.map((s: SessionInfo) => (
                   <TableRow key={s.id} selected={s.current}>
-                    <TableCell>{s.name || 'Без назви'}</TableCell>
+                    <TableCell>{s.name || dict.common.unnamed}</TableCell>
                     <TableCell>{formatDateTime(s.created_at)}</TableCell>
                     <TableCell>{formatDateTime(s.updated_at)}</TableCell>
                     <TableCell align="right">
@@ -80,7 +83,7 @@ export default function SessionsSection({
                         disabled={loading}
                         onClick={() => onRevoke(s.id, s.current)}
                       >
-                        Завершити
+                        {dict.profile.sessions.endButton}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -90,7 +93,7 @@ export default function SessionsSection({
                 <TableRow>
                   <TableCell colSpan={5}>
                     <Typography variant="body2" color="text.secondary">
-                      Сесій не знайдено
+                      {dict.profile.sessions.noData}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -113,12 +116,12 @@ export default function SessionsSection({
                   }}
                 >
                   <Stack spacing={0.5}>
-                    <Typography variant="subtitle1">{s.name || 'Без назви'}</Typography>
+                    <Typography variant="subtitle1">{s.name || dict.common.unnamed}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Створено: {formatDateTime(s.created_at)}
+                      {dict.profile.sessions.createdCol}: {formatDateTime(s.created_at)}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Оновлено: {formatDateTime(s.updated_at)}
+                      {dict.profile.sessions.updatedCol}: {formatDateTime(s.updated_at)}
                     </Typography>
                     <Stack direction="row" justifyContent="flex-end">
                       <Button
@@ -128,7 +131,7 @@ export default function SessionsSection({
                         disabled={loading}
                         onClick={() => onRevoke(s.id, s.current)}
                       >
-                        Завершити
+                        {dict.profile.sessions.endButton}
                       </Button>
                     </Stack>
                   </Stack>
@@ -137,7 +140,7 @@ export default function SessionsSection({
 
             {(!sessions || sessions.length === 0) && (
               <Typography variant="body2" color="text.secondary">
-                Сесій не знайдено
+                {dict.profile.sessions.noData}
               </Typography>
             )}
           </Stack>
