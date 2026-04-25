@@ -75,6 +75,7 @@ export const DocumentInputForm = forwardRef<DocumentInputFormRef, DocumentInputF
         transformErrors={transformErrors}
         omitExtraData
         noHtml5Validate
+        removeEmptyOptionalObjects
       >
         {children}
       </Form>
