@@ -13,7 +13,7 @@ export function PaginationControls({
   disabled = false,
 }: PaginationControlsProps) {
   return (
-    <Box display="flex" justifyContent="center">
+    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
       <MuiPagination
         count={meta.total_pages}
         page={meta.current_page}

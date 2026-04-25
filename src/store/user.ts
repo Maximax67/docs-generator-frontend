@@ -131,7 +131,7 @@ export const useUserStore = create<UserState>()(
 
       changePassword: async (oldPassword, newPassword) => {
         const u = get().user;
-        if (!u?.id) throw new Error('Користувач не знайдений');
+        if (!u?.id) throw new Error('User not found');
 
         const payload: ChangePasswordPayload = {
           email: u.email,
@@ -145,7 +145,7 @@ export const useUserStore = create<UserState>()(
 
       updateNames: async (firstName, lastName) => {
         const u = get().user;
-        if (!u?.id) throw new Error('Користувач не знайдений');
+        if (!u?.id) throw new Error('User not found');
 
         const user = await userApi.updateNames(u.id, firstName, lastName);
         set({ user });
@@ -153,7 +153,7 @@ export const useUserStore = create<UserState>()(
 
       deleteAccount: async () => {
         const u = get().user;
-        if (!u?.id) throw new Error('Користувач не знайдений');
+        if (!u?.id) throw new Error('User not found');
 
         await userApi.deleteAccount(u.id);
         tokenManager.clear();

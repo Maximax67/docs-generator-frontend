@@ -29,6 +29,7 @@ export default function AppThemeProvider({ children }: { children: React.ReactNo
           ? 'dark'
           : 'light';
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMode(preferred);
     } catch {
       setMode('light');

@@ -1,0 +1,224 @@
+import { FC, useEffect, useRef, useState } from 'react';
+import deepEqual from 'fast-deep-equal';
+import {
+  Box,
+  Typography,
+  TextField,
+  MenuItem,
+  FormControlLabel,
+  Switch,
+  Alert,
+  Button,
+} from '@mui/material';
+import { AccessLevel, ScopeSettings } from '@/types/scopes';
+import { useDictionary } from '@/contexts/LangContext';
+
+interface ScopeSettingsTabProps {
+  driveId: string;
+  isFolder: boolean;
+  initialSettings: ScopeSettings | null;
+  setupOnly?: boolean;
+  onChange: (settings: ScopeSettings | null) => void;
+}
+
+const DEFAULT_SETTINGS = (driveId: string): ScopeSettings => ({
+  drive_id: driveId,
+  is_pinned: false,
+  restrictions: {
+    access_level: AccessLevel.ANY,
+    max_depth: null,
+  },
+});
+
+export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
+  driveId,
+  isFolder,
+  initialSettings,
+  setupOnly,
+  onChange,
+}) => {
+  const dict = useDictionary();
+  const a = dict.documents.access;
+
+  const accessLevelLabels: Record<AccessLevel, string> = {
+    [AccessLevel.ANY]: a.allUsers,
+    [AccessLevel.AUTHENTICATED]: a.authenticated,
+    [AccessLevel.VERIFIED]: a.verified,
+    [AccessLevel.ADMIN]: a.adminsOnly,
+  };
+
+  const [hasLocalScope, setHasLocalScope] = useState<boolean>(!!initialSettings || !!setupOnly);
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>(
+    initialSettings?.restrictions.access_level ?? AccessLevel.ANY,
+  );
+  const [maxDepth, setMaxDepth] = useState<number | null>(
+    initialSettings?.restrictions.max_depth ?? null,
+  );
+  const [isPinned, setIsPinned] = useState<boolean>(initialSettings?.is_pinned ?? false);
+  const [isInfiniteDepth, setIsInfiniteDepth] = useState<boolean>(
+    initialSettings?.restrictions.max_depth === null,
+  );
+  const lastEmittedRef = useRef<ScopeSettings | null>(null);
+
+  useEffect(() => {
+    if (!hasLocalScope) {
+      lastEmittedRef.current = null;
+      return;
+    }
+
+    const nextSettings: ScopeSettings = {
+      drive_id: driveId,
+      is_pinned: isPinned,
+      restrictions: {
+        access_level: accessLevel,
+        max_depth: isInfiniteDepth ? null : maxDepth,
+      },
+    };
+
+    if (!deepEqual(lastEmittedRef.current, nextSettings)) {
+      lastEmittedRef.current = nextSettings;
+      onChange(nextSettings);
+    }
+  }, [accessLevel, maxDepth, isPinned, isInfiniteDepth, driveId, hasLocalScope, onChange]);
+
+  const handleAddScope = () => {
+    const defaults = DEFAULT_SETTINGS(driveId);
+
+    setAccessLevel(defaults.restrictions.access_level);
+    setMaxDepth(defaults.restrictions.max_depth);
+    setIsInfiniteDepth(true);
+    setIsPinned(false);
+
+    setHasLocalScope(true);
+    onChange(defaults);
+  };
+
+  const handleCancel = () => {
+    setHasLocalScope(false);
+    onChange(null);
+  };
+
+  const handleDelete = () => {
+    setHasLocalScope(false);
+    onChange(null);
+  };
+
+  const handleAccessLevelChange = (value: string) => {
+    setAccessLevel(value as AccessLevel);
+  };
+
+  const handleMaxDepthChange = (value: string) => {
+    if (value === '') {
+      setMaxDepth(0);
+      return;
+    }
+
+    const num = Number(value);
+    if (!Number.isNaN(num) && num >= 0) {
+      setMaxDepth(num);
+    }
+  };
+
+  const handleInfiniteDepthToggle = (checked: boolean) => {
+    setIsInfiniteDepth(checked);
+    if (checked) {
+      setMaxDepth(null);
+    } else if (maxDepth === null) {
+      setMaxDepth(1);
+    }
+  };
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h6" sx={{ mb: 3 }}>
+        {a.title}
+      </Typography>
+
+      {!hasLocalScope && !setupOnly ? (
+        <Alert
+          severity="info"
+          action={
+            <Button color="inherit" size="small" onClick={handleAddScope}>
+              {a.addAccess}
+            </Button>
+          }
+        >
+          {a.noAccess}
+        </Alert>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <TextField
+            select
+            fullWidth
+            label={a.accessLevel}
+            value={accessLevel}
+            onChange={(e) => handleAccessLevelChange(e.target.value)}
+            helperText={a.accessLevelHelp}
+          >
+            {Object.entries(accessLevelLabels).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {isFolder && (
+            <>
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={isInfiniteDepth}
+                      onChange={(e) => handleInfiniteDepthToggle(e.target.checked)}
+                    />
+                  }
+                  label={a.unlimitedDepth}
+                />
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ ml: 5, display: 'block' }}
+                >
+                  {a.unlimitedDepthHelp}
+                </Typography>
+              </Box>
+
+              {!isInfiniteDepth && (
+                <TextField
+                  fullWidth
+                  type="number"
+                  label={a.maxDepth}
+                  value={maxDepth ?? 1}
+                  onChange={(e) => handleMaxDepthChange(e.target.value)}
+                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                  helperText={a.maxDepthHelp}
+                />
+              )}
+            </>
+          )}
+
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} />
+              }
+              label={a.pinned}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 5, display: 'block' }}>
+              {a.pinnedHelp}
+            </Typography>
+          </Box>
+
+          {!setupOnly && (
+            <Button
+              color={initialSettings ? 'error' : 'primary'}
+              onClick={initialSettings ? handleDelete : handleCancel}
+            >
+              {initialSettings ? a.deleteAccess : a.cancelAccess}
+            </Button>
+          )}
+        </Box>
+      )}
+    </Box>
+  );
+};

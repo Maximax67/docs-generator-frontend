@@ -8,9 +8,15 @@ interface PdfViewerClientProps {
   blob?: Blob;
   url?: string;
   className?: string;
+  sidebar?: boolean;
 }
 
-export const PdfViewerClient: FC<PdfViewerClientProps> = ({ blob, url, className }) => {
+export const PdfViewerClient: FC<PdfViewerClientProps> = ({
+  blob,
+  url,
+  className,
+  sidebar = false,
+}) => {
   const { mode } = useThemeMode();
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<PDFViewer | null>(null);
@@ -36,6 +42,7 @@ export const PdfViewerClient: FC<PdfViewerClientProps> = ({ blob, url, className
         print: true,
         download: true,
         upload: false,
+        sidebar,
       },
     });
 
@@ -54,7 +61,7 @@ export const PdfViewerClient: FC<PdfViewerClientProps> = ({ blob, url, className
       viewerRef.current = null;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [mode, blob, url]);
+  }, [mode, blob, url, sidebar]);
 
   return <div ref={containerRef} className={className} />;
 };
