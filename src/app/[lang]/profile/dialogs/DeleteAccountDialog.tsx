@@ -35,7 +35,7 @@ export default function DeleteAccountDialog({
       <DialogTitle>{dict.profile.dialogs.deleteAccount.title}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          {dict.profile.dialogs.deleteAccount.description} "{email}":
+          {dict.profile.dialogs.deleteAccount.description} &quot;{email}&quot;:
         </Typography>
 
         <TextField
