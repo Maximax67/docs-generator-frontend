@@ -48,9 +48,12 @@ import { PaginationControls } from '@/components/PaginationControls';
 import { PageSizeControl } from '@/components/PageSizeControls';
 import { JSONValue } from '@/types/json';
 import { useRouter } from 'next/navigation';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function GenerationsPage() {
   const router = useRouter();
+  const dict = useDictionary();
+  const lang = useLang();
   const { user } = useUserStore();
   const isAdmin = isAdminUser(user);
   const [error, setError] = useState<string | null>(null);
@@ -80,14 +83,14 @@ export default function GenerationsPage() {
       }
     } catch (e) {
       if (!cancelledRef.current) {
-        setError(toErrorMessage(e, 'Не вдалось завантажити список генерацій'));
+        setError(toErrorMessage(e, dict.generations.loadError));
       }
     } finally {
       if (!cancelledRef.current) {
         setLoading(false);
       }
     }
-  }, [page, pageSize]);
+  }, [page, pageSize, dict.generations.loadError]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -104,7 +107,7 @@ export default function GenerationsPage() {
   if (!user) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="info">Ви не авторизовані</Alert>
+        <Alert severity="info">{dict.generations.notAuthorized}</Alert>
       </Container>
     );
   }
@@ -112,7 +115,7 @@ export default function GenerationsPage() {
   if (!isAdmin) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="error">Сторінка доступна лише модераторам</Alert>
+        <Alert severity="error">{dict.generations.adminOnly}</Alert>
       </Container>
     );
   }
@@ -144,9 +147,9 @@ export default function GenerationsPage() {
     try {
       const blob = await generationsApi.regenerateGeneration(id, variables);
       await savePdfToIndexedDb('generatedPdf', blob);
-      router.push('/documents/result');
+      router.push(`/${lang}/documents/result`);
     } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалось перегенерувати PDF'));
+      setError(toErrorMessage(e, dict.generations.regenerateError));
     } finally {
       setDisabledUI(false);
     }
@@ -165,7 +168,7 @@ export default function GenerationsPage() {
         await fetchData();
       }
     } catch (e) {
-      setError(toErrorMessage(e, 'Не вдалось видалити PDF'));
+      setError(toErrorMessage(e, dict.generations.deleteError));
     } finally {
       setDisabledUI(false);
     }
@@ -174,7 +177,7 @@ export default function GenerationsPage() {
   return (
     <Box p={2}>
       <Typography variant="h4" mb={3}>
-        Генерації
+        {dict.generations.title}
       </Typography>
 
       {!isFetched.current && (
@@ -184,7 +187,7 @@ export default function GenerationsPage() {
       )}
 
       {isFetched.current && (!generations || generations.data.length === 0) && (
-        <Alert severity="info">Немає згенерованих документів</Alert>
+        <Alert severity="info">{dict.generations.noData}</Alert>
       )}
 
       {isFetched.current && generations && generations.data.length > 0 && (
@@ -214,7 +217,7 @@ export default function GenerationsPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 size="small"
-                                title="Відкрити шаблон"
+                                title={dict.generations.openTemplate}
                               >
                                 <LaunchIcon fontSize="small" />
                               </IconButton>
@@ -224,7 +227,7 @@ export default function GenerationsPage() {
                                 onClick={() =>
                                   handleRegenerateGeneration(generation.id, generation.variables)
                                 }
-                                title="Перегенерувати"
+                                title={dict.generations.regenerate}
                               >
                                 <ReplayIcon fontSize="small" />
                               </IconButton>
@@ -232,7 +235,7 @@ export default function GenerationsPage() {
                                 size="small"
                                 disabled={disabledUI}
                                 onClick={() => handleRegenerateGeneration(generation.id)}
-                                title="Перегенерувати зі старими значеннями"
+                                title={dict.generations.regenerateOld}
                               >
                                 <RestoreIcon fontSize="small" />
                               </IconButton>
@@ -241,7 +244,7 @@ export default function GenerationsPage() {
                                 color="error"
                                 disabled={disabledUI}
                                 onClick={() => handleDeleteGeneration(generation.id)}
-                                title="Видалити"
+                                title={dict.generations.delete}
                               >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
@@ -256,7 +259,7 @@ export default function GenerationsPage() {
                               <RoleChip role={generation.user.role} />
                               <IconButton
                                 component={Link}
-                                href={`/profile?id=${generation.user.id}`}
+                                href={`/${lang}/profile?id=${generation.user.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 size="small"
@@ -265,7 +268,7 @@ export default function GenerationsPage() {
                               </IconButton>
                             </Stack>
                           ) : (
-                            <Typography variant="body2">Не авторизований</Typography>
+                            <Typography variant="body2">{dict.generations.unauthorized}</Typography>
                           )}
 
                           <Typography variant="body2" color="text.secondary">
@@ -282,7 +285,9 @@ export default function GenerationsPage() {
                                 onClick={() => setExpanded(isExpanded ? null : generation.id)}
                                 sx={{ alignSelf: 'flex-start' }}
                               >
-                                {isExpanded ? 'Приховати змінні' : 'Показати змінні'}
+                                {isExpanded
+                                  ? dict.generations.hideVariables
+                                  : dict.generations.showVariables}
                               </Button>
 
                               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -318,12 +323,12 @@ export default function GenerationsPage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Шаблон</TableCell>
-                    <TableCell>Користувач</TableCell>
-                    <TableCell>Роль</TableCell>
-                    <TableCell>Дата генерації</TableCell>
-                    <TableCell>Змінні</TableCell>
-                    <TableCell align="right">Дії</TableCell>
+                    <TableCell>{dict.generations.templateCol}</TableCell>
+                    <TableCell>{dict.generations.userCol}</TableCell>
+                    <TableCell>{dict.generations.roleCol}</TableCell>
+                    <TableCell>{dict.generations.dateCol}</TableCell>
+                    <TableCell>{dict.generations.variablesCol}</TableCell>
+                    <TableCell align="right">{dict.generations.actionsCol}</TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -345,7 +350,7 @@ export default function GenerationsPage() {
                                 </Typography>
                                 <IconButton
                                   component={Link}
-                                  href={`/profile?id=${generation.user.id}`}
+                                  href={`/${lang}/profile?id=${generation.user.id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   size="small"
@@ -354,7 +359,7 @@ export default function GenerationsPage() {
                                 </IconButton>
                               </Stack>
                             ) : (
-                              <Typography>Не авторизований</Typography>
+                              <Typography>{dict.generations.unauthorized}</Typography>
                             )}
                           </TableCell>
 
@@ -389,7 +394,7 @@ export default function GenerationsPage() {
                                 href={`https://docs.google.com/document/d/${generation.template_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                title="Відкрити шаблон"
+                                title={dict.generations.openTemplate}
                               >
                                 <LaunchIcon />
                               </IconButton>
@@ -398,14 +403,14 @@ export default function GenerationsPage() {
                                   handleRegenerateGeneration(generation.id, generation.variables)
                                 }
                                 disabled={disabledUI}
-                                title="Перегенерувати"
+                                title={dict.generations.regenerate}
                               >
                                 <ReplayIcon />
                               </IconButton>
                               <IconButton
                                 onClick={() => handleRegenerateGeneration(generation.id)}
                                 disabled={disabledUI}
-                                title="Перегенерувати зі старими значеннями"
+                                title={dict.generations.regenerateOld}
                               >
                                 <RestoreIcon />
                               </IconButton>
@@ -413,7 +418,7 @@ export default function GenerationsPage() {
                                 color="error"
                                 onClick={() => handleDeleteGeneration(generation.id)}
                                 disabled={disabledUI}
-                                title="Видалити"
+                                title={dict.generations.delete}
                               >
                                 <DeleteIcon />
                               </IconButton>

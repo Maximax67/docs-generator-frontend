@@ -35,6 +35,7 @@ import { DocumentInputForm, DocumentInputFormRef } from '@/components/DocumentIn
 import { applyTitleFallbacks } from '@/utils/json-schema';
 import { useUserStore } from '@/store/user';
 import { GenerationSuccessModal } from './GenerationSuccessModal';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 interface GeneratedDocument {
   blob: Blob;
@@ -46,6 +47,8 @@ interface GeneratedDocument {
 export default function SelectedDocumentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dict = useDictionary();
+  const lang = useLang();
   const { user } = useUserStore();
   const documentId = searchParams.get('id');
   const formRef = useRef<DocumentInputFormRef>(null);
@@ -65,7 +68,7 @@ export default function SelectedDocumentPage() {
 
   const loadData = useCallback(async () => {
     if (!documentId) {
-      setError('Документ не обрано!');
+      setError(dict.documents.documentNotSelected);
       setLoading(false);
       return;
     }
@@ -86,11 +89,11 @@ export default function SelectedDocumentPage() {
 
       setInitialFormData(initialValues);
     } catch {
-      setError('Не вдалося завантажити дані документа');
+      setError(dict.documents.loadError);
     } finally {
       setLoading(false);
     }
-  }, [documentId]);
+  }, [dict.documents.documentNotSelected, dict.documents.loadError, documentId]);
 
   useEffect(() => {
     loadData();
@@ -271,7 +274,7 @@ export default function SelectedDocumentPage() {
 
   const handlePreview = () => {
     // This will work because it's a direct response to user click
-    window.open('/documents/result/', '_blank');
+    window.open(`/${lang}/documents/result/`, '_blank');
   };
 
   const handleCloseSuccessModal = () => {
@@ -306,7 +309,7 @@ export default function SelectedDocumentPage() {
             documentId && (
               <Button color="inherit" size="small" onClick={loadData} sx={{ pt: 1 }}>
                 <RefreshIcon sx={{ mr: 1 }} />
-                Спробувати знову
+                {dict.common.tryAgain}
               </Button>
             )
           }
@@ -320,7 +323,7 @@ export default function SelectedDocumentPage() {
   if (!documentDetails) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="warning">Документ не знайдено</Alert>
+        <Alert severity="warning">{dict.documents.documentNotFound}</Alert>
       </Container>
     );
   }
@@ -332,7 +335,7 @@ export default function SelectedDocumentPage() {
       <Stack spacing={2}>
         <Box>
           <Button startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ mb: 2 }}>
-            Назад
+            {dict.common.back}
           </Button>
 
           <Typography variant="h4" gutterBottom>
@@ -340,13 +343,13 @@ export default function SelectedDocumentPage() {
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Оновлено: {formatDateTime(documentDetails.file.modified_time)}
+            {dict.documents.updated} {formatDateTime(documentDetails.file.modified_time)}
           </Typography>
         </Box>
 
         <Paper sx={{ p: 3, pb: 1 }}>
           {isNoVariables && (
-            <Alert severity="warning">Документ не містить полів для заповнення!</Alert>
+            <Alert severity="warning">{dict.documents.noFields}</Alert>
           )}
 
           {!isNoVariables && (
@@ -389,7 +392,9 @@ export default function SelectedDocumentPage() {
                 minWidth: { xs: '100%', sm: 200 },
               }}
             >
-              {isGenerating && requestedFormatRef.current === 'pdf' ? 'Генерація...' : 'Згенерувати PDF'}
+              {isGenerating && requestedFormatRef.current === 'pdf'
+                ? dict.documents.generating
+                : dict.documents.generatePdf}
             </Button>
 
             <Button
@@ -409,8 +414,8 @@ export default function SelectedDocumentPage() {
               }}
             >
               {isGenerating && requestedFormatRef.current === 'docx'
-                ? 'Генерація...'
-                : 'Згенерувати DOCX'}
+                ? dict.documents.generating
+                : dict.documents.generateDocx}
             </Button>
           </Stack>
         </Paper>

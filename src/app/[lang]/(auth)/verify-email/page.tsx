@@ -6,11 +6,14 @@ import { Alert, Box, Button, CircularProgress, Stack } from '@mui/material';
 import Link from 'next/link';
 import AuthScaffold from '@/components/AuthScaffold';
 import { useUserStore } from '@/store/user';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function VerifyEmailPage() {
   const params = useSearchParams();
   const token = params.get('token');
   const router = useRouter();
+  const dict = useDictionary();
+  const lang = useLang();
   const { user, verifyEmail, refeshSession } = useUserStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,14 +24,14 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     const confirmEmail = async () => {
       if (!token) {
-        setError('Відсутній токен підтвердження');
+        setError(dict.auth.verifyEmail.missingToken);
         setLoading(false);
         return;
       }
 
       try {
         await verifyEmail(token);
-        setSuccess('Пошта підтверджена');
+        setSuccess(dict.auth.verifyEmail.success);
 
         if (user) {
           try {
@@ -36,7 +39,7 @@ export default function VerifyEmailPage() {
           } catch {}
         }
       } catch {
-        setError('Не валідний або прострочений токен підтвердження');
+        setError(dict.auth.verifyEmail.invalidToken);
       } finally {
         setLoading(false);
       }
@@ -61,18 +64,18 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (countdown === 0 && success) {
-      router.push(user ? '/profile/' : '/');
+      router.push(user ? `/${lang}/profile/` : `/${lang}/`);
     }
-  }, [countdown, success, router, user]);
+  }, [countdown, success, router, user, lang]);
 
   return (
-    <AuthScaffold title="Підтвердження пошти">
+    <AuthScaffold title={dict.auth.verifyEmail.title}>
       <Box>
         <Stack spacing={2} mt={3} alignItems="center">
           {loading && (
             <>
               <CircularProgress />
-              <Alert severity="info">Перевіряю токен...</Alert>
+              <Alert severity="info">{dict.auth.verifyEmail.verifying}</Alert>
             </>
           )}
 
@@ -81,21 +84,23 @@ export default function VerifyEmailPage() {
           {!loading && success && (
             <>
               <Alert severity="success">{success}</Alert>
-              <p>Перенаправлення через {countdown} c.</p>
+              <p>
+                {dict.auth.verifyEmail.redirectingIn} {countdown} {dict.auth.verifyEmail.seconds}.
+              </p>
               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                 <Button
                   component={Link}
-                  href={user ? '/profile' : '/'}
+                  href={user ? `/${lang}/profile` : `/${lang}`}
                   variant="outlined"
                   size="small"
                 >
-                  Перейти зараз
+                  {dict.auth.verifyEmail.goNow}
                 </Button>
               </Stack>
             </>
           )}
 
-          {!loading && !error && !success && <Alert severity="info">Очікування...</Alert>}
+          {!loading && !error && !success && <Alert severity="info">{dict.auth.verifyEmail.waiting}</Alert>}
         </Stack>
       </Box>
     </AuthScaffold>

@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { Alert, Box, CircularProgress, Container } from '@mui/material';
 import { PdfViewerClient } from '@/components/PdfViewerClient';
 import { getPdfFromIndexedDb } from '@/lib/indexed-db-pdf';
+import { useDictionary } from '@/contexts/LangContext';
 
 export default function ResultPage() {
+  const dict = useDictionary();
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +39,7 @@ export default function ResultPage() {
   if (!pdfBlob) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="error">Згенерований PDF не знайдено</Alert>
+        <Alert severity="error">{dict.documents.resultNotFound}</Alert>
       </Container>
     );
   }

@@ -22,7 +22,14 @@ export const uk: Dictionary = {
     error: 'Сталася помилка',
     noData: 'Немає даних',
     unnamed: 'Без назви',
+    actions: 'Дії',
+    search: 'Пошук',
+    filter: 'Фільтр',
+    all: 'Всі',
+    yes: 'Так',
+    no: 'Ні',
   },
+
   nav: {
     documents: 'Документи',
     faq: 'FAQ',
@@ -33,6 +40,7 @@ export const uk: Dictionary = {
     menu: 'Меню',
     toggleTheme: 'Змінити тему',
   },
+
   home: {
     tagline: 'Генеруй документи швидко та зручно всього в кілька кліків',
     goToDocuments: 'Перейти до документів',
@@ -45,6 +53,7 @@ export const uk: Dictionary = {
     tos: 'Умови користування',
     privacy: 'Політика конфіденційності',
   },
+
   features: [
     {
       title: 'Створення документів',
@@ -63,16 +72,33 @@ export const uk: Dictionary = {
       desc: 'Згенеровані документи не зберігаються на наших серверах',
     },
   ],
+
   timeline: {
     title: 'Як створити документ',
     steps: [
-      { title: 'Обери документ', description: 'Обери потрібний шаблон з доступних' },
-      { title: 'Проглянь превью', description: 'Переглянь превью вже заповненого документа' },
-      { title: 'Заповни дані', description: 'Уважно заповни всі поля в документі' },
-      { title: 'Результат', description: 'Перевір згенерований документ на можливі помилки' },
-      { title: 'Скачай PDF', description: 'Завантаж або роздрукуй документ' },
+      {
+        title: 'Обери документ',
+        description: 'Обери потрібний шаблон з доступних',
+      },
+      {
+        title: 'Проглянь превью',
+        description: 'Переглянь превью вже заповненого документа',
+      },
+      {
+        title: 'Заповни дані',
+        description: 'Уважно заповни всі поля в документі',
+      },
+      {
+        title: 'Результат',
+        description: 'Перевір згенерований документ на можливі помилки',
+      },
+      {
+        title: 'Скачай PDF',
+        description: 'Завантаж або роздрукуй документ',
+      },
     ],
   },
+
   auth: {
     email: 'Ел. пошта',
     password: 'Пароль',
@@ -82,6 +108,7 @@ export const uk: Dictionary = {
     invalidPassword: 'Пароль має бути від 8 до 32 символів',
     invalidFirstName: "Не валідне ім'я",
     invalidLastName: 'Не валідне прізвище',
+
     login: {
       title: 'Увійти',
       subtitle: 'Раді бачити вас знову. Введіть свої дані, щоб продовжити',
@@ -91,6 +118,7 @@ export const uk: Dictionary = {
       noAccount: 'Немає акаунта?',
       register: 'Зареєструватися',
     },
+
     register: {
       title: 'Реєстрація',
       subtitle: 'Створіть акаунт, щоб розпочати користування сервісом',
@@ -103,6 +131,7 @@ export const uk: Dictionary = {
       alreadyHaveAccount: 'Вже маєте акаунт?',
       signIn: 'Увійти',
     },
+
     resetPassword: {
       title: 'Відновлення пароля',
       subtitleRequest: 'Вкажіть свою ел. пошту і ми надішлемо посилання для відновлення',
@@ -114,6 +143,7 @@ export const uk: Dictionary = {
       emailSent: 'Якщо адреса існує, лист відправлено',
       backToSignIn: 'Назад до входу',
     },
+
     verifyEmail: {
       title: 'Підтвердження пошти',
       missingToken: 'Відсутній токен підтвердження',
@@ -125,10 +155,12 @@ export const uk: Dictionary = {
       goNow: 'Перейти зараз',
       waiting: 'Очікування...',
     },
+
     logout: {
       loading: 'Вихід...',
     },
   },
+
   documents: {
     signInToSave: 'Увійдіть, щоб зберігати введені значення',
     verifyEmailToSave: 'Підтвердіть пошту, щоб зберігати введені значення',
@@ -149,6 +181,8 @@ export const uk: Dictionary = {
     folder: 'Папка',
     loadingScope: 'Завантаження...',
     loadScopeError: 'Помилка завантаження',
+    resultNotFound: 'Згенерований PDF не знайдено',
+
     drive: {
       dialogTitle: 'Відкрити папку Google Drive',
       description: 'Введіть URL папки Google Drive або ID папки',
@@ -162,6 +196,7 @@ export const uk: Dictionary = {
         'До папки не заданий доступ. Налаштуйте його, щоб дозволити користувачам переглядати цей розділ.',
       createAndOpen: 'Створити і відкрити',
     },
+
     settings: {
       validation: 'Валідація',
       constants: 'Константи',
@@ -186,6 +221,7 @@ export const uk: Dictionary = {
       loadSchemaError: 'Не вдалося завантажити схему',
       loadAccessError: 'Не вдалося завантажити налаштування доступу',
     },
+
     constants: {
       title: 'Константи',
       addButton: 'Додати константу',
@@ -221,7 +257,14 @@ export const uk: Dictionary = {
       clearedSuccess: 'Значення константи успішно видалено',
       emptyName: 'Назва змінної не може бути порожньою',
       parentScopeWarning: 'Ви редагуєте константу з вищого scope.',
+      overrideConstantWarning:
+        'Ця змінна вже задана в розділі "Валідація". Ви дійсно впевнені, що хочете зробити її константою?',
+      overrideParentWarning:
+        'Ця змінна вже існує в вищому scope. Ви дійсно впевнені, що хочете перевизначити її?',
+      overrideParentConstantWarning:
+        'Ця змінна вже визначена як константа в вищому scope і буде перевизначена.',
     },
+
     savingVars: {
       title: 'Збереження значень',
       addButton: 'Додати змінну',
@@ -242,11 +285,15 @@ export const uk: Dictionary = {
       emptyName: 'Назва змінної не може бути порожньою',
       duplicateInScope: 'Змінна з такою назвою вже існує в цьому scope.',
       constantInScope: 'Ця змінна є константою в поточному scope.',
+      constantParentWarning:
+        'Ця змінна є константою в вищому scope. Додавання savable-змінної перевизначить її для поточного scope.',
     },
+
     fieldOrder: {
       title: 'Порядок полів',
       noData: 'Немає полів для сортування.',
     },
+
     access: {
       title: 'Налаштування доступу',
       accessLevel: 'Рівень доступу',
@@ -264,12 +311,16 @@ export const uk: Dictionary = {
       noAccess: 'Доступ не налаштовано. Використовується доступ з батьківського розділу.',
       addAccess: 'Додати доступ',
       deleteAccess: 'Видалити доступ',
+      cancelAccess: 'Скасувати',
     },
+
     unsavedDialog: {
       title: 'Незбережені зміни',
       message: 'У вас є незбережені зміни. Ви впевнені, що хочете вийти без збереження?',
-      confirm: 'Війти без збереження',
+      confirm: 'Вийти без збереження',
+      cancel: 'Залишитись',
     },
+
     generation: {
       success: 'Документ успішно згенеровано!',
       readyToDownload: 'Ваш файл готовий до завантаження',
@@ -277,9 +328,11 @@ export const uk: Dictionary = {
       preview: 'Переглянути',
       close: 'Закрити',
     },
+
     saveVariables: {
       title: 'Зберегти значення?',
-      description: 'Оберіть змінні, значення яких ви хочете зберегти для наступних генерацій.',
+      description:
+        'Оберіть змінні, значення яких ви хочете зберегти для наступних генерацій.',
       variableCol: 'Змінна',
       currentValueCol: 'Поточне значення',
       was: 'Було:',
@@ -289,8 +342,8 @@ export const uk: Dictionary = {
       savedSuccess: 'Зміни успішно збережені',
       saveError: 'Не вдалося зберегти зміни',
     },
-    resultNotFound: 'Згенерований PDF не знайдено',
   },
+
   generations: {
     title: 'Генерації',
     noData: 'Немає згенерованих документів',
@@ -313,10 +366,12 @@ export const uk: Dictionary = {
     notAuthorized: 'Ви не авторизовані',
     loadError: 'Не вдалось завантажити список генерацій',
   },
+
   profile: {
     notAuthorized: 'Ви не авторизовані',
     adminOnly: 'Лише модератор може переглядати профіль інших',
     notFound: 'Користувач не знайдений',
+
     tabs: {
       info: 'Інформація',
       generations: 'Генерації',
@@ -324,6 +379,7 @@ export const uk: Dictionary = {
       sessions: 'Сесії',
       logout: 'Вийти',
     },
+
     info: {
       title: 'Обліковий запис',
       emailLabel: 'Ел. пошта',
@@ -345,6 +401,7 @@ export const uk: Dictionary = {
       makeAdmin: 'Зробити адміном',
       deleteUser: 'Видалити',
     },
+
     generations: {
       title: 'Генерації',
       deleteAll: 'Видалити все',
@@ -355,16 +412,20 @@ export const uk: Dictionary = {
       showVars: 'Показати змінні',
       hideVars: 'Приховати змінні',
     },
+
     vars: {
       title: 'Збережені дані',
       clearAll: 'Очистити все',
-      noData: 'Немає збережених данних',
+      noData: 'Немає збережених даних',
       variableCol: 'Змінна',
       typeCol: 'Тип',
       valueCol: 'Значення',
       scopeCol: 'Scope',
       actionsCol: 'Дії',
+      editTitle: 'Редагувати змінну',
+      editPlaceholder: 'Введіть значення (текст, число, true/false або JSON)',
     },
+
     sessions: {
       title: 'Сесії',
       logoutAll: 'Вийти з усіх сесій',
@@ -372,20 +433,25 @@ export const uk: Dictionary = {
       nameCol: 'Назва',
       createdCol: 'Створено',
       updatedCol: 'Оновлено',
+      actionsCol: 'Дії',
       endButton: 'Завершити',
+      currentBadge: 'Поточна',
     },
+
     logout: {
       title: 'Вихід',
       signOut: 'Вийти',
       signOutAll: 'Вийти з усіх сесій',
       deleteAccount: 'Видалити акаунт',
     },
+
     dialogs: {
       changeEmail: {
         title: 'Зміна пошти',
         newEmail: 'Нова пошта',
         invalidEmail: 'Не валідна електронна пошта',
         save: 'Зберегти',
+        cancel: 'Скасувати',
       },
       changePassword: {
         title: 'Зміна пароля',
@@ -393,6 +459,7 @@ export const uk: Dictionary = {
         newPassword: 'Новий пароль',
         invalidPassword: 'Пароль має бути від 8 до 32 символів',
         save: 'Зберегти',
+        cancel: 'Скасувати',
       },
       editNames: {
         title: "Оновити ім'я",
@@ -401,48 +468,67 @@ export const uk: Dictionary = {
         invalidFirstName: "Не валідне ім'я",
         invalidLastName: 'Не валідне прізвище',
         save: 'Зберегти',
+        cancel: 'Скасувати',
       },
       deleteAccount: {
         title: 'Підтвердження видалення акаунта',
         description: 'Для видалення введіть',
         confirmButton: 'Видалити',
+        cancelButton: 'Скасувати',
       },
     },
+
     confirmations: {
       endSession: {
         title: 'Завершити сесію',
         message: 'Ви впевнені, що хочете завершити сесію?',
         currentMessage: 'Ви впевнені, що хочете завершити поточну сесію?',
         confirm: 'Завершити',
+        cancel: 'Скасувати',
       },
       logoutAll: {
         title: 'Вийти з усіх сесій',
         message:
           'Ви впевнені, що хочете вийти з усіх активних сесій? Вам доведеться увійти знову на всіх пристроях.',
         confirm: 'Вийти з усіх',
+        cancel: 'Скасувати',
       },
       clearData: {
         title: 'Очистити всі дані',
-        message: 'Ви впевнені, що хочете видалити всі збережені дані? Цю дію не можна скасувати.',
+        message:
+          'Ви впевнені, що хочете видалити всі збережені дані? Цю дію не можна скасувати.',
         confirm: 'Очистити',
+        cancel: 'Скасувати',
       },
       deleteVar: {
         title: 'Видалити змінну',
         message: 'Ви впевнені, що хочете видалити цю змінну?',
         confirm: 'Видалити',
+        cancel: 'Скасувати',
       },
       deleteGeneration: {
         title: 'Видалити генерацію',
         message: 'Ви впевнені, що хочете видалити цю генерацію?',
         confirm: 'Видалити',
+        cancel: 'Скасувати',
       },
       deleteAllGenerations: {
         title: 'Видалити всі генерації',
-        message: 'Ви впевнені, що хочете видалити всі генерації? Цю дію не можна скасувати.',
+        message:
+          'Ви впевнені, що хочете видалити всі генерації? Цю дію не можна скасувати.',
         confirm: 'Видалити все',
+        cancel: 'Скасувати',
+      },
+      deleteAccount: {
+        title: 'Видалити акаунт',
+        message:
+          'Ви впевнені, що хочете назавжди видалити свій акаунт? Цю дію не можна скасувати.',
+        confirm: 'Видалити',
+        cancel: 'Скасувати',
       },
     },
   },
+
   users: {
     title: 'Користувачі',
     allRoles: 'Всі ролі',
@@ -459,7 +545,9 @@ export const uk: Dictionary = {
     notAuthorized: 'Ви не авторизовані',
     adminOnly: 'Сторінка лише для адміністраторів',
     loadError: 'Не вдалось завантажити список користувачів',
+    searchPlaceholder: 'Пошук за іменем або поштою',
   },
+
   faq: {
     title: 'Питання та відповіді',
     items: [
@@ -501,6 +589,7 @@ export const uk: Dictionary = {
       },
     ],
   },
+
   rateLimit: {
     title: 'Занадто багато запитів',
     description: 'Будь ласка, зачекайте трохи та спробуйте ще раз.',
@@ -508,22 +597,27 @@ export const uk: Dictionary = {
     seconds: 'с.',
     close: 'Закрити',
   },
+
   pwa: {
     installPrompt: 'Встановити додаток?',
     install: 'Встановити',
   },
+
   confirmDialog: {
     defaultTitle: 'Підтвердження',
     defaultConfirm: 'Підтвердити',
     cancel: 'Скасувати',
   },
+
   scope: {
     global: 'Глобальний',
   },
+
   fullValueDialog: {
     title: 'Значення змінної',
     close: 'Закрити',
   },
+
   roles: {
     user: 'Користувач',
     admin: 'Адмін',

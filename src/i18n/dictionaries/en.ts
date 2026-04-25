@@ -20,7 +20,14 @@ export const en = {
     error: 'An error occurred',
     noData: 'No data',
     unnamed: 'Unnamed',
+    actions: 'Actions',
+    search: 'Search',
+    filter: 'Filter',
+    all: 'All',
+    yes: 'Yes',
+    no: 'No',
   },
+
   nav: {
     documents: 'Documents',
     faq: 'FAQ',
@@ -31,6 +38,7 @@ export const en = {
     menu: 'Menu',
     toggleTheme: 'Toggle theme',
   },
+
   home: {
     tagline: 'Generate documents quickly and easily in just a few clicks',
     goToDocuments: 'Go to Documents',
@@ -43,6 +51,7 @@ export const en = {
     tos: 'Terms of Service',
     privacy: 'Privacy Policy',
   },
+
   features: [
     {
       title: 'Document Creation',
@@ -61,25 +70,43 @@ export const en = {
       desc: 'Generated documents are not stored on our servers',
     },
   ],
+
   timeline: {
     title: 'How to Create a Document',
     steps: [
-      { title: 'Choose a Document', description: 'Choose the required template from available ones' },
-      { title: 'View Preview', description: 'Preview the pre-filled document' },
-      { title: 'Fill in Data', description: 'Carefully fill in all fields in the document' },
-      { title: 'Review Result', description: 'Check the generated document for errors' },
-      { title: 'Download PDF', description: 'Download or print the document' },
+      {
+        title: 'Choose a Document',
+        description: 'Choose the required template from available ones',
+      },
+      {
+        title: 'View Preview',
+        description: 'Preview the pre-filled document',
+      },
+      {
+        title: 'Fill in Data',
+        description: 'Carefully fill in all fields in the document',
+      },
+      {
+        title: 'Review Result',
+        description: 'Check the generated document for errors',
+      },
+      {
+        title: 'Download PDF',
+        description: 'Download or print the document',
+      },
     ],
   },
+
   auth: {
     email: 'Email',
     password: 'Password',
     firstName: 'First Name',
     lastName: 'Last Name',
     invalidEmail: 'Invalid email address',
-    invalidPassword: 'Password must be 8-32 characters',
+    invalidPassword: 'Password must be 8–32 characters',
     invalidFirstName: 'Invalid first name',
     invalidLastName: 'Invalid last name',
+
     login: {
       title: 'Sign In',
       subtitle: 'Welcome back. Enter your credentials to continue',
@@ -89,6 +116,7 @@ export const en = {
       noAccount: "Don't have an account?",
       register: 'Register',
     },
+
     register: {
       title: 'Register',
       subtitle: 'Create an account to start using the service',
@@ -101,6 +129,7 @@ export const en = {
       alreadyHaveAccount: 'Already have an account?',
       signIn: 'Sign In',
     },
+
     resetPassword: {
       title: 'Password Recovery',
       subtitleRequest: 'Enter your email and we will send a recovery link',
@@ -112,6 +141,7 @@ export const en = {
       emailSent: 'If the address exists, the email has been sent',
       backToSignIn: 'Back to Sign In',
     },
+
     verifyEmail: {
       title: 'Email Verification',
       missingToken: 'Missing verification token',
@@ -123,10 +153,12 @@ export const en = {
       goNow: 'Go now',
       waiting: 'Waiting...',
     },
+
     logout: {
       loading: 'Signing out...',
     },
   },
+
   documents: {
     signInToSave: 'Sign in to save entered values',
     verifyEmailToSave: 'Verify your email to save entered values',
@@ -147,6 +179,8 @@ export const en = {
     folder: 'Folder',
     loadingScope: 'Loading...',
     loadScopeError: 'Load error',
+    resultNotFound: 'Generated PDF not found',
+
     drive: {
       dialogTitle: 'Open Google Drive Folder',
       description: 'Enter Google Drive folder URL or folder ID',
@@ -160,6 +194,7 @@ export const en = {
         'Folder access is not configured. Set it up to allow users to view this section.',
       createAndOpen: 'Create and open',
     },
+
     settings: {
       validation: 'Validation',
       constants: 'Constants',
@@ -184,6 +219,7 @@ export const en = {
       loadSchemaError: 'Failed to load schema',
       loadAccessError: 'Failed to load access settings',
     },
+
     constants: {
       title: 'Constants',
       addButton: 'Add constant',
@@ -216,10 +252,17 @@ export const en = {
       deleteTitle: 'Delete Variable',
       deleteMessage: 'Are you sure you want to delete this variable?',
       deletedSuccess: 'Variable deleted successfully',
-      clearedSuccess: 'Constant value deleted successfully',
+      clearedSuccess: 'Constant value cleared successfully',
       emptyName: 'Variable name cannot be empty',
       parentScopeWarning: 'You are editing a constant from a parent scope.',
+      overrideConstantWarning:
+        'This variable is already defined in "Validation". Are you sure you want to make it a constant?',
+      overrideParentWarning:
+        'This variable already exists in a parent scope. Are you sure you want to override it?',
+      overrideParentConstantWarning:
+        'This variable is already defined as a constant in a parent scope and will be overridden.',
     },
+
     savingVars: {
       title: 'Save Values',
       addButton: 'Add variable',
@@ -240,11 +283,15 @@ export const en = {
       emptyName: 'Variable name cannot be empty',
       duplicateInScope: 'A variable with this name already exists in this scope.',
       constantInScope: 'This variable is a constant in the current scope.',
+      constantParentWarning:
+        'This variable is a constant in a parent scope. Adding a savable variable will override it for the current scope.',
     },
+
     fieldOrder: {
       title: 'Field Order',
       noData: 'No fields to sort.',
     },
+
     access: {
       title: 'Access Settings',
       accessLevel: 'Access Level',
@@ -262,12 +309,16 @@ export const en = {
       noAccess: 'Access is not configured. Using parent scope access.',
       addAccess: 'Add access',
       deleteAccess: 'Delete access',
+      cancelAccess: 'Cancel',
     },
+
     unsavedDialog: {
       title: 'Unsaved Changes',
       message: 'You have unsaved changes. Are you sure you want to leave without saving?',
       confirm: 'Leave without saving',
+      cancel: 'Stay',
     },
+
     generation: {
       success: 'Document generated successfully!',
       readyToDownload: 'Your file is ready to download',
@@ -275,9 +326,11 @@ export const en = {
       preview: 'Preview',
       close: 'Close',
     },
+
     saveVariables: {
       title: 'Save values?',
-      description: 'Select variables whose values you want to save for future generations.',
+      description:
+        'Select variables whose values you want to save for future generations.',
       variableCol: 'Variable',
       currentValueCol: 'Current value',
       was: 'Was:',
@@ -287,8 +340,8 @@ export const en = {
       savedSuccess: 'Changes saved successfully',
       saveError: 'Failed to save changes',
     },
-    resultNotFound: 'Generated PDF not found',
   },
+
   generations: {
     title: 'Generations',
     noData: 'No generated documents',
@@ -311,10 +364,12 @@ export const en = {
     notAuthorized: 'You are not authorized',
     loadError: 'Failed to load generations',
   },
+
   profile: {
     notAuthorized: 'You are not authorized',
     adminOnly: 'Only a moderator can view other profiles',
     notFound: 'User not found',
+
     tabs: {
       info: 'Information',
       generations: 'Generations',
@@ -322,6 +377,7 @@ export const en = {
       sessions: 'Sessions',
       logout: 'Sign Out',
     },
+
     info: {
       title: 'Account',
       emailLabel: 'Email',
@@ -343,6 +399,7 @@ export const en = {
       makeAdmin: 'Make Admin',
       deleteUser: 'Delete',
     },
+
     generations: {
       title: 'Generations',
       deleteAll: 'Delete All',
@@ -353,6 +410,7 @@ export const en = {
       showVars: 'Show variables',
       hideVars: 'Hide variables',
     },
+
     vars: {
       title: 'Saved Data',
       clearAll: 'Clear all',
@@ -362,7 +420,10 @@ export const en = {
       valueCol: 'Value',
       scopeCol: 'Scope',
       actionsCol: 'Actions',
+      editTitle: 'Edit variable',
+      editPlaceholder: 'Enter value (text, number, true/false or JSON)',
     },
+
     sessions: {
       title: 'Sessions',
       logoutAll: 'Sign out of all sessions',
@@ -370,27 +431,33 @@ export const en = {
       nameCol: 'Name',
       createdCol: 'Created',
       updatedCol: 'Updated',
+      actionsCol: 'Actions',
       endButton: 'End',
+      currentBadge: 'Current',
     },
+
     logout: {
       title: 'Sign Out',
       signOut: 'Sign Out',
       signOutAll: 'Sign out of all sessions',
       deleteAccount: 'Delete Account',
     },
+
     dialogs: {
       changeEmail: {
         title: 'Change Email',
         newEmail: 'New email',
         invalidEmail: 'Invalid email address',
         save: 'Save',
+        cancel: 'Cancel',
       },
       changePassword: {
         title: 'Change Password',
         oldPassword: 'Old password',
         newPassword: 'New password',
-        invalidPassword: 'Password must be 8-32 characters',
+        invalidPassword: 'Password must be 8–32 characters',
         save: 'Save',
+        cancel: 'Cancel',
       },
       editNames: {
         title: 'Update Name',
@@ -399,48 +466,67 @@ export const en = {
         invalidFirstName: 'Invalid first name',
         invalidLastName: 'Invalid last name',
         save: 'Save',
+        cancel: 'Cancel',
       },
       deleteAccount: {
         title: 'Confirm Account Deletion',
         description: 'To delete, enter',
         confirmButton: 'Delete',
+        cancelButton: 'Cancel',
       },
     },
+
     confirmations: {
       endSession: {
         title: 'End Session',
         message: 'Are you sure you want to end this session?',
         currentMessage: 'Are you sure you want to end the current session?',
         confirm: 'End',
+        cancel: 'Cancel',
       },
       logoutAll: {
         title: 'Sign Out of All Sessions',
         message:
           'Are you sure you want to sign out of all active sessions? You will need to sign in again on all devices.',
         confirm: 'Sign out of all',
+        cancel: 'Cancel',
       },
       clearData: {
         title: 'Clear All Data',
-        message: 'Are you sure you want to delete all saved data? This action cannot be undone.',
+        message:
+          'Are you sure you want to delete all saved data? This action cannot be undone.',
         confirm: 'Clear',
+        cancel: 'Cancel',
       },
       deleteVar: {
         title: 'Delete Variable',
         message: 'Are you sure you want to delete this variable?',
         confirm: 'Delete',
+        cancel: 'Cancel',
       },
       deleteGeneration: {
         title: 'Delete Generation',
         message: 'Are you sure you want to delete this generation?',
         confirm: 'Delete',
+        cancel: 'Cancel',
       },
       deleteAllGenerations: {
         title: 'Delete All Generations',
-        message: 'Are you sure you want to delete all generations? This action cannot be undone.',
+        message:
+          'Are you sure you want to delete all generations? This action cannot be undone.',
         confirm: 'Delete all',
+        cancel: 'Cancel',
+      },
+      deleteAccount: {
+        title: 'Delete Account',
+        message:
+          'Are you sure you want to permanently delete your account? This action cannot be undone.',
+        confirm: 'Delete',
+        cancel: 'Cancel',
       },
     },
   },
+
   users: {
     title: 'Users',
     allRoles: 'All roles',
@@ -457,9 +543,11 @@ export const en = {
     notAuthorized: 'You are not authorized',
     adminOnly: 'This page is for administrators only',
     loadError: 'Failed to load users',
+    searchPlaceholder: 'Search by name or email',
   },
+
   faq: {
-    title: 'FAQ',
+    title: 'Frequently Asked Questions',
     items: [
       {
         q: 'How do I create a new document?',
@@ -499,6 +587,7 @@ export const en = {
       },
     ],
   },
+
   rateLimit: {
     title: 'Too Many Requests',
     description: 'Please wait a moment and try again.',
@@ -506,22 +595,27 @@ export const en = {
     seconds: 's.',
     close: 'Close',
   },
+
   pwa: {
     installPrompt: 'Install app?',
     install: 'Install',
   },
+
   confirmDialog: {
     defaultTitle: 'Confirm',
     defaultConfirm: 'Confirm',
     cancel: 'Cancel',
   },
+
   scope: {
     global: 'Global',
   },
+
   fullValueDialog: {
     title: 'Variable value',
     close: 'Close',
   },
+
   roles: {
     user: 'User',
     admin: 'Admin',

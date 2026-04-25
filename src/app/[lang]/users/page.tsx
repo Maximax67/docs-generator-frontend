@@ -43,6 +43,7 @@ import { SearchField } from '@/components/SearchField';
 import { FilterSelect, FilterOption } from '@/components/FilterSelect';
 import { PaginationControls } from '@/components/PaginationControls';
 import { PageSizeControl } from '@/components/PageSizeControls';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 const ROLE_OPTIONS: FilterOption[] = [
   { value: 'all', label: 'Всі ролі' },
@@ -58,6 +59,8 @@ const STATUS_OPTIONS: FilterOption[] = [
 ];
 
 export default function UsersPage() {
+  const dict = useDictionary();
+  const lang = useLang();
   const { user } = useUserStore();
   const isAdmin = isAdminUser(user);
 
@@ -100,14 +103,14 @@ export default function UsersPage() {
       }
     } catch (e) {
       if (!cancelledRef.current) {
-        setError(toErrorMessage(e, 'Не вдалось завантажити список користувачів'));
+        setError(toErrorMessage(e, dict.users.loadError));
       }
     } finally {
       if (!cancelledRef.current) {
         setLoading(false);
       }
     }
-  }, [searchQuery, page, pageSize, roleFilter, statusFilter]);
+  }, [searchQuery, page, pageSize, roleFilter, statusFilter, dict.users.loadError]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -124,7 +127,7 @@ export default function UsersPage() {
   if (!user) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="info">Ви не авторизовані</Alert>
+        <Alert severity="info">{dict.users.notAuthorized}</Alert>
       </Container>
     );
   }
@@ -132,7 +135,7 @@ export default function UsersPage() {
   if (!isAdmin) {
     return (
       <Container sx={{ py: 6 }}>
-        <Alert severity="error">Сторінка лише для адміністраторів</Alert>
+        <Alert severity="error">{dict.users.adminOnly}</Alert>
       </Container>
     );
   }
@@ -157,7 +160,7 @@ export default function UsersPage() {
   return (
     <Box p={2}>
       <Typography variant="h4" gutterBottom>
-        Користувачі
+        {dict.users.title}
       </Typography>
 
       <Stack
@@ -172,6 +175,7 @@ export default function UsersPage() {
           value={searchQuery}
           onSearch={(value) => setFilter('q', value)}
           disabled={loading}
+          placeholder={dict.users.searchPlaceholder}
         />
 
         <FilterSelect
@@ -236,10 +240,10 @@ export default function UsersPage() {
 
                       <IconButton
                         component={Link}
-                        href={`/profile?id=${user.id}`}
+                        href={`/${lang}/profile?id=${user.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label="Переглянути профіль"
+                        aria-label={dict.users.viewProfile}
                         size="small"
                       >
                         <LaunchIcon fontSize="small" />
@@ -277,7 +281,7 @@ export default function UsersPage() {
                     >
                       <RoleChip role={user.role} />
                       <Chip
-                        label={user.is_banned ? 'Заблокований' : 'Активний'}
+                        label={user.is_banned ? dict.users.banned : dict.users.active}
                         color={user.is_banned ? 'error' : 'success'}
                         size="small"
                         icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
@@ -292,12 +296,12 @@ export default function UsersPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Повне ім&apos;я</TableCell>
-                <TableCell>E-mail</TableCell>
-                <TableCell>Дата реєстрації</TableCell>
-                <TableCell>Роль</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell align="right">Дії</TableCell>
+                <TableCell>{dict.users.fullNameCol}</TableCell>
+                <TableCell>{dict.users.emailCol}</TableCell>
+                <TableCell>{dict.users.registrationCol}</TableCell>
+                <TableCell>{dict.users.roleCol}</TableCell>
+                <TableCell>{dict.users.statusCol}</TableCell>
+                <TableCell align="right">{dict.users.actionsCol}</TableCell>
               </TableRow>
             </TableHead>
 
@@ -331,7 +335,7 @@ export default function UsersPage() {
 
                   <TableCell>
                     <Chip
-                      label={user.is_banned ? 'Заблокований' : 'Активний'}
+                      label={user.is_banned ? dict.users.banned : dict.users.active}
                       color={user.is_banned ? 'error' : 'success'}
                       icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
                     />
@@ -343,7 +347,7 @@ export default function UsersPage() {
                       href={`/profile?id=${user.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="Переглянути профіль"
+                      aria-label={dict.users.viewProfile}
                     >
                       <LaunchIcon />
                     </IconButton>

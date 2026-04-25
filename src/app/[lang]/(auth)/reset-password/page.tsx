@@ -19,10 +19,13 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword } from '@/utils/validators';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function ResetPasswordPage() {
   const params = useSearchParams();
   const token = params.get('token');
+  const dict = useDictionary();
+  const lang = useLang();
   const { requestPasswordReset, changePasswordWithToken } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,13 +43,13 @@ export default function ResetPasswordPage() {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEmail(val);
-    setEmailError(val && !validateEmail(val) ? 'Не правильна електронна пошта' : '');
+    setEmailError(val && !validateEmail(val) ? dict.auth.invalidEmail : '');
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setPassword(val);
-    setPasswordError(val && !validatePassword(val) ? 'Пароль має бути від 8 до 32 символів' : '');
+    setPasswordError(val && !validatePassword(val) ? dict.auth.invalidPassword : '');
   };
 
   const onRequest = async (e: React.FormEvent) => {
@@ -82,11 +85,11 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthScaffold
-      title="Відновлення пароля"
+      title={dict.auth.resetPassword.title}
       subtitle={
         token
-          ? 'Введіть новий пароль для свого акаунта'
-          : 'Вкажіть свою ел. пошту і ми надішлемо посилання для відновлення'
+          ? dict.auth.resetPassword.subtitleChange
+          : dict.auth.resetPassword.subtitleRequest
       }
     >
       {token ? (
@@ -94,11 +97,11 @@ export default function ResetPasswordPage() {
           <Stack spacing={2.25} mt={3}>
             {error && <Alert severity="error">{error}</Alert>}
             {done ? (
-              <Alert severity="success">Пароль успішно змінено</Alert>
+              <Alert severity="success">{dict.auth.resetPassword.success}</Alert>
             ) : (
               <>
                 <TextField
-                  label="Новий пароль"
+                  label={dict.auth.resetPassword.newPassword}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={handlePasswordChange}
@@ -138,14 +141,14 @@ export default function ResetPasswordPage() {
                     fontWeight: 700,
                   }}
                 >
-                  Змінити пароль
+                  {dict.auth.resetPassword.submit}
                 </Button>
               </>
             )}
             <Divider flexItem sx={{ my: 1.5 }} />
             <Stack direction="row" spacing={1.5} justifyContent="center">
-              <Button component={Link} href="/login" sx={{ textTransform: 'none' }}>
-                Назад до входу
+              <Button component={Link} href={`/${lang}/login`} sx={{ textTransform: 'none' }}>
+                {dict.auth.resetPassword.backToSignIn}
               </Button>
             </Stack>
           </Stack>
@@ -155,11 +158,11 @@ export default function ResetPasswordPage() {
           <Stack spacing={2.25} mt={3}>
             {error && <Alert severity="error">{error}</Alert>}
             {done ? (
-              <Alert severity="success">Якщо адреса існує, лист відправлено</Alert>
+              <Alert severity="success">{dict.auth.resetPassword.emailSent}</Alert>
             ) : (
               <>
                 <TextField
-                  label="Ел. пошта"
+                  label={dict.auth.email}
                   type="email"
                   value={email}
                   onChange={handleEmailChange}
@@ -184,14 +187,14 @@ export default function ResetPasswordPage() {
                     fontWeight: 700,
                   }}
                 >
-                  Надіслати посилання
+                  {dict.auth.resetPassword.sendLink}
                 </Button>
               </>
             )}
             <Divider flexItem sx={{ my: 1.5 }} />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center">
-              <Button component={Link} href="/login" sx={{ textTransform: 'none' }}>
-                Назад до входу
+              <Button component={Link} href={`/${lang}/login`} sx={{ textTransform: 'none' }}>
+                {dict.auth.resetPassword.backToSignIn}
               </Button>
             </Stack>
           </Stack>

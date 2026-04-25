@@ -5,9 +5,11 @@ import { useUserStore } from '@/store/user';
 import { DocumentSelector } from '@/app/[lang]/documents/components/DocumentSelector';
 import { useState } from 'react';
 import { isAdminUser } from '@/utils/is-admin';
+import { useDictionary } from '@/contexts/LangContext';
 
 export default function DocumentsPage() {
   const { user } = useUserStore();
+  const dict = useDictionary();
   const [showAlert, setShowAlert] = useState(true);
   const handleCloseAlert = () => setShowAlert(false);
 
@@ -21,13 +23,13 @@ export default function DocumentsPage() {
       <Stack spacing={2} sx={{ height: '100%' }}>
         {!user && showAlert && (
           <Alert severity="info" onClose={handleCloseAlert}>
-            Увійдіть, щоб зберігати введені значення
+            {dict.documents.signInToSave}
           </Alert>
         )}
 
         {user && !isAdmin && !user.email_verified && (
           <Alert severity="info" onClose={handleCloseAlert}>
-            Підтвердіть пошту, щоб зберігати введені значення
+            {dict.documents.verifyEmailToSave}
           </Alert>
         )}
 

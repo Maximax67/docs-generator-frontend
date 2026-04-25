@@ -21,9 +21,12 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword, validateName } from '@/utils/validators';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const dict = useDictionary();
+  const lang = useLang();
   const { user, registerWithCredentials } = useUserStore();
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -51,25 +54,25 @@ export default function RegisterPage() {
   const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setFirstName(val);
-    setFirstNameError(val && !validateName(val) ? "Не валідне ім'я" : '');
+    setFirstNameError(val && !validateName(val) ? dict.auth.invalidFirstName : '');
   };
 
   const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setLastName(val);
-    setLastNameError(val && !validateName(val) ? 'Не валідне прізвище' : '');
+    setLastNameError(val && !validateName(val) ? dict.auth.invalidLastName : '');
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEmail(val);
-    setEmailError(val && !validateEmail(val) ? 'Не валідна електронна пошта' : '');
+    setEmailError(val && !validateEmail(val) ? dict.auth.invalidEmail : '');
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setPassword(val);
-    setPasswordError(val && !validatePassword(val) ? 'Пароль має бути від 8 до 32 символів' : '');
+    setPasswordError(val && !validatePassword(val) ? dict.auth.invalidPassword : '');
   };
 
   const handleTogglePasswordVisibility = () => {
@@ -82,9 +85,9 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (user) {
-      router.push('/profile/');
+      router.push(`/${lang}/profile/`);
     }
-  }, [router, user]);
+  }, [router, user, lang]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,23 +103,23 @@ export default function RegisterPage() {
         last_name: lastName,
         password,
       });
-      router.push('/profile/');
+      router.push(`/${lang}/profile/`);
     } catch (e) {
-      setRegisterError(toErrorMessage(e) || 'Помилка реєстрації');
+      setRegisterError(toErrorMessage(e) || dict.auth.register.error);
       setLoading(false);
     }
   };
 
   return (
     <AuthScaffold
-      title="Реєстрація"
-      subtitle="Створіть акаунт, щоб розпочати користування сервісом"
+      title={dict.auth.register.title}
+      subtitle={dict.auth.register.subtitle}
     >
       <Box component="form" onSubmit={onSubmit} noValidate>
         <Stack spacing={2.25} mt={3}>
           {registerError && <Alert severity="error">{registerError}</Alert>}
           <TextField
-            label="Ім'я"
+            label={dict.auth.firstName}
             value={firstName}
             onChange={handleFirstNameChange}
             required
@@ -127,7 +130,7 @@ export default function RegisterPage() {
             helperText={firstNameError}
           />
           <TextField
-            label="Прізвище"
+            label={dict.auth.lastName}
             value={lastName}
             onChange={handleLastNameChange}
             fullWidth
@@ -137,7 +140,7 @@ export default function RegisterPage() {
             helperText={lastNameError}
           />
           <TextField
-            label="Ел. пошта"
+            label={dict.auth.email}
             type="email"
             value={email}
             onChange={handleEmailChange}
@@ -149,7 +152,7 @@ export default function RegisterPage() {
             helperText={emailError}
           />
           <TextField
-            label="Пароль"
+            label={dict.auth.password}
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={handlePasswordChange}
@@ -180,27 +183,27 @@ export default function RegisterPage() {
             control={<Checkbox checked={agreeTos} onChange={handleAgreeTosChange} required />}
             label={
               <Typography component="span" variant="body2">
-                Я погоджуюся з{' '}
+                {dict.auth.register.agreeToTerms}{' '}
                 <Link
-                  href="/tos"
+                  href={`/${lang}/tos`}
                   style={{
                     color: 'inherit',
                     textDecoration: 'underline',
                     fontWeight: 600,
                   }}
                 >
-                  умовами користування
+                  {dict.auth.register.termsOfService}
                 </Link>{' '}
-                та{' '}
+                {dict.auth.register.and}{' '}
                 <Link
-                  href="/privacy"
+                  href={`/${lang}/privacy`}
                   style={{
                     color: 'inherit',
                     textDecoration: 'underline',
                     fontWeight: 600,
                   }}
                 >
-                  політикою конфіденційності
+                  {dict.auth.register.privacyPolicy}
                 </Link>
               </Typography>
             }
@@ -218,7 +221,7 @@ export default function RegisterPage() {
               fontWeight: 700,
             }}
           >
-            Зареєструватися
+            {dict.auth.register.submit}
           </Button>
 
           <Divider flexItem sx={{ my: 1.5 }} />
@@ -231,15 +234,15 @@ export default function RegisterPage() {
           >
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2" color="text.secondary">
-                Вже маєте акаунт?
+                {dict.auth.register.alreadyHaveAccount}
               </Typography>
               <Button
                 component={Link}
-                href="/login"
+                href={`/${lang}/login`}
                 variant="text"
                 sx={{ textTransform: 'none', fontWeight: 700 }}
               >
-                Увійти
+                {dict.auth.register.signIn}
               </Button>
             </Stack>
           </Stack>

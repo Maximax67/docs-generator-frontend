@@ -4,23 +4,26 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, CircularProgress, Stack, Typography } from '@mui/material';
 import { useUserStore } from '@/store/user';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function LogoutPage() {
   const router = useRouter();
+  const dict = useDictionary();
+  const lang = useLang();
   const { logout } = useUserStore();
 
   useEffect(() => {
     (async () => {
       await logout();
-      router.replace('/');
+      router.replace(`/${lang}/`);
     })();
-  }, [logout, router]);
+  }, [logout, router, lang]);
 
   return (
     <Container sx={{ py: 6 }}>
       <Stack spacing={2} alignItems="center">
         <CircularProgress />
-        <Typography>Вихід...</Typography>
+        <Typography>{dict.auth.logout.loading}</Typography>
       </Stack>
     </Container>
   );
