@@ -7,7 +7,7 @@ import { Launch as LaunchIcon } from '@mui/icons-material';
 import { DriveFile, DocumentPreview } from '@/types/documents';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
-import { PdfViewerClient } from '../../../components/PdfViewerClient';
+import { PdfViewerClient } from '@/components/PdfViewerClient';
 
 interface PdfPreviewProps {
   showWebLink?: boolean;

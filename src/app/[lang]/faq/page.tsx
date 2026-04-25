@@ -1,6 +1,5 @@
 'use client';
 
-import { faq } from '@/app/faq/data';
 import { ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material';
 import {
   Accordion,
@@ -10,17 +9,20 @@ import {
   Stack,
   Container,
 } from '@mui/material';
+import { useDictionary } from '@/contexts/LangContext';
 
-const FrequentlyAskedQuestions = () => {
+export default function FrequentlyAskedQuestions() {
+  const dict = useDictionary();
+
   return (
     <Container sx={{ py: 6, maxWidth: '1000px' }}>
       <Stack spacing={4}>
         <Typography variant="h4" fontWeight={600}>
-          Питання та відповіді
+          {dict.faq.title}
         </Typography>
 
         <Stack spacing={2}>
-          {faq.map((item, index) => (
+          {dict.faq.items.map((item, index) => (
             <Stack key={index}>
               <Accordion>
                 <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
@@ -36,6 +38,4 @@ const FrequentlyAskedQuestions = () => {
       </Stack>
     </Container>
   );
-};
-
-export default FrequentlyAskedQuestions;
+}

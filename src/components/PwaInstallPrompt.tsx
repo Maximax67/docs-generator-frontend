@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Snackbar, Button, IconButton, Slide } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import { useDictionary } from '@/contexts/LangContext';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -12,12 +13,12 @@ interface BeforeInstallPromptEvent extends Event {
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const dict = useDictionary();
 
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       if (localStorage.getItem('pwaPromptShown')) return;
-
       const event = e as BeforeInstallPromptEvent;
       setDeferredPrompt(event);
       setShowPrompt(true);
@@ -30,14 +31,10 @@ export default function PwaInstallPrompt() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-
     await deferredPrompt.prompt();
-
     setDeferredPrompt(null);
     setShowPrompt(false);
   };
-
-  const handleClose = () => setShowPrompt(false);
 
   return (
     <Snackbar
@@ -45,7 +42,7 @@ export default function PwaInstallPrompt() {
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       slots={{ transition: Slide }}
       slotProps={{ transition: { direction: 'up' } }}
-      message="Встановити додаток?"
+      message={dict.pwa.installPrompt}
       sx={{
         '& .MuiPaper-root': {
           backgroundColor: (theme) => theme.palette.background.paper,
@@ -55,9 +52,14 @@ export default function PwaInstallPrompt() {
       action={
         <>
           <Button color="primary" size="small" onClick={handleInstallClick}>
-            Встановити
+            {dict.pwa.install}
           </Button>
-          <IconButton size="small" aria-label="close" color="inherit" onClick={handleClose}>
+          <IconButton
+            size="small"
+            aria-label="close"
+            color="inherit"
+            onClick={() => setShowPrompt(false)}
+          >
             <CloseIcon fontSize="small" />
           </IconButton>
         </>

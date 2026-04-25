@@ -7,34 +7,21 @@ import {
   AutoAwesome as AutoAwesomeIcon,
   Security as SecurityIcon,
 } from '@mui/icons-material';
+import { useDictionary } from '@/contexts/LangContext';
 
-const keyFeatures = [
-  {
-    icon: <DescriptionIcon color="primary" sx={{ fontSize: 50, mb: 1 }} />,
-    title: 'Створення документів',
-    desc: 'Обирай шаблон та отримуйте готовий PDF за лічені хвилини',
-  },
-  {
-    icon: <AutoAwesomeIcon color="primary" sx={{ fontSize: 50, mb: 1 }} />,
-    title: 'Персоналізація',
-    desc: 'Зберігайте налаштування полів та керуйте своїми даними',
-  },
-  {
-    icon: <HelpOutlineIcon color="primary" sx={{ fontSize: 50, mb: 1 }} />,
-    title: 'Допомога та FAQ',
-    desc: 'Всі відповіді на питання зібрані в одному місці',
-  },
-  {
-    icon: <SecurityIcon color="primary" sx={{ fontSize: 50, mb: 1 }} />,
-    title: 'Безпека даних',
-    desc: 'Згенеровані документи не зберігаються на наших серверах',
-  },
+const icons = [
+  <DescriptionIcon key="desc" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
+  <AutoAwesomeIcon key="auto" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
+  <HelpOutlineIcon key="help" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
+  <SecurityIcon key="sec" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
 ];
 
 export default function Features() {
+  const dict = useDictionary();
+
   return (
     <Grid container spacing={3}>
-      {keyFeatures.map((card, index) => (
+      {dict.features.map((card, index) => (
         <Grid size={{ xs: 12, sm: 6 }} key={index}>
           <Paper
             elevation={3}
@@ -54,7 +41,7 @@ export default function Features() {
               spacing={2}
               sx={{ mb: 1 }}
             >
-              {card.icon}
+              {icons[index]}
               <Typography variant="h6" fontWeight={600}>
                 {card.title}
               </Typography>

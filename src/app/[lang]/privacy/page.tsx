@@ -1,6 +1,6 @@
 'use client';
 
-import { privacy, privacyUpdateDate } from '@/app/privacy/data';
+import { privacy, privacyUpdateDate } from '@/app/[lang]/privacy/data';
 import { LegalInfo } from '@/components/LegalInfo';
 import { Container } from '@mui/material';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { tos, tosUpdateDate } from '@/app/tos/data';
+import { tos, tosUpdateDate } from '@/app/[lang]/tos/data';
 import { LegalInfo } from '@/components/LegalInfo';
 import { Container } from '@mui/material';
 

@@ -14,44 +14,27 @@ import {
   CheckCircle as CheckCircleIcon,
   SaveAlt as SaveAltIcon,
 } from '@mui/icons-material';
+import { useDictionary } from '@/contexts/LangContext';
 
-const steps = [
-  {
-    title: 'Обери документ',
-    description: 'Обери потрібний шаблон з доступних',
-    icon: <DescriptionIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
-  },
-  {
-    title: 'Проглянь превью',
-    description: 'Переглянь превью вже заповненого документа',
-    icon: <VisibilityIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
-  },
-  {
-    title: 'Заповни дані',
-    description: 'Уважно заповни всі поля в документі',
-    icon: <EditIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
-  },
-  {
-    title: 'Результат',
-    description: 'Перевір згенерований документ на можливі помилки',
-    icon: <CheckCircleIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
-  },
-  {
-    title: 'Скачай PDF',
-    description: 'Завантаж або роздрукуй документ',
-    icon: <SaveAltIcon sx={{ fontSize: 30, color: 'primary.main' }} />,
-  },
+const stepIcons = [
+  <DescriptionIcon key="d" sx={{ fontSize: 30, color: 'primary.main' }} />,
+  <VisibilityIcon key="v" sx={{ fontSize: 30, color: 'primary.main' }} />,
+  <EditIcon key="e" sx={{ fontSize: 30, color: 'primary.main' }} />,
+  <CheckCircleIcon key="c" sx={{ fontSize: 30, color: 'primary.main' }} />,
+  <SaveAltIcon key="s" sx={{ fontSize: 30, color: 'primary.main' }} />,
 ];
 
 export default function StepsTimeline() {
+  const dict = useDictionary();
+
   return (
     <Stack spacing={6} alignItems="center" sx={{ width: '100%', mt: 6 }}>
       <Typography variant="h4" fontWeight={700}>
-        Як створити документ
+        {dict.timeline.title}
       </Typography>
 
       <Timeline position="alternate" sx={{ width: '100%' }}>
-        {steps.map((step, index) => (
+        {dict.timeline.steps.map((step, index) => (
           <TimelineItem key={index}>
             <TimelineSeparator>
               <TimelineDot
@@ -75,7 +58,7 @@ export default function StepsTimeline() {
               >
                 {index + 1}
               </TimelineDot>
-              {index < steps.length - 1 && <TimelineConnector />}
+              {index < dict.timeline.steps.length - 1 && <TimelineConnector />}
             </TimelineSeparator>
 
             <TimelineContent sx={{ py: '12px', px: 2 }}>
@@ -85,34 +68,21 @@ export default function StepsTimeline() {
                   p: 3,
                   textAlign: 'center',
                   transition: 'transform 0.3s, box-shadow 0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-5px)',
-                    boxShadow: 6,
-                  },
+                  '&:hover': { transform: 'translateY(-5px)', boxShadow: 6 },
                 }}
               >
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 1,
-                  }}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}
                 >
-                  {step.icon}
+                  {stepIcons[index]}
                   {step.title}
                 </Typography>
                 <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 1,
-                  }}
+                  sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}
                 >
                   {step.description}
                 </Typography>

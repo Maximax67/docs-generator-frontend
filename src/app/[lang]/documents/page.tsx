@@ -2,7 +2,7 @@
 
 import { Container, Stack, Alert, Box } from '@mui/material';
 import { useUserStore } from '@/store/user';
-import { DocumentSelector } from '@/app/documents/components/DocumentSelector';
+import { DocumentSelector } from '@/app/[lang]/documents/components/DocumentSelector';
 import { useState } from 'react';
 import { isAdminUser } from '@/utils/is-admin';
 

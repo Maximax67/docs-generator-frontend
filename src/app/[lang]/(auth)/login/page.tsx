@@ -19,9 +19,14 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import AuthScaffold from '@/components/AuthScaffold';
 import { validateEmail, validatePassword } from '@/utils/validators';
 import { toErrorMessage } from '@/utils/errors-messages';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const lang = useLang();
+  const dict = useDictionary();
+  const a = dict.auth; // shorthand
+
   const { user, loginWithCredentials } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,17 +39,13 @@ export default function LoginPage() {
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setEmail(val);
-    setEmailError(val && !validateEmail(val) ? 'Не правильна електронна пошта' : '');
+    setEmailError(val && !validateEmail(val) ? a.invalidEmail : '');
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setPassword(val);
-    setPasswordError(val && !validatePassword(val) ? 'Пароль має бути від 8 до 32 символів' : '');
-  };
-
-  const handleTogglePasswordVisibility = () => {
-    setShowPassword((v) => !v);
+    setPasswordError(val && !validatePassword(val) ? a.invalidPassword : '');
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -53,9 +54,9 @@ export default function LoginPage() {
     setLoginError('');
     try {
       await loginWithCredentials(email, password);
-      router.push('/profile/');
+      router.push(`/${lang}/profile/`);
     } catch (e) {
-      setLoginError(toErrorMessage(e) || 'Помилка входу');
+      setLoginError(toErrorMessage(e) || a.login.error);
       setLoading(false);
     }
   };
@@ -63,49 +64,38 @@ export default function LoginPage() {
   const isFormValid = email && password && !emailError && !passwordError;
 
   useEffect(() => {
-    if (user) {
-      router.push('/profile/');
-    }
-  }, [router, user]);
+    if (user) router.push(`/${lang}/profile/`);
+  }, [router, user, lang]);
 
   return (
-    <AuthScaffold
-      title="Увійти"
-      subtitle="Раді бачити вас знову. Введіть свої дані, щоб продовжити"
-    >
+    <AuthScaffold title={a.login.title} subtitle={a.login.subtitle}>
       <Box component="form" onSubmit={onSubmit} noValidate>
         <Stack spacing={2.25} mt={3}>
           {loginError && <Alert severity="error">{loginError}</Alert>}
           <TextField
-            label="Ел. пошта"
+            label={a.email}
             type="email"
             value={email}
             onChange={handleEmailChange}
             required
             fullWidth
-            size="medium"
             autoComplete="email"
             error={!!emailError}
             helperText={emailError}
           />
           <TextField
-            label="Пароль"
+            label={a.password}
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={handlePasswordChange}
             required
             fullWidth
-            size="medium"
             autoComplete="current-password"
             slotProps={{
               input: {
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleTogglePasswordVisibility}
-                      edge="end"
-                    >
+                    <IconButton onClick={() => setShowPassword((v) => !v)} edge="end">
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -121,14 +111,9 @@ export default function LoginPage() {
             variant="contained"
             size="large"
             disabled={loading || !isFormValid}
-            sx={{
-              py: 1.25,
-              borderRadius: 3,
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
+            sx={{ py: 1.25, borderRadius: 3, textTransform: 'none', fontWeight: 700 }}
           >
-            Увійти
+            {a.login.submit}
           </Button>
 
           <Divider flexItem sx={{ my: 1.5 }} />
@@ -139,20 +124,24 @@ export default function LoginPage() {
             justifyContent="space-between"
             alignItems={{ xs: 'stretch', sm: 'center' }}
           >
-            <Button component={Link} href="/reset-password" sx={{ textTransform: 'none' }}>
-              Забули пароль?
+            <Button
+              component={Link}
+              href={`/${lang}/reset-password`}
+              sx={{ textTransform: 'none' }}
+            >
+              {a.login.forgotPassword}
             </Button>
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2" color="text.secondary">
-                Немає акаунта?
+                {a.login.noAccount}
               </Typography>
               <Button
                 component={Link}
-                href="/register"
+                href={`/${lang}/register`}
                 variant="text"
                 sx={{ textTransform: 'none', fontWeight: 700 }}
               >
-                Зареєструватися
+                {a.login.register}
               </Button>
             </Stack>
           </Stack>

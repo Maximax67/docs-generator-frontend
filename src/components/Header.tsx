@@ -29,6 +29,8 @@ import { useUserStore } from '@/store/user';
 import { useThemeMode } from '@/providers/AppThemeProvider';
 import { useState, useMemo } from 'react';
 import { isAdminUser } from '@/utils/is-admin';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export default function Header() {
   const theme = useTheme();
@@ -36,22 +38,33 @@ export default function Header() {
   const { user } = useUserStore();
   const isAdmin = isAdminUser(user);
   const { mode, toggle, mounted } = useThemeMode();
+  const dict = useDictionary();
+  const lang = useLang();
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = useMemo(() => {
+    const prefix = `/${lang}`;
     const links = [
-      { href: '/documents', label: 'Документи', icon: <DescriptionIcon /> },
-      { href: '/faq', label: 'FAQ', icon: <HelpOutlineIcon /> },
+      { href: `${prefix}/documents`, label: dict.nav.documents, icon: <DescriptionIcon /> },
+      { href: `${prefix}/faq`, label: dict.nav.faq, icon: <HelpOutlineIcon /> },
     ];
 
     if (isAdmin) {
-      links.push({ href: '/generations', label: 'Генерації', icon: <PictureAsPdfIcon /> });
-      links.push({ href: '/users', label: 'Користувачі', icon: <PersonIcon /> });
+      links.push({
+        href: `${prefix}/generations`,
+        label: dict.nav.generations,
+        icon: <PictureAsPdfIcon />,
+      });
+      links.push({
+        href: `${prefix}/users`,
+        label: dict.nav.users,
+        icon: <PersonIcon />,
+      });
     }
 
     return links;
-  }, [isAdmin]);
+  }, [isAdmin, dict, lang]);
 
   if (!mounted) return null;
 
@@ -77,16 +90,18 @@ export default function Header() {
       ),
     );
 
+  const prefix = `/${lang}`;
+
   return (
     <AppBar position="sticky" color="primary">
-      <Toolbar sx={{ gap: 1 }}>
+      <Toolbar sx={{ gap: { xs: 0, sm: 1 } }}>
         {isMobile && (
           <IconButton
             size="large"
             edge="start"
             color="inherit"
             onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Меню"
+            aria-label={dict.nav.menu}
           >
             <MenuIcon />
           </IconButton>
@@ -94,7 +109,7 @@ export default function Header() {
 
         <Box sx={{ flexGrow: 1 }}>
           <Link
-            href="/"
+            href={`${prefix}/`}
             style={{
               textDecoration: 'none',
               color: 'inherit',
@@ -119,7 +134,9 @@ export default function Header() {
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>{renderLinks()}</Box>
         )}
 
-        <IconButton color="inherit" onClick={toggle} aria-label="Змінити тему">
+        <LanguageSwitcher />
+
+        <IconButton color="inherit" onClick={toggle} aria-label={dict.nav.toggleTheme}>
           {mode === 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
         </IconButton>
 
@@ -128,8 +145,8 @@ export default function Header() {
             component={Link}
             size={isMobile ? 'medium' : 'large'}
             color="inherit"
-            href="/profile"
-            aria-label="Профіль"
+            href={`${prefix}/profile`}
+            aria-label={dict.nav.profile}
           >
             <AccountCircleIcon />
           </IconButton>
@@ -138,14 +155,19 @@ export default function Header() {
             component={Link}
             size="medium"
             color="inherit"
-            href="/login"
-            aria-label="Увійти"
+            href={`${prefix}/login`}
+            aria-label={dict.nav.signIn}
           >
             <LoginIcon />
           </IconButton>
         ) : (
-          <Button component={Link} href="/login" color="inherit" startIcon={<LoginIcon />}>
-            Увійти
+          <Button
+            component={Link}
+            href={`${prefix}/login`}
+            color="inherit"
+            startIcon={<LoginIcon />}
+          >
+            {dict.nav.signIn}
           </Button>
         )}
       </Toolbar>

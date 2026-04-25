@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useRateLimitStore } from '@/store/rate-limit';
+import { useDictionary } from '@/contexts/LangContext';
 
 export default function RateLimitOverlay() {
   const rateLimitedUntil = useRateLimitStore((s) => s.rateLimitedUntil);
   const clearRateLimit = useRateLimitStore((s) => s.clearRateLimit);
+  const dict = useDictionary();
 
   const [now, setNow] = useState<number>(() => Date.now());
 
@@ -22,14 +24,13 @@ export default function RateLimitOverlay() {
   }, [rateLimitedUntil]);
 
   useEffect(() => {
-    if (rateLimitedUntil && msLeft === 0) {
-      clearRateLimit();
-    }
+    if (rateLimitedUntil && msLeft === 0) clearRateLimit();
   }, [msLeft, rateLimitedUntil, clearRateLimit]);
 
   if (!rateLimitedUntil || msLeft <= 0) return null;
 
   const secondsLeft = Math.ceil(msLeft / 1000);
+  const d = dict.rateLimit;
 
   return (
     <Box
@@ -72,16 +73,16 @@ export default function RateLimitOverlay() {
             429
           </Typography>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Занадто багато запитів
+            {d.title}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Будь ласка, зачекайте трохи та спробуйте ще раз.
+            {d.description}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Ви зможете повторити запит через {secondsLeft} с.
+            {d.retryIn} {secondsLeft} {d.seconds}
           </Typography>
           <Button variant="contained" onClick={clearRateLimit}>
-            Закрити
+            {d.close}
           </Button>
         </Stack>
       </Box>
