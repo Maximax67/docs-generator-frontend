@@ -12,7 +12,7 @@ import {
   Collapse,
   Chip,
 } from '@mui/material';
-import { JSONSchema, SchemaVisualEditor } from 'jsonjoy-builder';
+import { en, JSONSchema, SchemaVisualEditor, TranslationContext, uk } from 'jsonjoy-builder';
 import {
   Save as SaveIcon,
   Close as CloseIcon,
@@ -30,7 +30,7 @@ import { SavingTable } from './SavingTable';
 import { ScopeSettingsTab } from './ScopeSettingsTab';
 import { FieldOrderTab } from './FieldOrderTab';
 import { ScopeSettings } from '@/types/scopes';
-import { useDictionary } from '@/contexts/LangContext';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 import 'jsonjoy-builder/styles.css';
 import './Settings.module.css';
@@ -65,6 +65,7 @@ interface ParentScopeSchema {
 
 export const Settings = forwardRef<SettingsRef, SettingsProps>(
   ({ scope, scopeName, isFolder, folderTree, onClose }, ref) => {
+    const lang = useLang();
     const dict = useDictionary();
     const notify = useNotify();
     const [activeTab, setActiveTab] = useState<TabValue>('validation');
@@ -420,256 +421,260 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
             : undefined;
 
     return (
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Paper
-          elevation={1}
-          sx={{
-            p: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: 1,
-            borderColor: 'divider',
-            flexShrink: 0,
-            borderBottomLeftRadius: 0,
-            borderBottomRightRadius: 0,
-          }}
-        >
-          <Typography variant="h6" noWrap>
-            {scopeName}
-          </Typography>
-          <Box>
-            {handleSave && (
-              <IconButton
-                color="primary"
-                onClick={handleSave}
-                disabled={isSaving || isFetching || !canSave}
-                title={
-                  canSave ? dict.documents.settings.saveChanges : dict.documents.settings.noChanges
-                }
-              >
-                <SaveIcon />
-              </IconButton>
-            )}
-            <IconButton onClick={onClose} title={dict.documents.settings.close}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </Paper>
-
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
+      <TranslationContext value={lang === 'uk' ? uk : en}>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <Paper
+            elevation={1}
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+            }}
           >
-            <Tab
-              value="validation"
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="button">{dict.documents.settings.validation}</Typography>
-                  {hasSchemaChanges && (
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: 'warning.main',
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                </Box>
-              }
-              title={hasSchemaChanges ? dict.documents.settings.unsavedChanges : undefined}
-            />
-            <Tab label={dict.documents.settings.constants} value="constants" />
-            <Tab label={dict.documents.settings.saving} value="saving" />
-            <Tab
-              value="order"
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="button">{dict.documents.settings.order}</Typography>
-                  {hasOrderChanges && (
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: 'warning.main',
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                </Box>
-              }
-              title={hasOrderChanges ? dict.documents.settings.unsavedChanges : undefined}
-            />
-            <Tab
-              value="access"
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="button">{dict.documents.settings.access}</Typography>
-                  {hasScopeChanges && (
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: 'warning.main',
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                </Box>
-              }
-              title={hasScopeChanges ? dict.documents.settings.unsavedChanges : undefined}
-            />
-          </Tabs>
-        </Box>
-
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
-          {(fetchingSchema && activeTab === 'validation') ||
-          (fetchingScopeSettings && activeTab === 'access') ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
-              <CircularProgress />
+            <Typography variant="h6" noWrap>
+              {scopeName}
+            </Typography>
+            <Box>
+              {handleSave && (
+                <IconButton
+                  color="primary"
+                  onClick={handleSave}
+                  disabled={isSaving || isFetching || !canSave}
+                  title={
+                    canSave
+                      ? dict.documents.settings.saveChanges
+                      : dict.documents.settings.noChanges
+                  }
+                >
+                  <SaveIcon />
+                </IconButton>
+              )}
+              <IconButton onClick={onClose} title={dict.documents.settings.close}>
+                <CloseIcon />
+              </IconButton>
             </Box>
-          ) : (
-            <>
-              {activeTab === 'validation' && (
-                <>
-                  {parentSchemas.length > 0 && (
-                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          </Paper>
+
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab
+                value="validation"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="button">{dict.documents.settings.validation}</Typography>
+                    {hasSchemaChanges && (
                       <Box
-                        onClick={toggleParentSchemas}
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          p: 2,
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s',
-                          '&:hover': {
-                            bgcolor: 'action.hover',
-                          },
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: 'warning.main',
+                          flexShrink: 0,
                         }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                            {dict.documents.settings.parentValidation}
-                          </Typography>
-                          <Chip
-                            label={parentSchemas.length}
-                            size="small"
-                            color="primary"
-                            sx={{ height: 20, fontSize: '0.75rem' }}
-                          />
-                        </Box>
-                        <IconButton
-                          size="small"
+                      />
+                    )}
+                  </Box>
+                }
+                title={hasSchemaChanges ? dict.documents.settings.unsavedChanges : undefined}
+              />
+              <Tab label={dict.documents.settings.constants} value="constants" />
+              <Tab label={dict.documents.settings.saving} value="saving" />
+              <Tab
+                value="order"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="button">{dict.documents.settings.order}</Typography>
+                    {hasOrderChanges && (
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: 'warning.main',
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                  </Box>
+                }
+                title={hasOrderChanges ? dict.documents.settings.unsavedChanges : undefined}
+              />
+              <Tab
+                value="access"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="button">{dict.documents.settings.access}</Typography>
+                    {hasScopeChanges && (
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: 'warning.main',
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                  </Box>
+                }
+                title={hasScopeChanges ? dict.documents.settings.unsavedChanges : undefined}
+              />
+            </Tabs>
+          </Box>
+
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {(fetchingSchema && activeTab === 'validation') ||
+            (fetchingScopeSettings && activeTab === 'access') ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <>
+                {activeTab === 'validation' && (
+                  <>
+                    {parentSchemas.length > 0 && (
+                      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                        <Box
+                          onClick={toggleParentSchemas}
                           sx={{
-                            transform: parentSchemasExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.3s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            p: 2,
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            '&:hover': {
+                              bgcolor: 'action.hover',
+                            },
                           }}
                         >
-                          <ExpandMoreIcon />
-                        </IconButton>
-                      </Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                              {dict.documents.settings.parentValidation}
+                            </Typography>
+                            <Chip
+                              label={parentSchemas.length}
+                              size="small"
+                              color="primary"
+                              sx={{ height: 20, fontSize: '0.75rem' }}
+                            />
+                          </Box>
+                          <IconButton
+                            size="small"
+                            sx={{
+                              transform: parentSchemasExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.3s',
+                            }}
+                          >
+                            <ExpandMoreIcon />
+                          </IconButton>
+                        </Box>
 
-                      <Collapse in={parentSchemasExpanded} timeout="auto">
-                        <Box sx={{ bgcolor: 'background.default' }}>
-                          {parentSchemas.map((parentSchema, index) => (
-                            <Box
-                              key={`${parentSchema.scope}-${index}`}
-                              sx={{
-                                borderBottom: index < parentSchemas.length - 1 ? 1 : 0,
-                                borderColor: 'divider',
-                              }}
-                            >
+                        <Collapse in={parentSchemasExpanded} timeout="auto">
+                          <Box sx={{ bgcolor: 'background.default' }}>
+                            {parentSchemas.map((parentSchema, index) => (
                               <Box
+                                key={`${parentSchema.scope}-${index}`}
                                 sx={{
-                                  p: 2,
-                                  bgcolor: 'background.paper',
-                                  borderBottom: 1,
+                                  borderBottom: index < parentSchemas.length - 1 ? 1 : 0,
                                   borderColor: 'divider',
                                 }}
                               >
-                                <Typography variant="subtitle2" color="text.secondary">
-                                  {parentSchema.scopeName}
-                                </Typography>
+                                <Box
+                                  sx={{
+                                    p: 2,
+                                    bgcolor: 'background.paper',
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  <Typography variant="subtitle2" color="text.secondary">
+                                    {parentSchema.scopeName}
+                                  </Typography>
+                                </Box>
+                                <SchemaVisualEditor
+                                  schema={parentSchema.schema}
+                                  onChange={() => {}}
+                                  readOnly={true}
+                                />
                               </Box>
-                              <SchemaVisualEditor
-                                schema={parentSchema.schema}
-                                onChange={() => {}}
-                                readOnly={true}
-                              />
-                            </Box>
-                          ))}
-                        </Box>
-                      </Collapse>
+                            ))}
+                          </Box>
+                        </Collapse>
+                      </Box>
+                    )}
+                    <Box>
+                      <SchemaVisualEditor
+                        schema={schema}
+                        onChange={handleSchemaChange}
+                        readOnly={false}
+                      />
                     </Box>
-                  )}
-                  <Box>
-                    <SchemaVisualEditor
-                      schema={schema}
-                      onChange={handleSchemaChange}
-                      readOnly={false}
-                    />
-                  </Box>
-                </>
-              )}
-              {activeTab === 'constants' && (
-                <ConstantsTable
-                  scope={scope}
-                  folderTree={folderTree}
-                  variables={variables}
-                  onConstantClear={handleClearConstant}
-                  onConstantDelete={handleDeleteVariable}
-                  onConstantEdit={handleConstantEdit}
-                />
-              )}
-              {activeTab === 'saving' && (
-                <SavingTable
-                  scope={scope}
-                  folderTree={folderTree}
-                  variables={variables}
-                  onChangeSave={handleChangeSave}
-                  onAddVariable={handleAddVariable}
-                  onDeleteVariable={handleDeleteVariable}
-                />
-              )}
-              {activeTab === 'order' && (
-                <FieldOrderTab
-                  folderTree={folderTree}
-                  orderableVariables={orderableVariables}
-                  onChange={handleFieldOrdersChange}
-                  resetKey={orderResetKey}
-                />
-              )}
-              {activeTab === 'access' && (
-                <>
-                  {!scope && (
-                    <Box sx={{ p: 2 }}>
-                      <Alert severity="warning">
-                        {dict.documents.settings.globalAccessWarning}
-                      </Alert>
-                    </Box>
-                  )}
-                  {scope && (
-                    <ScopeSettingsTab
-                      driveId={scope}
-                      isFolder={isFolder}
-                      initialSettings={scopeSettings}
-                      onChange={handleScopeSettingsChange}
-                    />
-                  )}
-                </>
-              )}
-            </>
-          )}
+                  </>
+                )}
+                {activeTab === 'constants' && (
+                  <ConstantsTable
+                    scope={scope}
+                    folderTree={folderTree}
+                    variables={variables}
+                    onConstantClear={handleClearConstant}
+                    onConstantDelete={handleDeleteVariable}
+                    onConstantEdit={handleConstantEdit}
+                  />
+                )}
+                {activeTab === 'saving' && (
+                  <SavingTable
+                    scope={scope}
+                    folderTree={folderTree}
+                    variables={variables}
+                    onChangeSave={handleChangeSave}
+                    onAddVariable={handleAddVariable}
+                    onDeleteVariable={handleDeleteVariable}
+                  />
+                )}
+                {activeTab === 'order' && (
+                  <FieldOrderTab
+                    folderTree={folderTree}
+                    orderableVariables={orderableVariables}
+                    onChange={handleFieldOrdersChange}
+                    resetKey={orderResetKey}
+                  />
+                )}
+                {activeTab === 'access' && (
+                  <>
+                    {!scope && (
+                      <Box sx={{ p: 2 }}>
+                        <Alert severity="warning">
+                          {dict.documents.settings.globalAccessWarning}
+                        </Alert>
+                      </Box>
+                    )}
+                    {scope && (
+                      <ScopeSettingsTab
+                        driveId={scope}
+                        isFolder={isFolder}
+                        initialSettings={scopeSettings}
+                        onChange={handleScopeSettingsChange}
+                      />
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </Box>
         </Box>
-      </Box>
+      </TranslationContext>
     );
   },
 );
