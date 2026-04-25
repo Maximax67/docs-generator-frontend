@@ -17,7 +17,7 @@ export default function FrequentlyAskedQuestions() {
   return (
     <Container sx={{ py: 6, maxWidth: '1000px' }}>
       <Stack spacing={4}>
-        <Typography variant="h4" fontWeight={600}>
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
           {dict.faq.title}
         </Typography>
 
@@ -26,7 +26,7 @@ export default function FrequentlyAskedQuestions() {
             <Stack key={index}>
               <Accordion>
                 <AccordionSummary expandIcon={<ArrowDropDownIcon />}>
-                  <Typography fontWeight={600}>{item.q}</Typography>
+                  <Typography sx={{ fontWeight: 600 }}>{item.q}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Typography>{item.a}</Typography>

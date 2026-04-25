@@ -72,7 +72,7 @@ export default function VerifyEmailPage() {
   return (
     <AuthScaffold title={dict.auth.verifyEmail.title}>
       <Box>
-        <Stack spacing={2} mt={3} alignItems="center">
+        <Stack spacing={2} sx={{ mt: 3, alignItems: 'center' }}>
           {loading && (
             <>
               <CircularProgress />

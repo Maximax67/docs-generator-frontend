@@ -19,7 +19,7 @@ export function PageSizeControl({
   const dict = useDictionary();
 
   return (
-    <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
       <Typography variant="body2">{dict.common.perPage}</Typography>
       <FormControl size="small" variant="outlined">
         <Select

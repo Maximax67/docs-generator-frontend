@@ -28,8 +28,8 @@ export default function StepsTimeline() {
   const dict = useDictionary();
 
   return (
-    <Stack spacing={6} alignItems="center" sx={{ width: '100%', mt: 6 }}>
-      <Typography variant="h4" fontWeight={700}>
+    <Stack spacing={6} sx={{ width: '100%', mt: 6, alignItems: 'center' }}>
+      <Typography variant="h4" sx={{ fontWeight: 700 }}>
         {dict.timeline.title}
       </Typography>
 

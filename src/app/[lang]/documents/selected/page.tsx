@@ -286,7 +286,14 @@ export default function SelectedDocumentPage() {
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '400px',
+          }}
+        >
           <CircularProgress size={40} />
         </Box>
       </Container>

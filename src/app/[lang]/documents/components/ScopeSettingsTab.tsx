@@ -174,7 +174,11 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
                   }
                   label={a.unlimitedDepth}
                 />
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ ml: 5, display: 'block' }}
+                >
                   {a.unlimitedDepthHelp}
                 </Typography>
               </Box>
@@ -200,7 +204,7 @@ export const ScopeSettingsTab: FC<ScopeSettingsTabProps> = ({
               }
               label={a.pinned}
             />
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 5 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 5, display: 'block' }}>
               {a.pinnedHelp}
             </Typography>
           </Box>

@@ -20,7 +20,7 @@ import {
   AccountCircle as AccountCircleIcon,
   Login as LoginIcon,
   Description as DescriptionIcon,
-  HelpOutline as HelpOutlineIcon,
+  HelpOutlined as HelpOutlinedIcon,
   Person as PersonIcon,
   PictureAsPdf as PictureAsPdfIcon,
 } from '@mui/icons-material';
@@ -47,7 +47,7 @@ export default function Header() {
     const prefix = `/${lang}`;
     const links = [
       { href: `${prefix}/documents`, label: dict.nav.documents, icon: <DescriptionIcon /> },
-      { href: `${prefix}/faq`, label: dict.nav.faq, icon: <HelpOutlineIcon /> },
+      { href: `${prefix}/faq`, label: dict.nav.faq, icon: <HelpOutlinedIcon /> },
     ];
 
     if (isAdmin) {

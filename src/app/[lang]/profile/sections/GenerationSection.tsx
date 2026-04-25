@@ -104,8 +104,16 @@ export default function GenerationSection({
                     <Card key={generation.id} variant="outlined">
                       <CardContent>
                         <Stack spacing={1}>
-                          <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography fontWeight="bold">{generation.template_name}</Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Typography sx={{ fontWeight: 'bold' }}>
+                              {generation.template_name}
+                            </Typography>
                             <Stack direction="row" spacing={0.5}>
                               {isAdmin && (
                                 <IconButton
@@ -163,7 +171,9 @@ export default function GenerationSection({
                                 onClick={() => setExpanded(isExpanded ? null : generation.id)}
                                 sx={{ alignSelf: 'flex-start' }}
                               >
-                                {isExpanded ? dict.profile.generations.hideVars : dict.profile.generations.showVars}
+                                {isExpanded
+                                  ? dict.profile.generations.hideVars
+                                  : dict.profile.generations.showVars}
                               </Button>
 
                               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -227,7 +237,7 @@ export default function GenerationSection({
                             )}
                           </TableCell>
                           <TableCell align="right">
-                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                               {isAdmin && (
                                 <IconButton
                                   component={Link}

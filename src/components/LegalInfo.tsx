@@ -14,14 +14,14 @@ export const LegalInfo: FC<LegalInfoProps> = ({ title, data, updateDate }) => {
   return (
     <>
       <Stack spacing={4}>
-        <Typography variant="h4" fontWeight={600}>
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
 
         {data.map((section, idx) => (
           <Stack key={idx} spacing={2}>
             {section.t && (
-              <Typography variant="h5" fontWeight={500}>
+              <Typography variant="h5" sx={{ fontWeight: 500 }}>
                 {section.t}
               </Typography>
             )}
@@ -33,7 +33,7 @@ export const LegalInfo: FC<LegalInfoProps> = ({ title, data, updateDate }) => {
         ))}
       </Stack>
       {updateDate && (
-        <Typography variant="h6" fontWeight={500} sx={{ mt: 4 }}>
+        <Typography variant="h6" sx={{ mt: 4, fontWeight: 500 }}>
           Останнє оновлення: {updateDate}
         </Typography>
       )}

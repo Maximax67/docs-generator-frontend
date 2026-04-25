@@ -67,7 +67,7 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
       }}
     >
       <DialogTitle>
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main' }} />
           <Box>
             <Typography variant="h6" component="div">
@@ -90,7 +90,7 @@ export const GenerationSuccessModal: React.FC<GenerationSuccessModalProps> = ({
           }}
         >
           <Stack spacing={2}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
               {isPdf ? (
                 <PictureAsPdfIcon sx={{ fontSize: 48, color: 'error.main' }} />
               ) : (

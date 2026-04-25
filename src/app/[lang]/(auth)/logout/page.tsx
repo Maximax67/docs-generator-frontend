@@ -21,7 +21,7 @@ export default function LogoutPage() {
 
   return (
     <Container sx={{ py: 6 }}>
-      <Stack spacing={2} alignItems="center">
+      <Stack spacing={2} sx={{ alignItems: 'center' }}>
         <CircularProgress />
         <Typography>{dict.auth.logout.loading}</Typography>
       </Stack>

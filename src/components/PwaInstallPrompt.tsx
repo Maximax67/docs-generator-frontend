@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Snackbar, Button, IconButton, Slide } from '@mui/material';
+import { Snackbar, Button, IconButton, Slide, SlideProps } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useDictionary } from '@/contexts/LangContext';
 
@@ -41,7 +41,7 @@ export default function PwaInstallPrompt() {
       open={showPrompt}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       slots={{ transition: Slide }}
-      slotProps={{ transition: { direction: 'up' } }}
+      slotProps={{ transition: { direction: 'up' } as SlideProps }}
       message={dict.pwa.installPrompt}
       sx={{
         '& .MuiPaper-root': {

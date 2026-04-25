@@ -14,7 +14,7 @@ type SearchFieldProps = {
 export function SearchField({
   value,
   onSearch,
-  label = 'Пошук',
+  label,
   placeholder,
   disabled = false,
   fullWidth = true,

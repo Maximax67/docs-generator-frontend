@@ -123,7 +123,7 @@ export default function SessionsSection({
                     <Typography variant="caption" color="text.secondary">
                       {dict.profile.sessions.updatedCol}: {formatDateTime(s.updated_at)}
                     </Typography>
-                    <Stack direction="row" justifyContent="flex-end">
+                    <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
                       <Button
                         size="small"
                         color="warning"

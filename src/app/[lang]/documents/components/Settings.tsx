@@ -444,7 +444,9 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
                 color="primary"
                 onClick={handleSave}
                 disabled={isSaving || isFetching || !canSave}
-                title={canSave ? dict.documents.settings.saveChanges : dict.documents.settings.noChanges}
+                title={
+                  canSave ? dict.documents.settings.saveChanges : dict.documents.settings.noChanges
+                }
               >
                 <SaveIcon />
               </IconButton>
@@ -530,7 +532,7 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
         <Box sx={{ flex: 1, overflow: 'auto' }}>
           {(fetchingSchema && activeTab === 'validation') ||
           (fetchingScopeSettings && activeTab === 'access') ? (
-            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
               <CircularProgress />
             </Box>
           ) : (

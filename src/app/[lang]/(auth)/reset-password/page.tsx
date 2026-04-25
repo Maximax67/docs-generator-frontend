@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
     >
       {token ? (
         <Box component="form" onSubmit={onChange} noValidate>
-          <Stack spacing={2.25} mt={3}>
+          <Stack spacing={2.25} sx={{ mt: 3 }}>
             {error && <Alert severity="error">{error}</Alert>}
             {done ? (
               <Alert severity="success">{dict.auth.resetPassword.success}</Alert>
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
               </>
             )}
             <Divider flexItem sx={{ my: 1.5 }} />
-            <Stack direction="row" spacing={1.5} justifyContent="center">
+            <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'center' }}>
               <Button component={Link} href={`/${lang}/login`} sx={{ textTransform: 'none' }}>
                 {dict.auth.resetPassword.backToSignIn}
               </Button>
@@ -156,7 +156,7 @@ export default function ResetPasswordPage() {
         </Box>
       ) : (
         <Box component="form" onSubmit={onRequest} noValidate>
-          <Stack spacing={2.25} mt={3}>
+          <Stack spacing={2.25} sx={{ mt: 3 }}>
             {error && <Alert severity="error">{error}</Alert>}
             {done ? (
               <Alert severity="success">{dict.auth.resetPassword.emailSent}</Alert>
@@ -193,7 +193,7 @@ export default function ResetPasswordPage() {
               </>
             )}
             <Divider flexItem sx={{ my: 1.5 }} />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center">
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'center' }}>
               <Button component={Link} href={`/${lang}/login`} sx={{ textTransform: 'none' }}>
                 {dict.auth.resetPassword.backToSignIn}
               </Button>

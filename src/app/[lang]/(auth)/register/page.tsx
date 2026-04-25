@@ -111,12 +111,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthScaffold
-      title={dict.auth.register.title}
-      subtitle={dict.auth.register.subtitle}
-    >
+    <AuthScaffold title={dict.auth.register.title} subtitle={dict.auth.register.subtitle}>
       <Box component="form" onSubmit={onSubmit} noValidate>
-        <Stack spacing={2.25} mt={3}>
+        <Stack spacing={2.25} sx={{ mt: 3 }}>
           {registerError && <Alert severity="error">{registerError}</Alert>}
           <TextField
             label={dict.auth.firstName}
@@ -229,10 +226,9 @@ export default function RegisterPage() {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
+            sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' } }}
           >
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 {dict.auth.register.alreadyHaveAccount}
               </Typography>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   Description as DescriptionIcon,
-  HelpOutline as HelpOutlineIcon,
+  HelpOutlined as HelpOutlinedIcon,
   Api as ApiIcon,
 } from '@mui/icons-material';
 import { useDictionary, useLang } from '@/contexts/LangContext';
@@ -29,26 +29,24 @@ export default function Home() {
       }}
     >
       <Container>
-        <Stack spacing={6} alignItems="center">
-          <Stack spacing={2} alignItems="center" textAlign="center">
+        <Stack spacing={6} sx={{ alignItems: 'center' }}>
+          <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
             <Image src="/logo.png" alt="Docs Generator" width={150} height={150} />
             <Typography
               variant="h2"
               component="h1"
-              fontWeight={700}
-              sx={{ fontSize: { xs: '2rem', sm: '3.75rem' } }}
+              sx={{ fontSize: { xs: '2rem', sm: '3.75rem' }, fontWeight: 700 }}
             >
               Docs Generator
             </Typography>
             <Typography
               variant="h6"
               color="text.secondary"
-              maxWidth={600}
-              sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+              sx={{ fontSize: { xs: '1rem', sm: '1.25rem' }, maxWidth: 600 }}
             >
               {dict.home.tagline}
             </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} pt={{ sm: 1 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ pt: { sm: 1 } }}>
               <Button
                 component={Link}
                 href={`/${lang}/documents`}
@@ -63,7 +61,7 @@ export default function Home() {
                 href={`/${lang}/faq`}
                 variant="outlined"
                 size="large"
-                startIcon={<HelpOutlineIcon />}
+                startIcon={<HelpOutlinedIcon />}
               >
                 {dict.home.viewFaq}
               </Button>
@@ -85,18 +83,18 @@ export default function Home() {
               gap: 2,
             }}
           >
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <ApiIcon
                 color="primary"
                 fontSize="large"
                 sx={{ fontSize: { xs: '1.75rem', sm: '2rem' } }}
               />
-              <Typography variant="h4" fontWeight={700}>
+              <Typography variant="h4" sx={{ fontWeight: 700 }}>
                 {dict.home.api.title}
               </Typography>
             </Stack>
 
-            <Typography variant="body1" textAlign="center" maxWidth={600}>
+            <Typography variant="body1" sx={{ textAlign: 'center', maxWidth: 600 }}>
               {dict.home.api.description}
             </Typography>
 

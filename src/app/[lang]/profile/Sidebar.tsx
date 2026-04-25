@@ -31,7 +31,7 @@ export default function Sidebar({ active, onChange, user, isOwnProfile }: Sideba
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" spacing={1} alignItems="center">
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <PersonIcon />
         <Typography variant="h6">
           {user.first_name} {user.last_name || ''}

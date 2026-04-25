@@ -174,13 +174,13 @@ export default function GenerationsPage() {
   };
 
   return (
-    <Box p={2}>
-      <Typography variant="h4" mb={3}>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h4" sx={{ mb: 3 }}>
         {dict.generations.title}
       </Typography>
 
       {!generations && (
-        <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
       )}
@@ -207,8 +207,16 @@ export default function GenerationsPage() {
                     <Card key={generation.id} variant="outlined">
                       <CardContent>
                         <Stack spacing={1}>
-                          <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography fontWeight="bold">{generation.template_name}</Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Typography sx={{ fontWeight: 'bold' }}>
+                              {generation.template_name}
+                            </Typography>
                             <Stack direction="row" spacing={0.5}>
                               <IconButton
                                 component={Link}
@@ -251,7 +259,7 @@ export default function GenerationsPage() {
                           </Box>
 
                           {generation.user ? (
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                               <Typography variant="body2">
                                 {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
                               </Typography>
@@ -338,12 +346,12 @@ export default function GenerationsPage() {
                       <Fragment key={index}>
                         <TableRow key={generation.id}>
                           <TableCell>
-                            <Typography fontWeight="bold">{generation.template_name}</Typography>
+                            <Typography sx={{ fontWeight: 'bold' }}>{generation.template_name}</Typography>
                           </TableCell>
 
                           <TableCell>
                             {generation.user ? (
-                              <Stack direction="row" alignItems="center" spacing={1}>
+                              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                                 <Typography>
                                   {`${generation.user.first_name} ${generation.user.last_name ?? ''}`}
                                 </Typography>
@@ -387,7 +395,7 @@ export default function GenerationsPage() {
                           </TableCell>
 
                           <TableCell align="right">
-                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                            <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                               <IconButton
                                 component={Link}
                                 href={`https://docs.google.com/document/d/${generation.template_id}`}

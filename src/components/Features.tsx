@@ -3,7 +3,7 @@
 import { Grid, Paper, Stack, Typography } from '@mui/material';
 import {
   Description as DescriptionIcon,
-  HelpOutline as HelpOutlineIcon,
+  HelpOutlined as HelpOutlinedIcon,
   AutoAwesome as AutoAwesomeIcon,
   Security as SecurityIcon,
 } from '@mui/icons-material';
@@ -12,7 +12,7 @@ import { useDictionary } from '@/contexts/LangContext';
 const icons = [
   <DescriptionIcon key="desc" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
   <AutoAwesomeIcon key="auto" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
-  <HelpOutlineIcon key="help" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
+  <HelpOutlinedIcon key="help" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
   <SecurityIcon key="sec" color="primary" sx={{ fontSize: 50, mb: 1 }} />,
 ];
 
@@ -36,13 +36,11 @@ export default function Features() {
           >
             <Stack
               direction="row"
-              alignItems="center"
-              justifyContent="center"
               spacing={2}
-              sx={{ mb: 1 }}
+              sx={{ mb: 1, alignItems: 'center', justifyContent: 'center' }}
             >
               {icons[index]}
-              <Typography variant="h6" fontWeight={600}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
                 {card.title}
               </Typography>
             </Stack>

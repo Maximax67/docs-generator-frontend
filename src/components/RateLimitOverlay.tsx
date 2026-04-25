@@ -57,7 +57,7 @@ export default function RateLimitOverlay() {
           textAlign: 'center',
         }}
       >
-        <Stack spacing={2} alignItems="center">
+        <Stack spacing={2} sx={{ alignItems: 'center' }}>
           <Typography
             variant="h1"
             sx={{

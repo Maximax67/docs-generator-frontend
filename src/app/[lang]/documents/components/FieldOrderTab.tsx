@@ -271,8 +271,7 @@ export const FieldOrderTab: FC<FieldOrderTabProps> = ({
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <ListItemText
                       primary={variable.variable}
-                      sx={{ m: 0 }}
-                      slotProps={{ primary: { fontWeight: 500 } }}
+                      sx={{ m: 0, fontWeight: 500 }}
                     />
                     <ScopeBadge folderTree={folderTree} scope={variable.scope} />
                   </Box>

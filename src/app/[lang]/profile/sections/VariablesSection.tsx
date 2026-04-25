@@ -188,7 +188,7 @@ export default function VariablesSection({
                           <ValueDisplay value={savedVar.value} onClick={showFullValue} />
                         </Box>
                         <ScopeBadge folderTree={folderTree} scope={savedVar.variable.scope} />
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                           <IconButton
                             size="small"
                             onClick={() => handleEdit(savedVar)}

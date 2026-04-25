@@ -1,7 +1,7 @@
 import { Stack, Typography, Chip, Box, Button } from '@mui/material';
 import {
   Verified as VerifiedIcon,
-  ErrorOutline as ErrorOutlineIcon,
+  ErrorOutlined as ErrorOutlinedIcon,
   Email as EmailIcon,
   LockReset as LockResetIcon,
   Edit as EditIcon,
@@ -55,7 +55,7 @@ export default function InfoSection({
     <Stack spacing={2}>
       <Typography variant="h5">{dict.profile.info.title}</Typography>
 
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }} useFlexGap>
         <RoleChip role={user.role} />
         <Chip
           label={user.is_banned ? dict.profile.info.banned : dict.profile.info.active}
@@ -63,9 +63,13 @@ export default function InfoSection({
           icon={user.is_banned ? <BlockIcon /> : <VerifiedIcon />}
         />
         <Chip
-          label={user.email_verified ? dict.profile.info.emailVerified : dict.profile.info.emailNotVerified}
+          label={
+            user.email_verified
+              ? dict.profile.info.emailVerified
+              : dict.profile.info.emailNotVerified
+          }
           color={user.email_verified ? 'success' : 'warning'}
-          icon={user.email_verified ? <VerifiedIcon /> : <ErrorOutlineIcon />}
+          icon={user.email_verified ? <VerifiedIcon /> : <ErrorOutlinedIcon />}
         />
       </Stack>
 
@@ -82,10 +86,9 @@ export default function InfoSection({
           {dict.profile.info.emailLabel}
         </Typography>
         <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          alignItems={{ sm: 'center' }}
-          justifyContent="space-between"
           spacing={1}
+          direction={{ xs: 'column', sm: 'row' }}
+          sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}
         >
           <Typography variant="h6">{user.email}</Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -131,10 +134,9 @@ export default function InfoSection({
           {dict.profile.info.nameLabel}
         </Typography>
         <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          alignItems={{ sm: 'center' }}
-          justifyContent="space-between"
           spacing={1}
+          direction={{ xs: 'column', sm: 'row' }}
+          sx={{ justifyContent: 'space-between', alignItems: { sm: 'center' } }}
         >
           <Typography variant="h6">
             {user.first_name} {user.last_name || ''}

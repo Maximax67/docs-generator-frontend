@@ -70,7 +70,7 @@ export default function LoginPage() {
   return (
     <AuthScaffold title={a.login.title} subtitle={a.login.subtitle}>
       <Box component="form" onSubmit={onSubmit} noValidate>
-        <Stack spacing={2.25} mt={3}>
+        <Stack spacing={2.25} sx={{ mt: 3 }}>
           {loginError && <Alert severity="error">{loginError}</Alert>}
           <TextField
             label={a.email}
@@ -121,8 +121,7 @@ export default function LoginPage() {
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1.5}
-            justifyContent="space-between"
-            alignItems={{ xs: 'stretch', sm: 'center' }}
+            sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' } }}
           >
             <Button
               component={Link}
@@ -131,7 +130,7 @@ export default function LoginPage() {
             >
               {a.login.forgotPassword}
             </Button>
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 {a.login.noAccount}
               </Typography>

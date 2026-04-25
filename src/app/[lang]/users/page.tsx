@@ -23,7 +23,7 @@ import {
 import {
   Launch as LaunchIcon,
   Verified as VerifiedIcon,
-  ErrorOutline as ErrorOutlineIcon,
+  ErrorOutlined as ErrorOutlinedIcon,
   Block as BlockIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
@@ -44,19 +44,6 @@ import { FilterSelect, FilterOption } from '@/components/FilterSelect';
 import { PaginationControls } from '@/components/PaginationControls';
 import { PageSizeControl } from '@/components/PageSizeControls';
 import { useDictionary, useLang } from '@/contexts/LangContext';
-
-const ROLE_OPTIONS: FilterOption[] = [
-  { value: 'all', label: 'Всі ролі' },
-  { value: 'user', label: 'Користувач' },
-  { value: 'admin', label: 'Адмін' },
-  { value: 'god', label: 'Бог' },
-];
-
-const STATUS_OPTIONS: FilterOption[] = [
-  { value: 'all', label: 'Всі статуси' },
-  { value: 'active', label: 'Активні' },
-  { value: 'banned', label: 'Заблоковані' },
-];
 
 export default function UsersPage() {
   const dict = useDictionary();
@@ -86,6 +73,19 @@ export default function UsersPage() {
   const [searchResult, setSearchResult] = useState<Paginated<User> | null>(null);
 
   const cancelledRef = useRef(false);
+
+  const ROLE_OPTIONS: FilterOption[] = [
+    { value: 'all', label: dict.users.allRoles },
+    { value: 'user', label: dict.roles.user },
+    { value: 'admin', label: dict.roles.admin },
+    { value: 'god', label: dict.roles.god },
+  ];
+
+  const STATUS_OPTIONS: FilterOption[] = [
+    { value: 'all', label: dict.users.allStatuses },
+    { value: 'active', label: dict.users.active },
+    { value: 'banned', label: dict.users.banned },
+  ];
 
   const loadUsers = useCallback(async () => {
     try {
@@ -159,20 +159,18 @@ export default function UsersPage() {
   }
 
   return (
-    <Box p={2}>
+    <Box sx={{ p: 2 }}>
       <Typography variant="h4" gutterBottom>
         {dict.users.title}
       </Typography>
 
       <Stack
         direction="row"
-        flexWrap={{ xs: 'wrap', md: 'nowrap' }}
-        mb={2}
-        mt={3}
-        alignItems="center"
         spacing={{ md: 2 }}
+        sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' }, mb: 2, mt: 3, alignItems: 'center' }}
       >
         <SearchField
+          label={dict.users.searchPlaceholder}
           value={searchQuery}
           onSearch={(value) => setFilter('q', value)}
           disabled={loading}
@@ -207,7 +205,7 @@ export default function UsersPage() {
       </Stack>
 
       {searchResult && (
-        <Box my={2}>
+        <Box sx={{ my: 2 }}>
           <PageSizeControl
             pageSize={pageSize}
             totalItems={searchResult.meta.total_items}
@@ -224,11 +222,17 @@ export default function UsersPage() {
               <Card key={user.id} variant="outlined">
                 <CardContent>
                   <Stack spacing={1}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
                       <Typography
                         variant="subtitle1"
-                        fontWeight="bold"
                         sx={{
+                          fontWeight: 'bold',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -260,7 +264,7 @@ export default function UsersPage() {
                           sx={{ verticalAlign: 'middle', ml: 0.5 }}
                         />
                       ) : (
-                        <ErrorOutlineIcon
+                        <ErrorOutlinedIcon
                           color="warning"
                           fontSize="small"
                           sx={{ verticalAlign: 'middle', ml: 0.5 }}
@@ -320,7 +324,7 @@ export default function UsersPage() {
                         sx={{ verticalAlign: 'middle', ml: 0.5 }}
                       />
                     ) : (
-                      <ErrorOutlineIcon
+                      <ErrorOutlinedIcon
                         color="warning"
                         fontSize="small"
                         sx={{ verticalAlign: 'middle', ml: 0.5 }}

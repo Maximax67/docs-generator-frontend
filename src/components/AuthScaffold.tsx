@@ -44,8 +44,8 @@ export default function AuthScaffold({ title, subtitle, children }: AuthScaffold
             boxShadow: cardShadow,
           }}
         >
-          <Stack spacing={3} alignItems="center" textAlign="center">
-            <Typography variant="h4" fontWeight={700} letterSpacing={0.2}>
+          <Stack spacing={3} sx={{ alignItems: 'center', textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 0.2 }}>
               {title}
             </Typography>
             {subtitle && (
