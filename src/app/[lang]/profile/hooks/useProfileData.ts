@@ -5,7 +5,7 @@ import { adminApi } from '@/lib/api';
 import { User } from '@/types/user';
 import { toErrorMessage } from '@/utils/errors-messages';
 import { isAdminUser } from '@/utils/is-admin';
-import { useDictionary } from '@/contexts/LangContext';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export function useProfileData() {
   const router = useRouter();
@@ -14,6 +14,7 @@ export function useProfileData() {
   const { user: currentUser } = useUserStore();
   const isAdmin = isAdminUser(currentUser);
   const dict = useDictionary();
+  const lang = useLang();
 
   const [targetUser, setTargetUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export function useProfileData() {
 
     // Only admins can view other profiles
     if (!isAdmin) {
-      router.replace('/profile');
+      router.replace(`/${lang}/profile`);
       return;
     }
 
@@ -49,7 +50,7 @@ export function useProfileData() {
     } finally {
       setLoading(false);
     }
-  }, [currentUser, isAdmin, userId, router, dict.profile.errors.loadProfile]);
+  }, [currentUser, userId, isAdmin, router, lang, dict.profile.errors.loadProfile]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

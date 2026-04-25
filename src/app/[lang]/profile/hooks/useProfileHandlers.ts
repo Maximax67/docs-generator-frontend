@@ -11,10 +11,11 @@ import { Generation } from '@/types/generations';
 import { SavedVariable } from '@/types/variables';
 import { FolderTreeGlobal } from '@/types/documents';
 import { useConfirm } from '@/providers/ConfirmProvider';
-import { useDictionary } from '@/contexts/LangContext';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolean) {
   const router = useRouter();
+  const lang = useLang();
   const userStore = useUserStore();
   const { confirm } = useConfirm();
   const dict = useDictionary();
@@ -78,7 +79,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     await withAsyncHandler(async () => {
       if (isOwnProfile) {
         await userStore.changeEmail(emailForm.newEmail);
-        router.push('/login');
+        router.push(`/${lang}/login`);
       } else {
         await adminApi.changeUserEmail(targetUser.id, emailForm.newEmail);
         if (targetUser) targetUser.email = emailForm.newEmail;
@@ -86,7 +87,7 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       setEmailDialogOpen(false);
       setEmailForm({ newEmail: '' });
     }, pe.changeEmail);
-  }, [targetUser, isOwnProfile, emailForm.newEmail, router, withAsyncHandler, userStore, pe.changeEmail]);
+  }, [targetUser, withAsyncHandler, pe.changeEmail, isOwnProfile, userStore, emailForm.newEmail, router, lang]);
 
   // Password Handlers
   const handleOpenPasswordDialog = useCallback(() => {
@@ -97,9 +98,9 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     await withAsyncHandler(async () => {
       await userStore.changePassword(passwordForm.oldPassword, passwordForm.newPassword);
       setPasswordDialogOpen(false);
-      router.push('/login');
+      router.push(`/${lang}/login`);
     }, pe.changePassword);
-  }, [passwordForm, router, withAsyncHandler, userStore, pe.changePassword]);
+  }, [withAsyncHandler, pe.changePassword, userStore, passwordForm.oldPassword, passwordForm.newPassword, router, lang]);
 
   // Names Handlers
   const handleOpenNamesDialog = useCallback(() => {
@@ -214,11 +215,11 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         await adminApi.deleteUser(targetUser.id);
       }
       setDeleteDialogOpen(false);
-      router.push(isOwnProfile ? '/' : '/users');
+      router.push(isOwnProfile ? `/${lang}` : `/${lang}/users`);
     } catch {
       setDeleteForm((prev) => ({ ...prev, error: pe.deleteAccount }));
     }
-  }, [targetUser, isOwnProfile, router, userStore, pe.deleteAccount]);
+  }, [targetUser, isOwnProfile, router, lang, userStore, pe.deleteAccount]);
 
   // Session Handlers
   const handleRefreshSessions = useCallback(async () => {
@@ -247,17 +248,17 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
         setSessions((prev) => prev.filter((s) => s.id !== sessionId));
         if (isCurrent) {
           userStore.logoutLocal();
-          router.push('/');
+          router.push(`/${lang}`);
         }
       }, pe.deleteSession);
     },
-    [confirm, withAsyncHandler, userStore, router, pc, dict.common.cancel, pe.deleteSession],
+    [confirm, pc.endSession.title, pc.endSession.currentMessage, pc.endSession.message, pc.endSession.confirm, dict.common.cancel, withAsyncHandler, pe.deleteSession, userStore, router, lang],
   );
 
   const handleLogout = useCallback(async () => {
     await userStore.logout();
-    router.push('/');
-  }, [router, userStore]);
+    router.push(`/${lang}`);
+  }, [lang, router, userStore]);
 
   const handleLogoutEverywhere = useCallback(async () => {
     const confirmed = await confirm({
@@ -271,8 +272,8 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
     if (!confirmed) return;
 
     await userStore.logoutEverywhere();
-    router.push('/');
-  }, [confirm, router, userStore, pc, dict.common.cancel]);
+    router.push(`/${lang}`);
+  }, [confirm, pc.logoutAll.title, pc.logoutAll.message, pc.logoutAll.confirm, dict.common.cancel, userStore, router, lang]);
 
   // Variables Handlers
   const handleRefreshSavedVars = useCallback(async () => {
@@ -384,10 +385,10 @@ export function useProfileHandlers(targetUser: User | null, isOwnProfile: boolea
       await withAsyncHandler(async () => {
         const blob = await generationsApi.regenerateGeneration(id, variables);
         await savePdfToIndexedDb('generatedPdf', blob);
-        router.push('/documents/result');
+        router.push(`/${lang}/documents/result`);
       }, pe.regenerate);
     },
-    [router, withAsyncHandler, pe.regenerate],
+    [withAsyncHandler, pe.regenerate, router, lang],
   );
 
   const handleDeleteGeneration = useCallback(

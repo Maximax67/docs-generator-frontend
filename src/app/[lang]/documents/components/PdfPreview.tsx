@@ -8,7 +8,7 @@ import { DriveFile, DocumentPreview } from '@/types/documents';
 import { formatDateTime } from '@/utils/dates';
 import { formatFilename } from '@/utils/format-filename';
 import { PdfViewerClient } from '@/components/PdfViewerClient';
-import { useDictionary } from '@/contexts/LangContext';
+import { useDictionary, useLang } from '@/contexts/LangContext';
 
 interface PdfPreviewProps {
   showWebLink?: boolean;
@@ -19,12 +19,13 @@ interface PdfPreviewProps {
 
 export const PdfPreview: FC<PdfPreviewProps> = ({ showWebLink, document, preview, onRefresh }) => {
   const router = useRouter();
+  const lang = useLang();
   const dict = useDictionary();
   const d = dict.documents;
 
   const documentSelectHandler = () => {
     if (document) {
-      router.push(`/documents/selected/?id=${document.id}`);
+      router.push(`/${lang}/documents/selected/?id=${document.id}`);
     }
   };
 
