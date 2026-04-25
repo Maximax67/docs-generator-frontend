@@ -89,6 +89,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadFolderTree(treeScopeParam);
   }, [loadFolderTree, treeScopeParam]);
 
@@ -165,6 +166,7 @@ export const DocumentSelector: FC<DocumentSelectorProps> = ({ showWebLink }) => 
         pathsSet.add(currentPath);
       }
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedPaths(pathsSet);
       setHighlightPath(targetPath);
     }

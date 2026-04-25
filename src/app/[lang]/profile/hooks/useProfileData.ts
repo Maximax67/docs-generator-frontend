@@ -52,6 +52,7 @@ export function useProfileData() {
   }, [currentUser, isAdmin, userId, router, dict.profile.errors.loadProfile]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUser();
   }, [fetchUser]);
 

@@ -22,6 +22,7 @@ export function SearchField({
   const [input, setInput] = useState(value);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInput(value);
   }, [value]);
 

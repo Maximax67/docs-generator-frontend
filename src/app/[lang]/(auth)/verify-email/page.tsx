@@ -52,6 +52,7 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (!success) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCountdown(5);
     intervalRef.current = window.setInterval(() => {
       setCountdown((c) => (c > 0 ? c - 1 : 0));

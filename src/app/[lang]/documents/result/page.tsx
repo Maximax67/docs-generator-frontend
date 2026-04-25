@@ -50,7 +50,7 @@ export default function ResultPage() {
         height: 'calc(100dvh - 64px)',
       }}
     >
-      <PdfViewerClient blob={pdfBlob} className="h-full" />
+      <PdfViewerClient blob={pdfBlob} sidebar className="h-full" />
     </Box>
   );
 }

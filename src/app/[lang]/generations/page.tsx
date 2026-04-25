@@ -70,7 +70,6 @@ export default function GenerationsPage() {
   });
 
   const cancelledRef = useRef(false);
-  const isFetched = useRef(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -78,7 +77,6 @@ export default function GenerationsPage() {
       const response = await generationsApi.getGenerations({ page, pageSize });
 
       if (!cancelledRef.current) {
-        isFetched.current = true;
         setGenerations(response);
       }
     } catch (e) {
@@ -96,6 +94,7 @@ export default function GenerationsPage() {
     if (!isAdmin) return;
 
     cancelledRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null);
     fetchData();
 
@@ -180,17 +179,17 @@ export default function GenerationsPage() {
         {dict.generations.title}
       </Typography>
 
-      {!isFetched.current && (
+      {!generations && (
         <Box display="flex" justifyContent="center" alignItems="center" py={4}>
           <CircularProgress />
         </Box>
       )}
 
-      {isFetched.current && (!generations || generations.data.length === 0) && (
+      {generations && generations.data.length === 0 && (
         <Alert severity="info">{dict.generations.noData}</Alert>
       )}
 
-      {isFetched.current && generations && generations.data.length > 0 && (
+      {generations && generations.data.length > 0 && (
         <>
           <PageSizeControl
             pageSize={pageSize}

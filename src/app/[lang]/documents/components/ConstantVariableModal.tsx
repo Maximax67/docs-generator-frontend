@@ -52,9 +52,17 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
   const [overrideWarning, setOverrideWarning] = useState<string>('');
   const [isEditingParentScope, setIsEditingParentScope] = useState(false);
 
+  const getVariableType = (value: JSONValue): VariableType => {
+    if (typeof value === 'boolean') return 'boolean';
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'string') return 'text';
+    return 'json';
+  };
+
   useEffect(() => {
     if (open) {
       if (editingVariable) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setVariableName(editingVariable.variable);
         const type = getVariableType(editingVariable.value);
         setVariableType(type);
@@ -83,13 +91,6 @@ export const ConstantVariableModal: FC<ConstantVariableModalProps> = ({
       setOverrideWarning('');
     }
   }, [open, editingVariable, scope]);
-
-  const getVariableType = (value: JSONValue): VariableType => {
-    if (typeof value === 'boolean') return 'boolean';
-    if (typeof value === 'number') return 'number';
-    if (typeof value === 'string') return 'text';
-    return 'json';
-  };
 
   const handleNameChange = (name: string) => {
     setVariableName(name);

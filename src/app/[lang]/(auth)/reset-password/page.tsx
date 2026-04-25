@@ -37,6 +37,7 @@ export default function ResetPasswordPage() {
   const [passwordError, setPasswordError] = useState<string>('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null);
   }, []);
 

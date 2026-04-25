@@ -59,7 +59,8 @@ export default function SelectedDocumentPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [initialFormData, setInitialFormData] = useState<Record<string, JSONValue>>({});
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingFormat, setGeneratingFormat] = useState<'pdf' | 'docx' | null>(null);
+  const isGenerating = generatingFormat !== null;
   const [generateError, setGenerateError] = useState<string | null>(null);
 
   const [generatedDocument, setGeneratedDocument] = useState<GeneratedDocument | null>(null);
@@ -96,6 +97,7 @@ export default function SelectedDocumentPage() {
   }, [dict.documents.documentNotSelected, dict.documents.loadError, documentId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, [loadData]);
 
@@ -185,7 +187,7 @@ export default function SelectedDocumentPage() {
     const format = requestedFormatRef.current;
 
     try {
-      setIsGenerating(true);
+      setGeneratingFormat(format);
       setGenerateError(null);
       requestedFormatRef.current = format;
 
@@ -222,7 +224,7 @@ export default function SelectedDocumentPage() {
         format === 'docx' ? dict.documents.generateDocxError : dict.documents.generateError,
       );
     } finally {
-      setIsGenerating(false);
+      setGeneratingFormat(null);
     }
   };
 
@@ -370,11 +372,7 @@ export default function SelectedDocumentPage() {
               variant="contained"
               size="large"
               startIcon={
-                isGenerating && requestedFormatRef.current === 'pdf' ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  <DownloadIcon />
-                )
+                generatingFormat === 'pdf' ? <CircularProgress size={20} /> : <DownloadIcon />
               }
               disabled={isGenerating}
               onClick={isNoVariables ? () => onGenerateEmpty('pdf') : handlePdfClick}
@@ -382,16 +380,14 @@ export default function SelectedDocumentPage() {
                 minWidth: { xs: '100%', sm: 200 },
               }}
             >
-              {isGenerating && requestedFormatRef.current === 'pdf'
-                ? dict.documents.generating
-                : dict.documents.generatePdf}
+              {generatingFormat === 'pdf' ? dict.documents.generating : dict.documents.generatePdf}
             </Button>
 
             <Button
               variant="outlined"
               size="large"
               startIcon={
-                isGenerating && requestedFormatRef.current === 'docx' ? (
+                isGenerating && generatingFormat === 'docx' ? (
                   <CircularProgress size={20} />
                 ) : (
                   <DescriptionIcon />
@@ -403,7 +399,7 @@ export default function SelectedDocumentPage() {
                 minWidth: { xs: '100%', sm: 200 },
               }}
             >
-              {isGenerating && requestedFormatRef.current === 'docx'
+              {isGenerating && generatingFormat === 'docx'
                 ? dict.documents.generating
                 : dict.documents.generateDocx}
             </Button>

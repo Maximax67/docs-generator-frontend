@@ -116,6 +116,7 @@ export default function UsersPage() {
     if (!isAdmin) return;
 
     cancelledRef.current = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError(null);
     loadUsers();
 

@@ -56,6 +56,7 @@ export const EditVariableDialog: FC<EditVariableDialogProps> = ({
         },
         required: [variable.variable],
       };
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSchema(formSchema as RJSFSchema);
     } else {
       setSchema(null);

@@ -50,6 +50,7 @@ export const SaveVariablesModal: FC<SaveVariablesModalProps> = ({
   useEffect(() => {
     if (!open) return;
     const autoChecked = new Set(candidates.filter((c) => c.isChanged).map((c) => c.id));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChecked(autoChecked);
   }, [open, candidates]);
 
