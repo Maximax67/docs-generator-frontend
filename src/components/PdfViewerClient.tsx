@@ -39,6 +39,7 @@ export const PdfViewerClient: FC<PdfViewerClientProps> = ({
         scaleDropdown: true,
         search: true,
         signature: true,
+        signatureButton: true,
         print: true,
         download: true,
         upload: false,

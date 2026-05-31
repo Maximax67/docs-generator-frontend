@@ -10,7 +10,7 @@ import {
   VariableUpdate,
   VariableOrderUpdate,
 } from '@/types/variables';
-import { JSONSchema } from 'jsonjoy-builder';
+import { JsonSchema } from 'jsonjoy-builder';
 import { JSONValue } from '@/types/json';
 
 export const variablesApi = {
@@ -21,7 +21,7 @@ export const variablesApi = {
     return response.data;
   },
 
-  async updateValidationSchema(scope: string | null, schema: JSONSchema): Promise<void> {
+  async updateValidationSchema(scope: string | null, schema: JsonSchema): Promise<void> {
     await api.put('/variables/schema', {
       scope,
       validation_schema: schema,
