@@ -50,7 +50,6 @@ export interface SettingsRef {
 
 const emptySchema: JsonSchema = {
   type: 'object',
-  properties: {},
   required: [],
 };
 
@@ -257,9 +256,13 @@ export const Settings = forwardRef<SettingsRef, SettingsProps>(
       setLoading(true);
 
       try {
-        await variablesApi.updateValidationSchema(scope, schema);
-        setInitialSchema(schema);
+        if (schema && typeof schema === 'object' && 'properties' in schema) {
+          await variablesApi.updateValidationSchema(scope, schema);
+        } else {
+          await variablesApi.deleteValidationSchema(scope);
+        }
 
+        setInitialSchema(schema);
         notify(dict.documents.settings.schemaSaved);
       } catch (err) {
         notify(toErrorMessage(err, dict.documents.settings.schemaError), 'error');

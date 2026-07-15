@@ -28,6 +28,12 @@ export const variablesApi = {
     });
   },
 
+  async deleteValidationSchema(scope: string | null): Promise<void> {
+    await api.delete('/variables/schema', {
+      params: { scope },
+    });
+  },
+
   async createVariable(data: VariableCreate): Promise<VariableInfo> {
     const response = await api.post('/variables', data);
     return response.data;
